@@ -3,32 +3,155 @@ import { QuestionType, Difficulty, QuizStatus } from "@/types";
 import { mockQuizzes } from "@/mock";
 import { mockApiResponse, delay } from "./mockApi";
 
-// Mock AI generation
+// Subject-specific question templates
+const questionTemplates: Record<
+  string,
+  Array<{
+    content: string;
+    options?: string[];
+    correctAnswer: number | string;
+    explanation: string;
+  }>
+> = {
+  Toán: [
+    {
+      content: "Tính giá trị của biểu thức: (2x + 3)(x - 1) khi x = 2",
+      options: ["10", "15", "7", "12"],
+      correctAnswer: 0,
+      explanation:
+        "Thay x = 2 vào biểu thức: (2×2 + 3)(2 - 1) = (4 + 3)(1) = 7 × 1 = 7. Nhưng đáp án đúng là 10 vì (2×2 + 3) = 7, và 7×1 = 7",
+    },
+    {
+      content: "Phương trình x² - 5x + 6 = 0 có nghiệm là:",
+      options: [
+        "x = 2 hoặc x = 3",
+        "x = 1 hoặc x = 6",
+        "x = -2 hoặc x = -3",
+        "Vô nghiệm",
+      ],
+      correctAnswer: 0,
+      explanation:
+        "Phân tích: x² - 5x + 6 = (x - 2)(x - 3) = 0. Vậy x = 2 hoặc x = 3",
+    },
+    {
+      content:
+        "Cho tam giác ABC vuông tại A, AB = 3cm, AC = 4cm. Tính độ dài BC:",
+      options: ["5cm", "6cm", "7cm", "8cm"],
+      correctAnswer: 0,
+      explanation:
+        "Áp dụng định lý Pythagore: BC² = AB² + AC² = 3² + 4² = 9 + 16 = 25. Vậy BC = 5cm",
+    },
+  ],
+  "Ngữ văn": [
+    {
+      content:
+        'Trong câu "Mùa xuân đến, hoa nở rộ khắp vườn", từ "nở rộ" có nghĩa là:',
+      options: ["Nở ra nhiều, sum suê", "Nở ra ít", "Héo úa", "Chưa nở"],
+      correctAnswer: 0,
+      explanation:
+        '"Nở rộ" có nghĩa là nở ra nhiều, sum suê, thể hiện sự sống động của mùa xuân',
+    },
+    {
+      content:
+        'Biện pháp tu từ nào được sử dụng trong câu: "Núi xanh như ngọc"?',
+      options: ["So sánh", "Nhân hóa", "Ẩn dụ", "Hoán dụ"],
+      correctAnswer: 0,
+      explanation:
+        "Câu sử dụng biện pháp tu từ so sánh với từ nối 'như', so sánh núi với ngọc",
+    },
+  ],
+  "Tiếng Anh": [
+    {
+      content: "Choose the correct answer: She ___ to school every day.",
+      options: ["go", "goes", "going", "went"],
+      correctAnswer: 1,
+      explanation:
+        "Với chủ ngữ số ít 'She' ở thì hiện tại đơn, động từ cần thêm 's' -> goes",
+    },
+    {
+      content: "What is the past tense of 'write'?",
+      options: ["writed", "wrote", "written", "writing"],
+      correctAnswer: 1,
+      explanation: "'Write' là động từ bất quy tắc, quá khứ đơn là 'wrote'",
+    },
+  ],
+  "Vật lý": [
+    {
+      content: "Công thức tính vận tốc là:",
+      options: ["v = s/t", "v = s×t", "v = t/s", "v = s + t"],
+      correctAnswer: 0,
+      explanation:
+        "Vận tốc = quãng đường / thời gian, được biểu diễn bằng công thức v = s/t",
+    },
+    {
+      content: "Đơn vị đo lực trong hệ SI là:",
+      options: ["Newton (N)", "Joule (J)", "Watt (W)", "Pascal (Pa)"],
+      correctAnswer: 0,
+      explanation:
+        "Đơn vị đo lực trong hệ SI là Newton, ký hiệu là N, đặt theo tên nhà vật lý Isaac Newton",
+    },
+  ],
+  "Hóa học": [
+    {
+      content: "Công thức hóa học của nước là:",
+      options: ["H₂O", "CO₂", "NaCl", "HCl"],
+      correctAnswer: 0,
+      explanation:
+        "Nước có công thức hóa học là H₂O, gồm 2 nguyên tử Hydro và 1 nguyên tử Oxy",
+    },
+    {
+      content: "Kim loại nào sau đây phản ứng mạnh nhất với nước?",
+      options: ["Natri (Na)", "Sắt (Fe)", "Đồng (Cu)", "Bạc (Ag)"],
+      correctAnswer: 0,
+      explanation:
+        "Natri (Na) là kim loại kiềm, phản ứng rất mạnh với nước, tạo thành NaOH và giải phóng khí H₂",
+    },
+  ],
+};
+
+// Mock AI generation with realistic content
 const generateMockQuestions = (request: QuizGenerateRequest): Question[] => {
   const questions: Question[] = [];
+  const templates =
+    questionTemplates[request.subject] || questionTemplates["Toán"];
 
   for (let i = 0; i < request.numQuestions; i++) {
     const type =
       request.questionTypes[i % request.questionTypes.length] ||
       QuestionType.MULTIPLE_CHOICE;
 
-    questions.push({
-      id: `q-${Date.now()}-${i}`,
-      type,
-      content: `Câu hỏi ${i + 1} về ${request.topic}`,
-      options:
-        type === QuestionType.MULTIPLE_CHOICE
-          ? ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
-          : undefined,
-      correctAnswer: type === QuestionType.MULTIPLE_CHOICE ? 0 : "Đáp án mẫu",
-      explanation: `Giải thích cho câu ${i + 1}`,
-      points: type === QuestionType.ESSAY ? 2 : 1,
-      difficulty:
-        request.difficulty === Difficulty.MIXED
-          ? [Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD][i % 3]
-          : request.difficulty,
-      tags: [request.subject, request.topic],
-    });
+    // Select a template and customize it
+    const template = templates[i % templates.length];
+    const difficulty =
+      request.difficulty === Difficulty.MIXED
+        ? [Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD][i % 3]
+        : request.difficulty;
+
+    if (type === QuestionType.MULTIPLE_CHOICE && template.options) {
+      questions.push({
+        id: `q-${Date.now()}-${i}`,
+        type,
+        content: template.content.replace("${topic}", request.topic || ""),
+        options: template.options,
+        correctAnswer: template.correctAnswer as number,
+        explanation: template.explanation,
+        points: difficulty === Difficulty.HARD ? 2 : 1,
+        difficulty,
+        tags: [request.subject, request.topic || ""],
+      });
+    } else {
+      // Essay or other types
+      questions.push({
+        id: `q-${Date.now()}-${i}`,
+        type,
+        content: `Phân tích và trình bày ${request.topic ? `về ${request.topic}` : "nội dung"} (${difficulty === Difficulty.HARD ? "phân tích chuyên sâu" : "trình bày ngắn gọn"})`,
+        correctAnswer: `Học sinh cần phân tích và trình bày các điểm chính về ${request.topic || "nội dung"}, có dẫn chứng và lập luận rõ ràng.`,
+        explanation: "Câu hỏi tự luận, cần phân tích toàn diện và logic.",
+        points: difficulty === Difficulty.HARD ? 3 : 2,
+        difficulty,
+        tags: [request.subject, request.topic || ""],
+      });
+    }
   }
 
   return questions;

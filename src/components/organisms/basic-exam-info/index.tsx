@@ -74,7 +74,8 @@ export function BasicExamInfoComponent({
     });
   };
 
-  const grades = [6, 7, 8, 9, 10, 11, 12];
+  const grades = [6, 7, 8, 9];
+  const subjects = ["Tiếng Anh", "Ngữ văn", "Toán"];
 
   return (
     <Card className="p-6">
@@ -96,15 +97,29 @@ export function BasicExamInfoComponent({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Subject */}
-          <FormField
-            label="Môn học"
-            name="subject"
-            value={examInfo.subject}
-            onChange={(value) => handleInputChange("subject", value)}
-            error={errors.subject}
-            placeholder="VD: Toán, Văn, Anh..."
-            required
-          />
+          <div className="space-y-2">
+            <Label htmlFor="subject">
+              Môn học <span className="text-red-500">*</span>
+            </Label>
+            <Select
+              value={examInfo.subject}
+              onValueChange={(value) => handleInputChange("subject", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Chọn môn học" />
+              </SelectTrigger>
+              <SelectContent>
+                {subjects.map((subject) => (
+                  <SelectItem key={subject} value={subject}>
+                    {subject}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.subject && (
+              <p className="text-sm text-red-500">{errors.subject}</p>
+            )}
+          </div>
 
           {/* Grade */}
           <div className="space-y-2">

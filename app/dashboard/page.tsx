@@ -11,7 +11,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { analyticsMockService } from "@/services/mock";
-import { AnalyticsData } from "@/types";
+import type { AnalyticsData } from "@/types";
 
 export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);

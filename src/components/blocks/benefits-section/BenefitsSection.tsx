@@ -42,7 +42,7 @@ export function BenefitsSection() {
               "radial-gradient(circle, #3B82F6 1px, transparent 1px)",
             backgroundSize: "50px 50px",
           }}
-        ></div>
+        />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -94,7 +94,7 @@ export function BenefitsSection() {
                 {/* Decorative gradient border on hover */}
                 <div
                   className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-5 transition-opacity -z-10`}
-                ></div>
+                />
               </div>
             );
           })}

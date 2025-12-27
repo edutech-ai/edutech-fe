@@ -1,4 +1,5 @@
-import { Quiz, Question, QuestionType, Difficulty, QuizStatus } from "@/types";
+import type { Quiz, Question } from "@/types";
+import { QuestionType, Difficulty, QuizStatus } from "@/types";
 
 export const mockQuestions: Question[] = [
   {

@@ -1,9 +1,5 @@
-import {
-  AnalyticsData,
-  Activity,
-  TopicPerformance,
-  ActivityLogType,
-} from "@/types";
+import type { AnalyticsData, Activity, TopicPerformance } from "@/types";
+import { ActivityLogType } from "@/types";
 
 export const mockActivities: Activity[] = [
   {

@@ -14,8 +14,8 @@ export function HeroSection() {
     <section className="relative overflow-hidden bg-white pt-20 pb-24 min-h-screen flex items-center">
       {/* Background decorations */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-20 right-10 w-72 h-72 bg-blue-100 rounded-full blur-3xl opacity-30"></div>
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-purple-100 rounded-full blur-3xl opacity-30"></div>
+        <div className="absolute top-20 right-10 w-72 h-72 bg-blue-100 rounded-full blur-3xl opacity-30" />
+        <div className="absolute bottom-20 left-10 w-96 h-96 bg-purple-100 rounded-full blur-3xl opacity-30" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -99,9 +99,9 @@ export function HeroSection() {
             {/* Trust Badge */}
             <div className="flex items-center gap-2 text-sm text-gray-500 pt-2">
               <div className="flex -space-x-2">
-                <div className="w-8 h-8 rounded-full bg-blue-500 border-2 border-white"></div>
-                <div className="w-8 h-8 rounded-full bg-purple-500 border-2 border-white"></div>
-                <div className="w-8 h-8 rounded-full bg-green-500 border-2 border-white"></div>
+                <div className="w-8 h-8 rounded-full bg-blue-500 border-2 border-white" />
+                <div className="w-8 h-8 rounded-full bg-purple-500 border-2 border-white" />
+                <div className="w-8 h-8 rounded-full bg-green-500 border-2 border-white" />
               </div>
               <span>
                 Được <strong className="text-gray-900">1000+ giáo viên</strong>{" "}
@@ -132,9 +132,9 @@ export function HeroSection() {
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <div className="h-3 bg-gray-100 rounded-full w-full"></div>
-                      <div className="h-3 bg-gray-100 rounded-full w-5/6"></div>
-                      <div className="h-3 bg-gray-100 rounded-full w-4/6"></div>
+                      <div className="h-3 bg-gray-100 rounded-full w-full" />
+                      <div className="h-3 bg-gray-100 rounded-full w-5/6" />
+                      <div className="h-3 bg-gray-100 rounded-full w-4/6" />
                       <div className="h-20 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl mt-4 flex items-center justify-center">
                         <Brain className="w-10 h-10 text-blue-600 animate-pulse" />
                       </div>
@@ -151,8 +151,8 @@ export function HeroSection() {
                     </span>
                   </div>
                   <div className="space-y-2">
-                    <div className="h-2 bg-gray-100 rounded w-full"></div>
-                    <div className="h-2 bg-gray-100 rounded w-3/4"></div>
+                    <div className="h-2 bg-gray-100 rounded w-full" />
+                    <div className="h-2 bg-gray-100 rounded w-3/4" />
                   </div>
                 </div>
 
@@ -165,8 +165,8 @@ export function HeroSection() {
                     </span>
                   </div>
                   <div className="space-y-2">
-                    <div className="h-2 bg-gray-100 rounded w-full"></div>
-                    <div className="h-2 bg-gray-100 rounded w-4/5"></div>
+                    <div className="h-2 bg-gray-100 rounded w-full" />
+                    <div className="h-2 bg-gray-100 rounded w-4/5" />
                   </div>
                 </div>
               </div>

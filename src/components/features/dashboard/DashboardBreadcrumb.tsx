@@ -14,7 +14,7 @@ export function DashboardBreadcrumb() {
     "/dashboard": "Tổng quan",
     "/dashboard/library": "Thư viện",
     "/dashboard/quiz-generator": "Tạo đề thi",
-    "/dashboard/lesson-planner": "Giáo án",
+    "/dashboard/classroom": "Quản lý lớp học",
     "/dashboard/slide-creator": "Slide bài giảng",
     "/dashboard/analytics": "Thống kê",
     "/dashboard/settings": "Cài đặt",

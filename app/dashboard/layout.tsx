@@ -15,6 +15,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { Loading } from "@/components/ui/Loading";
 
 interface User {
   id: string;
@@ -53,11 +54,7 @@ export default function DashboardLayout({
   };
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    );
+    return <Loading message="Đang kiểm tra xác thực..." fullScreen />;
   }
 
   const navigation = [

@@ -3,38 +3,45 @@
 import Image from "next/image";
 
 interface LoadingProps {
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   message?: string;
   fullScreen?: boolean;
 }
 
 const sizeMap = {
-  sm: 40,
-  md: 60,
-  lg: 80,
-  xl: 120,
+  sm: 150,
+  md: 300,
+  lg: 450,
+  xl: 600,
+  "2xl": 750,
+  "3xl": 900,
 };
 
 export function Loading({
-  size = "md",
+  size = "3xl",
   message = "Đang xử lý...",
   fullScreen = false,
 }: LoadingProps) {
   const dimension = sizeMap[size];
 
   const content = (
-    <div className="flex flex-col items-center justify-center gap-4">
-      <div className="relative" style={{ width: dimension, height: dimension }}>
+    <div className="flex flex-col items-center justify-center gap-4 bg-transparent">
+      <div
+        className="relative bg-transparent"
+        style={{ width: dimension, height: dimension }}
+      >
         <Image
-          src="/loading/loading.svg"
+          src="/loading/loading.gif"
           alt="Loading"
-          fill
-          className="object-contain"
+          width={dimension}
+          height={dimension}
+          className="object-contain bg-transparent"
           priority
+          unoptimized
         />
       </div>
       {message && (
-        <p className="text-gray-600 text-sm font-medium animate-pulse">
+        <p className="text-gray-700 text-3xl font-bold animate-pulse mt-12">
           {message}
         </p>
       )}
@@ -43,8 +50,32 @@ export function Loading({
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
-        {content}
+      <div className="fixed inset-0 flex items-center justify-center z-[9999] bg-white/95">
+        <div className="flex flex-col items-center justify-center gap-4 bg-transparent w-screen h-screen">
+          <div
+            className="relative bg-transparent"
+            style={{
+              width: "80vmin",
+              height: "80vmin",
+              maxWidth: "1000px",
+              maxHeight: "1000px",
+            }}
+          >
+            <Image
+              src="/loading/loading_ai.gif"
+              alt="Loading"
+              fill
+              className="object-contain bg-transparent"
+              priority
+              unoptimized
+            />
+          </div>
+          {message && (
+            <p className="text-gray-700 text-4xl font-bold animate-pulse mt-12">
+              {message}
+            </p>
+          )}
+        </div>
       </div>
     );
   }
@@ -86,7 +117,7 @@ export function LoadingSkeleton({
       {Array.from({ length: rows }).map((_, i) => (
         <div
           key={i}
-          className="h-4 bg-gray-200 rounded animate-pulse"
+          className="h-4 rounded animate-pulse"
           style={{ width: `${100 - i * 10}%` }}
         />
       ))}

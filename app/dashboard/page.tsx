@@ -10,6 +10,7 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
+import { Loading } from "@/components/ui/Loading";
 import { analyticsMockService } from "@/services/mock";
 import type { AnalyticsData } from "@/types";
 
@@ -31,11 +32,7 @@ export default function DashboardPage() {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-500">Đang tải...</div>
-      </div>
-    );
+    return <Loading message="Đang tải dữ liệu..." fullScreen />;
   }
 
   if (!analytics) return null;

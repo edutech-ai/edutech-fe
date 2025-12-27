@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { LoadingSpinner } from "@/components/ui/Loading";
 import { authMockService } from "@/services/mock";
 
 export default function LoginPage() {
@@ -104,8 +105,14 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
+          {isLoading && (
+            <LoadingSpinner
+              size="sm"
+              className="border-white border-t-transparent"
+            />
+          )}
           {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
 

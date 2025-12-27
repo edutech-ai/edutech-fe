@@ -1,0 +1,6 @@
+# Skip hooks during CI/CD or deploy
+[ -n "$CI" ] && exit 0
+[ -n "$VERCEL" ] && exit 0
+[ -n "$NETLIFY" ] && exit 0
+
+bunx lint-staged

@@ -299,3 +299,6 @@ export const GRADES = [6, 7, 8, 9, 10, 11, 12] as const;
 
 export type Subject = (typeof SUBJECTS)[number];
 export type Grade = (typeof GRADES)[number];
+
+// ==================== CLASSROOM ====================
+export * from "./classroom";

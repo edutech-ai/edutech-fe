@@ -8,11 +8,11 @@ import { cn } from "@/lib/utils";
 import {
   Home,
   FileQuestion,
-  BookOpen,
   Library,
   BarChart3,
   Settings,
   X,
+  Users,
 } from "lucide-react";
 import { useSidebar } from "../ui/sidebar";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "../ui/sheet";
@@ -38,9 +38,9 @@ const teacherMenuItems: MenuItem[] = [
     icon: FileQuestion,
   },
   {
-    title: "Tạo giáo án",
-    url: "/dashboard/lesson-plan",
-    icon: BookOpen,
+    title: "Quản lý lớp học",
+    url: "/dashboard/classroom",
+    icon: Users,
   },
   {
     title: "Thư viện",

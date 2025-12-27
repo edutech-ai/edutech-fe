@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FolderCard } from "./FolderCard";
 import { FileCard } from "./FileCard";
+import type { FolderColor } from "@/components/atoms/FolderIcon";
 
 interface FileManagerProps {
   viewMode: "grid" | "list";
@@ -11,7 +12,13 @@ interface FileManagerProps {
 }
 
 // Mock data
-const mockFolders = [
+const mockFolders: Array<{
+  id: string;
+  name: string;
+  itemCount: number;
+  createdAt: string;
+  color: FolderColor;
+}> = [
   {
     id: "1",
     name: "Đề thi Toán",

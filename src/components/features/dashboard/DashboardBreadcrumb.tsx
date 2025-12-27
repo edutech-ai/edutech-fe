@@ -48,7 +48,11 @@ export function DashboardBreadcrumb() {
       return [];
     }
 
-    const items = [];
+    const items: Array<{
+      name: string;
+      path: string;
+      icon: React.ReactNode;
+    }> = [];
     let currentPath = "";
 
     paths.forEach((segment, index) => {

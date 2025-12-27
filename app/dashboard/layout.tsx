@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, User as UserIcon } from "lucide-react";
-import { Loading } from "@/components/ui/Loading";
+import { Loading } from "@/components/atoms/Loading";
 import { AppSidebar } from "@/components/sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import {
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { DashboardBreadcrumb } from "@/components/features/dashboard/DashboardBreadcrumb";
 
 interface User {
   id: string;
@@ -130,6 +131,7 @@ export default function DashboardLayout({
 
           {/* Main Content */}
           <main className="flex-1 overflow-auto bg-gray-50 p-6">
+            <DashboardBreadcrumb />
             {children}
           </main>
         </div>

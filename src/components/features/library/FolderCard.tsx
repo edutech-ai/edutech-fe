@@ -1,6 +1,14 @@
 "use client";
 
-import { Folder, MoreVertical } from "lucide-react";
+import { MoreVertical, Share2, Trash2, Edit3 } from "lucide-react";
+import { FolderIcon, type FolderColor } from "@/components/atoms/FolderIcon";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface FolderCardProps {
   folder: {
@@ -8,11 +16,14 @@ interface FolderCardProps {
     name: string;
     itemCount: number;
     createdAt: string;
-    color: string;
+    color: FolderColor;
   };
   isSelected: boolean;
   onClick: () => void;
   onSelect: () => void;
+  onRename?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onShare?: (id: string) => void;
 }
 
 export function FolderCard({
@@ -20,66 +31,108 @@ export function FolderCard({
   isSelected,
   onClick,
   onSelect,
+  onRename,
+  onDelete,
+  onShare,
 }: FolderCardProps) {
-  const colorClasses = {
-    blue: "bg-blue-100 text-blue-600 hover:bg-blue-200",
-    green: "bg-green-100 text-green-600 hover:bg-green-200",
-    purple: "bg-purple-100 text-purple-600 hover:bg-purple-200",
-    yellow: "bg-yellow-100 text-yellow-600 hover:bg-yellow-200",
-    red: "bg-red-100 text-red-600 hover:bg-red-200",
-  };
-
-  const colorClass =
-    colorClasses[folder.color as keyof typeof colorClasses] ||
-    colorClasses.blue;
-
   return (
     <div
-      className={`group relative rounded-lg border ${
+      className={`group relative rounded-lg border-2 ${
         isSelected
-          ? "border-blue-500 bg-blue-50"
-          : "border-gray-200 bg-white hover:border-gray-300"
-      } p-4 cursor-pointer transition-all duration-200 hover:shadow-md`}
+          ? "border-blue-500 bg-blue-50/50 ring-2 ring-blue-200"
+          : "border-transparent bg-white hover:bg-gray-50"
+      } p-3 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02]`}
       onClick={onClick}
     >
       {/* Selection Checkbox */}
-      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div
+        className={`absolute top-3 left-3 transition-opacity ${
+          isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+        }}
+      >
         <input
           type="checkbox"
           checked={isSelected}
           onChange={(e) => {
             e.stopPropagation();
-            onSelect();
           }}
-          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
         />
       </div>
 
       {/* More Menu */}
-      <button
-        className="absolute top-2 right-2 p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-gray-100 transition-opacity"
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-      >
-        <MoreVertical className="w-4 h-4 text-gray-600" />
-      </button>
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="p-1.5 rounded-md hover:bg-gray-200/80 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              <MoreVertical className="w-4 h-4 text-gray-600" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {onRename && (
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRename(folder.id);
+                }}
+              >
+                <Edit3 className="w-4 h-4 mr-2" />
+                Đổi tên
+              </DropdownMenuItem>
+            )}
+            {onShare && (
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShare(folder.id);
+                }}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Chia sẻ
+              </DropdownMenuItem>
+            )}
+            {(onRename || onShare) && onDelete && <DropdownMenuSeparator />}
+            {onDelete && (
+              <DropdownMenuItem
+                className="text-red-600 focus:text-red-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(folder.id);
+                }}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Xóa
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-      {/* Folder Icon */}
-      <div
-        className={`w-16 h-16 mx-auto mb-3 rounded-lg flex items-center justify-center ${colorClass} transition-colors`}
-      >
-        <Folder className="w-8 h-8" />
+      {/* Folder Icon - Google Drive / Windows style */}
+      <div className="flex justify-center mb-2 mt-2">
+        <FolderIcon color={folder.color} size={56} />
       </div>
 
       {/* Folder Name */}
-      <h3 className="text-sm font-medium text-gray-900 text-center truncate mb-1">
+      <h3
+        className="text-sm font-medium text-gray-900 text-center truncate px-2 mb-1"
+        title={folder.name}
+      >
         {folder.name}
       </h3>
 
       {/* Item Count */}
       <p className="text-xs text-gray-500 text-center">
-        {folder.itemCount} mục
+        {folder.itemCount} {folder.itemCount === 1 ? "mục" : "mục"}
       </p>
     </div>
   );

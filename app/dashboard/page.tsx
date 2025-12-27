@@ -10,7 +10,7 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-import { Loading } from "@/components/ui/Loading";
+import { Loading } from "@/components/atoms/Loading";
 import { analyticsMockService } from "@/services/mock";
 import type { AnalyticsData } from "@/types";
 

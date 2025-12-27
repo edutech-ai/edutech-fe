@@ -34,6 +34,11 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+
+  --color-file-blue: hsl(206 100% 50%);
+  --color-file-green: hsl(142 73% 48%);
+  --color-file-yellow: hsl(48 100% 67%);
+  --color-file-red: hsl(0 84.2% 60.2%);
 }
 
 body {

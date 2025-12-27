@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { LoadingSpinner } from "@/components/ui/Loading";
+import { LoadingSpinner } from "@/components/atoms/Loading";
 import { authMockService } from "@/services/mock";
 
 export default function LoginPage() {

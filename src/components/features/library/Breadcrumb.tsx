@@ -1,34 +1,53 @@
 "use client";
 
-import { ChevronRight, Home } from "lucide-react";
+import { ChevronRight, Home, Folder } from "lucide-react";
 
-interface BreadcrumbProps {
-  path: string[];
-  onNavigate: (path: string[]) => void;
+export interface BreadcrumbItem {
+  id: string;
+  name: string;
+  type?: "root" | "folder";
 }
 
-export function Breadcrumb({ path, onNavigate }: BreadcrumbProps) {
-  return (
-    <div className="flex items-center gap-2 text-sm">
-      <button
-        className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
-        onClick={() => onNavigate([path[0]])}
-      >
-        <Home className="w-4 h-4 text-blue-600" />
-        <span className="font-medium text-gray-700">{path[0]}</span>
-      </button>
+interface BreadcrumbProps {
+  items: BreadcrumbItem[];
+  onNavigate: (itemId: string) => void;
+}
 
-      {path.slice(1).map((folder, index) => (
-        <div key={index} className="flex items-center gap-2">
-          <ChevronRight className="w-4 h-4 text-gray-400" />
-          <button
-            className="px-2 py-1 rounded hover:bg-gray-100 transition-colors font-medium text-gray-700"
-            onClick={() => onNavigate(path.slice(0, index + 2))}
-          >
-            {folder}
-          </button>
-        </div>
-      ))}
-    </div>
+export function Breadcrumb({ items, onNavigate }: BreadcrumbProps) {
+  if (items.length === 0) return null;
+
+  return (
+    <nav className="flex items-center gap-1 text-sm bg-white px-4 py-2.5 rounded-lg border border-gray-200">
+      {items.map((item, index) => {
+        const isLast = index === items.length - 1;
+        const isRoot = index === 0 || item.type === "root";
+
+        return (
+          <div key={item.id} className="flex items-center gap-1">
+            {index > 0 && (
+              <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            )}
+            <button
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${
+                isLast
+                  ? "text-gray-900 font-medium bg-gray-100"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              }`}
+              onClick={() => onNavigate(item.id)}
+              disabled={isLast}
+            >
+              {isRoot ? (
+                <Home className="w-4 h-4" />
+              ) : (
+                <Folder className="w-4 h-4" />
+              )}
+              <span className="max-w-[150px] truncate" title={item.name}>
+                {item.name}
+              </span>
+            </button>
+          </div>
+        );
+      })}
+    </nav>
   );
 }

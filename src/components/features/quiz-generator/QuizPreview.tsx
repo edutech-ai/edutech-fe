@@ -3,7 +3,7 @@
 import { Eye, Download, Save, Edit, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loading } from "@/components/ui/Loading";
+import { Loading } from "@/components/atoms/Loading";
 import type { Question } from "@/types";
 import { QuestionType } from "@/types";
 

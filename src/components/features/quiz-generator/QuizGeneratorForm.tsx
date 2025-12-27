@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Settings2, FileQuestion } from "lucide-react";
+import { Settings2, FileQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,8 +34,8 @@ export function QuizGeneratorForm({
   setIsGenerating,
 }: QuizGeneratorFormProps) {
   const [formData, setFormData] = useState<QuizGenerateRequest>({
-    subject: "Toán",
-    grade: 9,
+    subject: "Tiếng Anh",
+    grade: 8,
     topic: "",
     numQuestions: 10,
     difficulty: Difficulty.MEDIUM,
@@ -77,14 +77,9 @@ export function QuizGeneratorForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="Tiếng Anh">Tiếng Anh</SelectItem>
+                <SelectItem value="Ngữ văn">Ngữ văn</SelectItem>
                 <SelectItem value="Toán">Toán</SelectItem>
-                <SelectItem value="Văn">Ngữ Văn</SelectItem>
-                <SelectItem value="Anh">Tiếng Anh</SelectItem>
-                <SelectItem value="Lý">Vật Lý</SelectItem>
-                <SelectItem value="Hóa">Hóa Học</SelectItem>
-                <SelectItem value="Sinh">Sinh Học</SelectItem>
-                <SelectItem value="Sử">Lịch Sử</SelectItem>
-                <SelectItem value="Địa">Địa Lý</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -101,7 +96,7 @@ export function QuizGeneratorForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {[6, 7, 8, 9, 10, 11, 12].map((grade) => (
+                {[6, 7, 8, 9].map((grade) => (
                   <SelectItem key={grade} value={grade.toString()}>
                     Lớp {grade}
                   </SelectItem>
@@ -220,10 +215,7 @@ export function QuizGeneratorForm({
               Đang tạo câu hỏi...
             </>
           ) : (
-            <>
-              <Sparkles className="w-5 h-5 mr-2" />
-              Tạo đề thi với AI
-            </>
+            <>Tạo đề thi với AI</>
           )}
         </Button>
 

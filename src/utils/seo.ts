@@ -35,10 +35,10 @@ export function createExcerpt(
   const lastSpaceIndex = truncated.lastIndexOf(" ");
 
   if (lastSpaceIndex > 0) {
-    return truncated.substring(0, lastSpaceIndex) + "...";
+    return `${truncated.substring(0, lastSpaceIndex)}...`;
   }
 
-  return truncated + "...";
+  return `${truncated}...`;
 }
 
 /**

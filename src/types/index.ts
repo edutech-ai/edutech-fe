@@ -123,6 +123,7 @@ export interface QuizGenerateRequest {
   numQuestions: number;
   questionTypes: QuestionType[];
   difficulty: Difficulty;
+  learningObjectives?: string;
   language?: "vi" | "en";
 }
 

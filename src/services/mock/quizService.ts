@@ -1,12 +1,6 @@
-import {
-  Quiz,
-  Question,
-  QuizGenerateRequest,
-  QuestionType,
-  Difficulty,
-  QuizStatus,
-} from "@/types";
-import { mockQuizzes } from "@/mock-data";
+import type { Quiz, Question, QuizGenerateRequest } from "@/types";
+import { QuestionType, Difficulty, QuizStatus } from "@/types";
+import { mockQuizzes } from "@/mock";
 import { mockApiResponse, delay } from "./mockApi";
 
 // Mock AI generation

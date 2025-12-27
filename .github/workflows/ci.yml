@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev, chore/*, feat/*, fix/*]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  quality-check:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check code formatting
+        run: bun run format:check
+
+      - name: Run ESLint
+        run: bun run lint
+
+      - name: Type check
+        run: bun run build --dry-run || tsc --noEmit
+
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: quality-check
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build project
+        run: bun run build
+        env:
+          CI: true
+          SKIP_ENV_VALIDATION: true
+
+      - name: Check build output
+        run: |
+          if [ ! -d ".next" ]; then
+            echo "Build failed - .next directory not found"
+            exit 1
+          fi
+          echo "Build successful!"

@@ -62,7 +62,7 @@ export default function AuthLayout({
                 className="object-contain"
               />
             </div>
-            <div className="w-px h-72 bg-white opacity-40"></div>
+            <div className="w-px h-72 bg-white opacity-40" />
           </div>
           <div className="flex flex-col justify-center items-start gap-7">
             <h1 className="text-6xl leading-tight font-bold">

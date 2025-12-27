@@ -1,5 +1,5 @@
-import { User, AuthResponse, UserRole } from "@/types";
-import { mockTeacher } from "@/mock-data";
+import type { User, AuthResponse, UserRole } from "@/types";
+import { mockTeacher } from "@/mock";
 import { mockApiResponse, mockApiError } from "./mockApi";
 
 interface LoginCredentials {
@@ -27,8 +27,8 @@ export const authMockService = {
     // Simulate successful login
     return mockApiResponse<AuthResponse>({
       user: mockTeacher,
-      token: "mock-jwt-token-" + Date.now(),
-      refreshToken: "mock-refresh-token-" + Date.now(),
+      token: `mock-jwt-token-${Date.now()}`,
+      refreshToken: `mock-refresh-token-${Date.now()}`,
     });
   },
 
@@ -51,8 +51,8 @@ export const authMockService = {
 
     return mockApiResponse<AuthResponse>({
       user: newUser,
-      token: "mock-jwt-token-" + Date.now(),
-      refreshToken: "mock-refresh-token-" + Date.now(),
+      token: `mock-jwt-token-${Date.now()}`,
+      refreshToken: `mock-refresh-token-${Date.now()}`,
     });
   },
 

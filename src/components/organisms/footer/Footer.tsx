@@ -2,25 +2,31 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Github, Linkedin, Twitter } from "lucide-react";
+import { Mail, Linkedin, Twitter, Facebook } from "lucide-react";
 
 const footerLinks = {
   product: [
-    { name: "Công cụ", href: "#features" },
+    { name: "Tính năng", href: "#features" },
+    { name: "Quy trình", href: "#process" },
     { name: "Bảng giá", href: "#pricing" },
-    { name: "Về EduTech AI", href: "#about" },
+    { name: "Đối tượng", href: "#target" },
+  ],
+  company: [
+    { name: "Về chúng tôi", href: "#about-us" },
     { name: "Liên hệ", href: "#contact" },
+    { name: "Blog", href: "/blog" },
+    { name: "Tuyển dụng", href: "/careers" },
   ],
   legal: [
     { name: "Điều khoản sử dụng", href: "/terms" },
     { name: "Chính sách bảo mật", href: "/privacy" },
-    { name: "Hỗ trợ", href: "/support" },
+    { name: "Cookie Policy", href: "/cookies" },
   ],
   social: [
-    { name: "Email", icon: Mail, href: "mailto:edutechteam.work@gmail.com" },
-    { name: "GitHub", icon: Github, href: "https://github.com/edutech-ai" },
-    { name: "LinkedIn", icon: Linkedin, href: "#" },
+    { name: "Facebook", icon: Facebook, href: "#" },
     { name: "Twitter", icon: Twitter, href: "#" },
+    { name: "LinkedIn", icon: Linkedin, href: "#" },
+    { name: "Email", icon: Mail, href: "mailto:contact@edutech.ai" },
   ],
 };
 
@@ -28,12 +34,20 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gradient-to-b from-gray-900 to-black text-white">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-          <div className="col-span-1 md:col-span-2">
-            <Link href="/" className="flex items-center gap-3 mb-6">
-              <div className="relative w-12 h-12">
+    <footer className="bg-white border-t border-gray-100 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03]">
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')]" />
+      </div>
+
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-blue-50/50 to-transparent rounded-full blur-3xl -z-10" />
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-16">
+          {/* Brand Column */}
+          <div className="lg:col-span-4 space-y-6">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="relative w-10 h-10">
                 <Image
                   src="/images/logo/logo.svg"
                   alt="EduTech Logo"
@@ -41,14 +55,19 @@ export function Footer() {
                   className="object-contain"
                 />
               </div>
-              <div>
-                <h3 className="text-2xl font-bold">EduTech AI</h3>
-                <p className="text-sm text-gray-400">Giáo dục thông minh</p>
+              <div className="relative h-8 w-32">
+                <Image
+                  src="/images/logo/logo-text.svg"
+                  alt="EduTech"
+                  fill
+                  className="object-contain object-left"
+                />
               </div>
             </Link>
-            <p className="text-gray-400 max-w-md mb-6 leading-relaxed">
-              Hệ thống AI hỗ trợ giảng dạy toàn diện, giúp giáo viên tối ưu hoá
-              công việc và nâng cao chất lượng giáo dục.
+            <p className="text-gray-600 leading-relaxed max-w-sm">
+              Nền tảng trợ lý AI toàn diện cho giáo dục. Tự động hóa soạn bài,
+              chấm điểm và quản lý lớp học, giúp giáo viên tiết kiệm thời gian
+              và nâng cao hiệu quả giảng dạy.
             </p>
             <div className="flex gap-3">
               {footerLinks.social.map((social) => {
@@ -57,7 +76,7 @@ export function Footer() {
                   <a
                     key={social.name}
                     href={social.href}
-                    className="w-11 h-11 bg-gray-800 hover:bg-blue-600 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-110"
+                    className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md"
                     aria-label={social.name}
                   >
                     <Icon className="w-5 h-5" />
@@ -67,14 +86,15 @@ export function Footer() {
             </div>
           </div>
 
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Sản phẩm</h4>
-            <ul className="space-y-2">
+          {/* Links Columns */}
+          <div className="lg:col-span-2 md:col-span-1">
+            <h4 className="font-bold text-gray-900 mb-6">Sản phẩm</h4>
+            <ul className="space-y-4">
               {footerLinks.product.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-600 hover:text-blue-600 transition-colors font-medium"
                   >
                     {link.name}
                   </Link>
@@ -83,14 +103,14 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Pháp lý</h4>
-            <ul className="space-y-2">
-              {footerLinks.legal.map((link) => (
+          <div className="lg:col-span-2 md:col-span-1">
+            <h4 className="font-bold text-gray-900 mb-6">Công ty</h4>
+            <ul className="space-y-4">
+              {footerLinks.company.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-600 hover:text-blue-600 transition-colors font-medium"
                   >
                     {link.name}
                   </Link>
@@ -98,16 +118,49 @@ export function Footer() {
               ))}
             </ul>
           </div>
+
+          <div className="lg:col-span-4 md:col-span-2 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+            <h4 className="font-bold text-gray-900 mb-4">Đăng ký nhận tin</h4>
+            <p className="text-gray-600 mb-4 text-sm">
+              Nhận thông tin cập nhật mới nhất về tính năng và ưu đãi từ EduTech
+              AI.
+            </p>
+            <form className="space-y-3" onSubmit={(e) => e.preventDefault()}>
+              <div className="relative">
+                <input
+                  type="email"
+                  placeholder="Email của bạn"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-2 bottom-2 px-4 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  Đăng ký
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">
+                Bằng cách đăng ký, bạn đồng ý với Chính sách bảo mật của chúng
+                tôi.
+              </p>
+            </form>
+          </div>
         </div>
 
-        <div className="border-t border-gray-800 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-gray-400 text-sm">
-              © {currentYear} EduTech AI. All rights reserved.
-            </p>
-            <p className="text-gray-400 text-sm">
-              Made with ❤️ by the EduTech Development Team
-            </p>
+        <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-gray-500 text-sm">
+            © {currentYear} EduTech AI. All rights reserved.
+          </p>
+          <div className="flex gap-6">
+            {footerLinks.legal.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                className="text-sm text-gray-500 hover:text-blue-600 transition-colors"
+              >
+                {link.name}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

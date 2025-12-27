@@ -46,13 +46,16 @@
 
 - **Primary**: Secondary school teachers (Grades 6-12, MVP focus on Math, Literature and English)
 - **Secondary**: School administrators
-- **Tertiary**: Education Center 
+- **Tertiary**: Education Center
+
 ---
 
 ## Core Features
 
 ### 1. AI Quiz Generation Module
+
 Automatically create customized quizzes based on:
+
 - Lesson topic and learning objectives
 - Number of questions (configurable)
 - Question types (MCQ, Short Answer, True/False)
@@ -60,14 +63,18 @@ Automatically create customized quizzes based on:
 - AI-powered question quality validation
 
 ### 2. Auto-Grading Module
+
 Intelligent answer evaluation system:
+
 - Upload student answers (bulk or individual)
 - Tech based powered grading with explanations
 - Personalized improvement suggestions
 - Detailed feedback for teachers
 
 ### 3. Quiz Management System
+
 Comprehensive quiz organization:
+
 - Save and categorize quiz templates
 - CRUD operations (Create, Read, Update, Delete)
 - Search and filter by topic/difficulty
@@ -75,7 +82,9 @@ Comprehensive quiz organization:
 - Version control for quiz iterations
 
 ### 4. Analytics Dashboard
+
 Data-driven insights for teachers:
+
 - Question difficulty distribution
 - Student accuracy rates by topic
 - Performance trends over time
@@ -83,7 +92,9 @@ Data-driven insights for teachers:
 - AI-powered teaching recommendations
 
 ### 5. System Settings
+
 Flexible configuration:
+
 - AI model parameters (temperature, max tokens)
 - Grading thresholds
 - Notification preferences
@@ -95,34 +106,38 @@ Flexible configuration:
 ## Tech Stack
 
 ### **Frontend**
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Next.js** | 16.0.10 | React framework with App Router |
-| **React** | 19.2.1 | UI library |
-| **TypeScript** | 5.0 | Type-safe JavaScript |
-| **TailwindCSS** | 4.1.7 | Utility-first CSS framework |
-| **Zustand** | 5.0.6 | Lightweight state management |
-| **TanStack Query** | 5.80.6 | Server state management |
-| **Radix UI** | Latest | Headless UI components |
+
+| Technology         | Version | Purpose                         |
+| ------------------ | ------- | ------------------------------- |
+| **Next.js**        | 16.0.10 | React framework with App Router |
+| **React**          | 19.2.1  | UI library                      |
+| **TypeScript**     | 5.0     | Type-safe JavaScript            |
+| **TailwindCSS**    | 4.1.7   | Utility-first CSS framework     |
+| **Zustand**        | 5.0.6   | Lightweight state management    |
+| **TanStack Query** | 5.80.6  | Server state management         |
+| **Radix UI**       | Latest  | Headless UI components          |
 
 ### **Backend Integration**
-| Technology | Purpose |
-|------------|---------|
-| **Axios** | HTTP client for API calls |
-| **Prisma** | Type-safe ORM (PostgreSQL) |
-| **JWT** | Token-based authentication |
-| **WebSocket** | Real-time communication |
+
+| Technology    | Purpose                    |
+| ------------- | -------------------------- |
+| **Axios**     | HTTP client for API calls  |
+| **Prisma**    | Type-safe ORM (PostgreSQL) |
+| **JWT**       | Token-based authentication |
+| **WebSocket** | Real-time communication    |
 
 ### **AI & Document Processing**
-| Library | Purpose |
-|---------|---------|
-| **TipTap** | Rich text editor |
-| **docx** | Word document generation |
-| **pptxgenjs** | PowerPoint generation |
-| **pdfjs-dist** | PDF rendering |
-| **xlsx** | Excel file handling |
+
+| Library        | Purpose                  |
+| -------------- | ------------------------ |
+| **TipTap**     | Rich text editor         |
+| **docx**       | Word document generation |
+| **pptxgenjs**  | PowerPoint generation    |
+| **pdfjs-dist** | PDF rendering            |
+| **xlsx**       | Excel file handling      |
 
 ### **Development Tools**
+
 - **Bun**: Fast JavaScript runtime & package manager
 - **ESLint**: Code linting
 - **Prettier**: Code formatting (optional)
@@ -136,6 +151,7 @@ Flexible configuration:
 ### Prerequisites
 
 Ensure you have the following installed:
+
 - **Node.js** 18+ or **Bun** latest
 - **PostgreSQL** 14+ (or access to database server)
 - **Git** for version control
@@ -150,11 +166,13 @@ cd edutech-client
 ### 2. Install Dependencies
 
 **Using Bun (Recommended):**
+
 ```bash
 bun install
 ```
 
 **Using npm/yarn/pnpm:**
+
 ```bash
 npm install
 # or
@@ -166,6 +184,7 @@ pnpm install
 ### 3. Environment Configuration
 
 Create your environment file:
+
 ```bash
 cp .env.example .env
 ```
@@ -426,6 +445,7 @@ server {
 ```
 
 Enable site:
+
 ```bash
 sudo ln -s /etc/nginx/sites-available/edutech /etc/nginx/sites-enabled/
 sudo nginx -t
@@ -493,36 +513,40 @@ We welcome contributions! Please follow these steps:
 
 ## 👥 Team
 
-| Role | Name | Responsibilities |
-|------|------|-----------------|
-| **Project Manager** | [Name] | Project planning, stakeholder communication |
-| **Business Analyst** | [Name] | Requirements gathering, UAT |
-| **Developer** | [Name] | Full-stack development |
-| **QA Engineer** | [Name] | Testing, quality assurance |
+| Role                 | Name   | Responsibilities                            |
+| -------------------- | ------ | ------------------------------------------- |
+| **Project Manager**  | [Name] | Project planning, stakeholder communication |
+| **Business Analyst** | [Name] | Requirements gathering, UAT                 |
+| **Developer**        | [Name] | Full-stack development                      |
+| **QA Engineer**      | [Name] | Testing, quality assurance                  |
 
 ---
 
 ## Project Roadmap
 
 ### Phase 1: Foundation (Week 1-2)
+
 - [x] Project setup
 - [x] Repository structure
 - [x] Database design
 - [x] Authentication system
 
 ### Phase 2: AI Core (Week 3-5)
+
 - [x] Quiz generation API integration
 - [x] Auto-grading system
 - [x] OpenAI integration
 - [ ] Local testing & optimization
 
 ### 🔄 Phase 3: UI & Dashboard (Week 6-8)
+
 - [ ] Quiz builder interface
 - [ ] Grading dashboard
 - [ ] Analytics charts
 - [ ] Quiz library management
 
 ### 🔜 Phase 4: Testing & Deployment (Week 9-10)
+
 - [ ] System testing
 - [ ] UAT with pilot teachers
 - [ ] VPS deployment
@@ -530,6 +554,7 @@ We welcome contributions! Please follow these steps:
 - [ ] Performance optimization
 
 ### 🚀 Future Enhancements
+
 - Student portal
 - Class management
 - Real-time quiz hosting

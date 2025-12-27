@@ -46,10 +46,10 @@ export const mockUsers = [
     updatedAt: "2024-12-08T00:00:00Z",
     token: "mock-jwt-token-admin",
     refreshToken: "mock-refresh-token-admin",
-  }
+  },
 ];
 
-export const mockCurrentUser = mockUsers[0]; 
+export const mockCurrentUser = mockUsers[0];
 
 export const findUserByEmail = (email: string) =>
   mockUsers.find((user) => user.email === email);

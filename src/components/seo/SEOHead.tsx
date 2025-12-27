@@ -31,13 +31,13 @@ export function generateSEOMetadata({
   noIndex = false,
   noFollow = false,
 }: SEOProps): Metadata {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "edutechai.vn";
-    const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
-    const ogImage = image
-        ? `${baseUrl}${image}`
-        : `${baseUrl}/images/og-image.png`;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "edutechai.vn";
+  const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
+  const ogImage = image
+    ? `${baseUrl}${image}`
+    : `${baseUrl}/images/og-image.png`;
 
-    const allKeywords = [
+  const allKeywords = [
     ...keywords,
     "edutech",
     "đề thi",

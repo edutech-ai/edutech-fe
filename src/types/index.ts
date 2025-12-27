@@ -1,0 +1,300 @@
+// ==================== ENUMS ====================
+export enum UserRole {
+  TEACHER = "TEACHER",
+  STUDENT = "STUDENT",
+  ADMIN = "ADMIN",
+  STAFF = "STAFF",
+}
+
+export enum QuestionType {
+  MULTIPLE_CHOICE = "MULTIPLE_CHOICE",
+  ESSAY = "ESSAY",
+  TRUE_FALSE = "TRUE_FALSE",
+  SHORT_ANSWER = "SHORT_ANSWER",
+}
+
+export enum Difficulty {
+  EASY = "EASY",
+  MEDIUM = "MEDIUM",
+  HARD = "HARD",
+  MIXED = "MIXED",
+}
+
+export enum QuizStatus {
+  DRAFT = "DRAFT",
+  PUBLISHED = "PUBLISHED",
+  ARCHIVED = "ARCHIVED",
+}
+
+export enum LessonPlanStatus {
+  DRAFT = "DRAFT",
+  PUBLISHED = "PUBLISHED",
+}
+
+export enum ActivityType {
+  WARMUP = "WARMUP",
+  PRESENTATION = "PRESENTATION",
+  PRACTICE = "PRACTICE",
+  PRODUCTION = "PRODUCTION",
+  ASSESSMENT = "ASSESSMENT",
+}
+
+export enum ExamInstanceStatus {
+  SCHEDULED = "SCHEDULED",
+  ONGOING = "ONGOING",
+  COMPLETED = "COMPLETED",
+}
+
+export enum ActivityLogType {
+  QUIZ_CREATED = "QUIZ_CREATED",
+  LESSON_PLAN_CREATED = "LESSON_PLAN_CREATED",
+  EXAM_COMPLETED = "EXAM_COMPLETED",
+  STUDENT_GRADED = "STUDENT_GRADED",
+}
+
+export enum LibraryItemType {
+  QUIZ = "QUIZ",
+  LESSON_PLAN = "LESSON_PLAN",
+  DOCUMENT = "DOCUMENT",
+  SLIDE = "SLIDE",
+}
+
+export enum Framework {
+  BLOOM = "BLOOM",
+  VN_STANDARD = "VN_STANDARD",
+  CUSTOM = "CUSTOM",
+}
+
+// ==================== USER & AUTH ====================
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  avatar?: string;
+  phone?: string;
+  school?: string;
+  subject?: string;
+  grade?: number;
+  createdAt: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+  refreshToken: string;
+}
+
+// ==================== QUIZ/EXAM ====================
+export interface Question {
+  id: string;
+  type: QuestionType;
+  content: string;
+  options?: string[]; // For multiple choice
+  correctAnswer?: string | number; // Index or text
+  explanation?: string;
+  points: number;
+  difficulty: Difficulty;
+  tags?: string[];
+  imageUrl?: string;
+}
+
+export interface Quiz {
+  id: string;
+  title: string;
+  description?: string;
+  subject: string;
+  grade: number;
+  totalQuestions: number;
+  totalPoints: number;
+  duration?: number; // minutes
+  questions: Question[];
+  status: QuizStatus;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  tags?: string[];
+}
+
+export interface QuizGenerateRequest {
+  topic: string;
+  subject: string;
+  grade: number;
+  numQuestions: number;
+  questionTypes: QuestionType[];
+  difficulty: Difficulty;
+  language?: "vi" | "en";
+}
+
+// ==================== LESSON PLAN ====================
+export interface LessonPlan {
+  id: string;
+  title: string;
+  subject: string;
+  grade: number;
+  duration: number; // minutes
+  objectives: string[];
+  activities: LessonActivity[];
+  materials: string[];
+  assessment: string;
+  status: LessonPlanStatus;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LessonActivity {
+  id: string;
+  title: string;
+  duration: number;
+  description: string;
+  type: ActivityType;
+}
+
+export interface LessonPlanGenerateRequest {
+  topic: string;
+  subject: string;
+  grade: number;
+  duration: number;
+  objectives?: string[];
+  framework?: Framework;
+}
+
+// ==================== EXAM MATRIX ====================
+export interface ExamMatrix {
+  id: string;
+  title: string;
+  subject: string;
+  grade: number;
+  chapters: ChapterDistribution[];
+  totalQuestions: number;
+  difficultyDistribution: {
+    easy: number;
+    medium: number;
+    hard: number;
+  };
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface ChapterDistribution {
+  chapterId: string;
+  chapterName: string;
+  numQuestions: number;
+  difficulty: {
+    easy: number;
+    medium: number;
+    hard: number;
+  };
+}
+
+// ==================== STUDENT EXAM ====================
+export interface ExamInstance {
+  id: string;
+  quizId: string;
+  code: string; // Exam access code
+  startTime: string;
+  endTime: string;
+  duration: number;
+  status: ExamInstanceStatus;
+  studentResults?: StudentResult[];
+}
+
+export interface StudentResult {
+  id: string;
+  studentId: string;
+  studentName: string;
+  examInstanceId: string;
+  answers: StudentAnswer[];
+  score: number;
+  totalPoints: number;
+  percentage: number;
+  submittedAt: string;
+  gradedAt?: string;
+}
+
+export interface StudentAnswer {
+  questionId: string;
+  answer: string | number;
+  isCorrect?: boolean;
+  points?: number;
+}
+
+// ==================== ANALYTICS ====================
+export interface AnalyticsData {
+  totalQuizzes: number;
+  totalLessonPlans: number;
+  totalStudents: number;
+  averageScore: number;
+  recentActivities: Activity[];
+  performanceByTopic: TopicPerformance[];
+  difficultyDistribution: {
+    easy: number;
+    medium: number;
+    hard: number;
+  };
+}
+
+export interface Activity {
+  id: string;
+  type: ActivityLogType;
+  title: string;
+  description: string;
+  timestamp: string;
+}
+
+export interface TopicPerformance {
+  topic: string;
+  totalQuestions: number;
+  correctAnswers: number;
+  accuracy: number;
+}
+
+// ==================== LIBRARY ====================
+export interface LibraryItem {
+  id: string;
+  type: LibraryItemType;
+  title: string;
+  subject: string;
+  grade: number;
+  thumbnail?: string;
+  fileUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+  tags?: string[];
+}
+
+// ==================== COMMON ====================
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  error?: string;
+}
+
+// ==================== SUBJECTS & GRADES ====================
+export const SUBJECTS = [
+  "Toán",
+  "Ngữ Văn",
+  "Tiếng Anh",
+  "Vật Lý",
+  "Hóa Học",
+  "Sinh Học",
+  "Lịch Sử",
+  "Địa Lý",
+  "GDCD",
+  "Tin Học",
+] as const;
+
+export const GRADES = [6, 7, 8, 9, 10, 11, 12] as const;
+
+export type Subject = (typeof SUBJECTS)[number];
+export type Grade = (typeof GRADES)[number];

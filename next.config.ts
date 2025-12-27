@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*",
+        source: "/(.*)",
         headers: [
           {
             key: "X-Content-Type-Options",
@@ -40,7 +40,10 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline';",
+            value:
+              process.env.NODE_ENV === "development"
+                ? "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:;"
+                : "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
           },
         ],
       },
@@ -77,7 +80,7 @@ const nextConfig: NextConfig = {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
           },
-        ],  
+        ],
       },
       {
         source: "/favicon.ico",
@@ -87,8 +90,8 @@ const nextConfig: NextConfig = {
             value: "public, max-age=604800, immutable",
           },
         ],
-      }
-    ]
+      },
+    ];
   },
 
   reactStrictMode: true,
@@ -98,7 +101,8 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  webpack: (config, {isServer}) => {
+  turbopack: {},
+  webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -116,12 +120,10 @@ const nextConfig: NextConfig = {
         net: false,
         module: false,
       };
-
     }
 
     return config;
   },
-
 };
 
 export default nextConfig;

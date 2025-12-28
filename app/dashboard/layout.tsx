@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { DashboardBreadcrumb } from "@/components/features/dashboard/DashboardBreadcrumb";
+import { Toaster } from "@/components/ui/sonner";
 
 interface User {
   id: string;
@@ -41,10 +42,10 @@ export default function DashboardLayout({
       router.push("/login");
     } else if (!user) {
       // Only parse and set user if not already loaded
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(JSON.parse(userData));
     }
-  }, [router, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -136,6 +137,7 @@ export default function DashboardLayout({
           </main>
         </div>
       </div>
+      <Toaster />
     </SidebarProvider>
   );
 }

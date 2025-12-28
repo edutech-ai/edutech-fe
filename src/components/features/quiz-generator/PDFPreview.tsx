@@ -1,9 +1,10 @@
 "use client";
 
-import { Download, ExternalLink, FileText } from "lucide-react";
+import { Download, ExternalLink, FileText, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { previewExamPDF, downloadExamPDF } from "@/lib/pdfGenerator";
+import { downloadExamPDF, generateExamPDF } from "@/lib/pdfGeneratorNew";
 import { Card } from "@/components/ui/card";
+import { useState } from "react";
 
 interface ExamInfo {
   name: string;
@@ -36,22 +37,31 @@ export function PDFPreview({
   open,
   onClose,
 }: PDFPreviewProps) {
-  const handleOpenInNewTab = () => {
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleOpenInNewTab = async (includeAnswers = false) => {
     try {
-      const url = previewExamPDF(examInfo, questions);
+      setIsGenerating(true);
+      const blob = await generateExamPDF(examInfo, questions, includeAnswers);
+      const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
       onClose();
     } catch (error) {
       console.error("Error opening PDF:", error);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async (includeAnswers = false) => {
     try {
-      downloadExamPDF(examInfo, questions, false);
+      setIsGenerating(true);
+      await downloadExamPDF(examInfo, questions, includeAnswers);
       onClose();
     } catch (error) {
       console.error("Error downloading PDF:", error);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -66,10 +76,12 @@ export function PDFPreview({
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Xem trước đề thi
+            Xuất đề thi PDF
           </h2>
 
-          <p className="text-gray-600 mb-6">Chọn cách xem đề thi PDF của bạn</p>
+          <p className="text-gray-600 mb-6">
+            Chọn phiên bản muốn xuất (cùng 1 đề thi)
+          </p>
 
           <div className="space-y-3 mb-6">
             <div className="p-3 bg-gray-50 rounded-lg text-left">
@@ -83,21 +95,58 @@ export function PDFPreview({
             </div>
           </div>
 
-          <div className="space-y-3">
-            <Button onClick={handleOpenInNewTab} className="w-full" size="lg">
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Mở trong tab mới
-            </Button>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Đề thi cho học sinh
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleOpenInNewTab(false)}
+                  className="flex-1"
+                  variant="outline"
+                  disabled={isGenerating}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  {isGenerating ? "Đang tạo..." : "Xem"}
+                </Button>
+                <Button
+                  onClick={() => handleDownload(false)}
+                  className="flex-1"
+                  variant="outline"
+                  disabled={isGenerating}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  {isGenerating ? "Đang tạo..." : "Tải về"}
+                </Button>
+              </div>
+            </div>
 
-            <Button
-              onClick={handleDownload}
-              variant="outline"
-              className="w-full"
-              size="lg"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Tải xuống PDF
-            </Button>
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Đáp án (dành cho giáo viên)
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleOpenInNewTab(true)}
+                  className="flex-1"
+                  variant="outline"
+                  disabled={isGenerating}
+                >
+                  <Key className="w-4 h-4 mr-2" />
+                  {isGenerating ? "Đang tạo..." : "Xem"}
+                </Button>
+                <Button
+                  onClick={() => handleDownload(true)}
+                  className="flex-1"
+                  variant="outline"
+                  disabled={isGenerating}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  {isGenerating ? "Đang tạo..." : "Tải về"}
+                </Button>
+              </div>
+            </div>
 
             <Button onClick={onClose} variant="ghost" className="w-full">
               Hủy

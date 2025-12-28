@@ -15,6 +15,7 @@ interface Question {
   content: string;
   type: string;
   answers?: string[];
+  correctAnswer?: number | string;
   points: number;
 }
 
@@ -154,7 +155,18 @@ export function generateExamPDF(
       question.answers.forEach((answer, ansIndex) => {
         checkNewPage(6);
         const letter = String.fromCharCode(65 + ansIndex); // A, B, C, D
-        const answerLines = wrapText(`${letter}. ${answer}`, contentWidth - 10);
+        const isCorrect = includeAnswers && ansIndex === question.correctAnswer;
+
+        // Set color for correct answer
+        if (isCorrect) {
+          doc.setTextColor(34, 139, 34); // Green color for correct answer
+          doc.setFont("helvetica", "bold");
+        }
+
+        const answerLines = wrapText(
+          `${letter}. ${answer}${isCorrect ? " ✓" : ""}`,
+          contentWidth - 10
+        );
         answerLines.forEach((line, lineIndex) => {
           checkNewPage(6);
           if (lineIndex === 0) {
@@ -164,6 +176,12 @@ export function generateExamPDF(
           }
           yPosition += 5;
         });
+
+        // Reset color and font
+        if (isCorrect) {
+          doc.setTextColor(0, 0, 0);
+          doc.setFont("helvetica", "normal");
+        }
       });
       yPosition += 5;
 

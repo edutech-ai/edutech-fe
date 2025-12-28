@@ -5,6 +5,8 @@ import { Edit, Trash2, GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export interface Question {
   id: string;
@@ -45,8 +47,25 @@ export function QuestionItem({
   isDraggable = false,
   className,
 }: QuestionItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: question.id, disabled: !isDraggable });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   return (
     <div
+      ref={setNodeRef}
+      style={style}
       className={cn(
         "group bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow",
         className
@@ -55,7 +74,11 @@ export function QuestionItem({
       <div className="flex gap-3">
         {/* Drag Handle */}
         {isDraggable && (
-          <div className="flex items-start pt-1 cursor-grab active:cursor-grabbing">
+          <div
+            {...attributes}
+            {...listeners}
+            className="flex items-start pt-1 cursor-grab active:cursor-grabbing"
+          >
             <GripVertical className="w-5 h-5 text-gray-400" />
           </div>
         )}

@@ -28,46 +28,15 @@ import {
   type File,
   type FolderColor,
 } from "@/data/library";
-
-const mockQuizzes: Quiz[] = [
-  {
-    id: "1",
-    name: "Kiểm tra giữa kỳ I - Toán 8",
-    subject: "Toán học",
-    grade: 8,
-    durationMinutes: 45,
-    totalQuestions: 45,
-    createdAt: "2024-12-15T10:00:00",
-    updatedAt: "2024-12-15T10:00:00",
-  },
-  {
-    id: "2",
-    name: "Ôn tập chương 1 - Văn 8",
-    subject: "Ngữ văn",
-    grade: 8,
-    durationMinutes: 45,
-    totalQuestions: 15,
-    createdAt: "2024-12-14T14:30:00",
-    updatedAt: "2024-12-14T14:30:00",
-  },
-  {
-    id: "3",
-    name: "Kiểm tra 15 phút - Văn 8",
-    subject: "Ngữ văn",
-    grade: 8,
-    durationMinutes: 15,
-    totalQuestions: 10,
-    createdAt: "2024-12-13T09:15:00",
-    updatedAt: "2024-12-13T09:15:00",
-  },
-];
+import { ExamStorageService } from "@/services/storage/examStorage";
+import { toast } from "sonner";
 
 export function LibraryTemplate() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
-  const [quizzes] = useState<Quiz[]>(mockQuizzes);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [folders] = useState<Folder[]>(mockFolders);
   const [files] = useState<File[]>(mockFiles);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
@@ -75,6 +44,28 @@ export function LibraryTemplate() {
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+
+  // Load exams from localStorage
+  const loadExams = () => {
+    const savedExams = ExamStorageService.getAllExams();
+    const quizzes: Quiz[] = savedExams.map((exam) => ({
+      id: exam.id,
+      name: exam.examInfo.name,
+      subject: exam.examInfo.subject,
+      grade: exam.examInfo.grade,
+      durationMinutes: exam.examInfo.durationMinutes,
+      totalQuestions: exam.questions.length,
+      createdAt: exam.createdAt,
+      updatedAt: exam.updatedAt,
+    }));
+    setQuizzes(quizzes);
+  };
+
+  // Load exams on mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadExams();
+  }, []);
 
   // Load folder, tab, and search from URL on mount
   useEffect(() => {
@@ -183,21 +174,26 @@ export function LibraryTemplate() {
   };
 
   const handleEditQuiz = (quizId: string) => {
-    // eslint-disable-next-line no-console
-    console.log("Edit quiz:", quizId);
-    // TODO: Navigate to quiz editor
+    router.push(`/dashboard/quiz-generator?exam=${quizId}`);
   };
 
   const handleDuplicateQuiz = (quizId: string) => {
-    // eslint-disable-next-line no-console
-    console.log("Duplicate quiz:", quizId);
-    // TODO: Call API to duplicate quiz
+    const exam = ExamStorageService.getExamById(quizId);
+    if (exam) {
+      // Create a copy without the ID
+      ExamStorageService.saveExam(
+        { ...exam.examInfo, name: `${exam.examInfo.name} (Copy)` },
+        exam.questions
+      );
+      loadExams(); // Reload to show the new copy
+      toast.success("Đã tạo bản sao đề thi!");
+    }
   };
 
   const handleDeleteQuiz = (quizId: string) => {
-    // eslint-disable-next-line no-console
-    console.log("Delete quiz:", quizId);
-    // TODO: Call API to delete quiz
+    ExamStorageService.deleteExam(quizId);
+    loadExams(); // Reload after delete
+    toast.success("Đã xóa đề thi!");
   };
 
   const handleCreateQuiz = () => {

@@ -2,7 +2,7 @@ export interface Customer {
   id: string;
   name: string;
   type: "school" | "district";
-  plan: "free" | "teacher" | "school" | "district";
+  plan: "free" | "teacher" | "school" | "district" | "trial" | "suspended";
   users: number;
   maxUsers: number;
   mrr: number; // Monthly Recurring Revenue

@@ -102,11 +102,15 @@ export default function DashboardLayout({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-sm">
-                      {user.name.charAt(0).toUpperCase()}
+                      {user.name?.charAt(0).toUpperCase() || "U"}
                     </div>
                     <div className="hidden md:block text-left">
-                      <p className="text-sm font-medium">{user.name}</p>
-                      <p className="text-xs text-gray-500">{user.role}</p>
+                      <p className="text-sm font-medium">
+                        {user.name || "User"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {user.role || "Teacher"}
+                      </p>
                     </div>
                   </Button>
                 </DropdownMenuTrigger>

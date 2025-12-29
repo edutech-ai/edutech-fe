@@ -22,7 +22,12 @@ export default function LoginPage() {
       const response = await authMockService.login({ email, password });
       localStorage.setItem("token", response.token);
       localStorage.setItem("user", JSON.stringify(response.user));
-      router.push("/dashboard");
+
+      if (response.user.role?.toUpperCase() === "ADMIN") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đăng nhập thất bại");
     } finally {
@@ -126,18 +131,6 @@ export default function LoginPage() {
           </Link>
         </div>
       </form>
-
-      {/* Demo note */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-md border border-gray-200">
-        <p className="text-xs text-gray-600 font-medium mb-2">
-          💡 Demo Account:
-        </p>
-        <p className="text-xs text-gray-500">
-          Email: demo@edu.vn
-          <br />
-          Password: bất kỳ (any password works)
-        </p>
-      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import type { User, AuthResponse, UserRole } from "@/types";
-import { mockTeacher } from "@/mock";
+import { mockTeacher, mockAdmin } from "@/mock";
 import { mockApiResponse, mockApiError } from "./mockApi";
 
 interface LoginCredentials {
@@ -24,9 +24,12 @@ export const authMockService = {
       return mockApiError("Email và mật khẩu không được để trống");
     }
 
+    // Return admin user if email is admin@edu.vn
+    const user = credentials.email === "admin@edu.vn" ? mockAdmin : mockTeacher;
+
     // Simulate successful login
     return mockApiResponse<AuthResponse>({
-      user: mockTeacher,
+      user,
       token: `mock-jwt-token-${Date.now()}`,
       refreshToken: `mock-refresh-token-${Date.now()}`,
     });

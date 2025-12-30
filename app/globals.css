@@ -44,6 +44,8 @@ html {
   --color-file-green: hsl(142 73% 48%);
   --color-file-yellow: hsl(48 100% 67%);
   --color-file-red: hsl(0 84.2% 60.2%);
+
+  --color-primary-logo: #29a4dd;
 }
 
 body {

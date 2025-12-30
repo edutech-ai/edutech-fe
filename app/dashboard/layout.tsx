@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, User as UserIcon } from "lucide-react";
-import { Loading } from "@/components/atoms/Loading";
+import { Bell, Settings, User as UserIcon } from "lucide-react";
+import { CoreLoading } from "@/components/atoms/CoreLoading";
 import { AppSidebar } from "@/components/sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import {
@@ -54,7 +54,7 @@ export default function DashboardLayout({
   };
 
   if (!user) {
-    return <Loading message="Đang kiểm tra xác thực..." fullScreen />;
+    return <CoreLoading message="Đang kiểm tra xác thực..." fullScreen />;
   }
 
   return (
@@ -68,10 +68,9 @@ export default function DashboardLayout({
       }
     >
       <div className="flex min-h-screen w-full">
-        {/* Sidebar - Full Height Left */}
         <AppSidebar />
 
-        {/* Right side: Header + Content */}
+        {/* Header + Content */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
           <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-4 border-b bg-white px-6">
@@ -121,7 +120,10 @@ export default function DashboardLayout({
                     <UserIcon className="mr-2 h-4 w-4" />
                     Thông tin cá nhân
                   </DropdownMenuItem>
-                  <DropdownMenuItem>Cài đặt</DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Cài đặt
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}

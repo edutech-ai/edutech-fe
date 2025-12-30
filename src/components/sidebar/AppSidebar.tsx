@@ -13,6 +13,7 @@ import {
   Settings,
   X,
   Users,
+  Grid3x3,
 } from "lucide-react";
 import { useSidebar } from "../ui/sidebar";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "../ui/sheet";
@@ -36,6 +37,11 @@ const teacherMenuItems: MenuItem[] = [
     title: "Tạo đề thi",
     url: "/dashboard/quiz-generator",
     icon: FileQuestion,
+  },
+  {
+    title: "Ma trận đề thi",
+    url: "/dashboard/exam-matrix",
+    icon: Grid3x3,
   },
   {
     title: "Quản lý lớp học",
@@ -106,7 +112,10 @@ function SidebarContent({
         <div className="space-y-1 px-2">
           {teacherMenuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.url;
+            const isActive =
+              item.url === "/dashboard"
+                ? pathname === item.url
+                : pathname.startsWith(item.url);
 
             return (
               <Link
@@ -178,7 +187,7 @@ export function AppSidebar() {
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "hidden md:flex bg-white border-r border-gray-200 flex-col transition-all duration-300 ease-in-out sticky top-0 h-screen",
+          "hidden md:flex bg-white border-r-[0.5px] border-gray-200 flex-col transition-all duration-300 ease-in-out sticky top-0 h-screen",
           isCollapsed ? "w-16" : "w-64"
         )}
       >

@@ -10,13 +10,32 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-import { Loading } from "@/components/atoms/Loading";
+import { CoreLoading } from "@/components/atoms/CoreLoading";
 import { analyticsMockService } from "@/services/mock";
-import type { AnalyticsData } from "@/types";
+import type { AnalyticsData, User } from "@/types";
+import { useUserStore } from "@/store/useUserStore";
+import { UpgradeBanner } from "@/components/molecules/upgrade-banner";
+import { PricingModal } from "@/components/organisms/dashboard/pricing-modal";
 
 export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+
+  const { user, setUser, isPaidUser } = useUserStore();
+
+  useEffect(() => {
+    // Load user from localStorage if not in store
+    const userData = localStorage.getItem("user");
+    if (userData && !user) {
+      try {
+        const parsedUser: User = JSON.parse(userData);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error("Failed to parse user data:", error);
+      }
+    }
+  }, [user, setUser]);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -32,7 +51,7 @@ export default function DashboardPage() {
   }, []);
 
   if (isLoading) {
-    return <Loading message="Đang tải dữ liệu..." fullScreen />;
+    return <CoreLoading message="Đang tải dữ liệu..." fullScreen />;
   }
 
   if (!analytics) return null;
@@ -63,7 +82,7 @@ export default function DashboardPage() {
       href: "/dashboard/analytics",
     },
     {
-      name: "Điểm TB",
+      name: "Điểm trung bình",
       value: analytics.averageScore.toFixed(1),
       icon: TrendingUp,
       bgColor: "bg-orange-100",
@@ -76,7 +95,7 @@ export default function DashboardPage() {
     {
       title: "Tạo đề thi với AI",
       description: "Tạo đề kiểm tra tự động trong vài phút",
-      href: "/dashboard/quiz-generator",
+      href: "/dashboard/quiz-generator?tab=ai",
       color: "blue",
     },
     {
@@ -95,7 +114,13 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Stats Grid */}
+      {!isPaidUser() && (
+        <UpgradeBanner onUpgradeClick={() => setIsPricingModalOpen(true)} />
+      )}
+
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        Thống kê chính
+      </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
           <Link
@@ -213,6 +238,11 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      <PricingModal
+        isOpen={isPricingModalOpen}
+        onClose={() => setIsPricingModalOpen(false)}
+      />
     </div>
   );
 }

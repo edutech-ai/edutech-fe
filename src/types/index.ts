@@ -76,6 +76,7 @@ export interface User {
   school?: string;
   subject?: string;
   grade?: number;
+  isPaidUser?: boolean;
   createdAt: string;
 }
 
@@ -162,31 +163,39 @@ export interface LessonPlanGenerateRequest {
 }
 
 // ==================== EXAM MATRIX ====================
+export enum CognitiveDomain {
+  RECOGNITION = "RECOGNITION",
+  COMPREHENSION = "COMPREHENSION",
+  APPLICATION = "APPLICATION",
+  HIGH_APPLICATION = "HIGH_APPLICATION",
+}
+
+export interface CognitiveDomainDistribution {
+  recognition: { count: number; points: number };
+  comprehension: { count: number; points: number };
+  application: { count: number; points: number };
+  highApplication: { count: number; points: number };
+}
+
+export interface ChapterDistribution {
+  id: string;
+  chapterNumber: number;
+  chapterName: string;
+  distribution: CognitiveDomainDistribution;
+}
+
 export interface ExamMatrix {
   id: string;
-  title: string;
+  name: string;
+  description?: string;
   subject: string;
   grade: number;
   chapters: ChapterDistribution[];
   totalQuestions: number;
-  difficultyDistribution: {
-    easy: number;
-    medium: number;
-    hard: number;
-  };
+  totalPoints: number;
   createdBy: string;
   createdAt: string;
-}
-
-export interface ChapterDistribution {
-  chapterId: string;
-  chapterName: string;
-  numQuestions: number;
-  difficulty: {
-    easy: number;
-    medium: number;
-    hard: number;
-  };
+  updatedAt: string;
 }
 
 // ==================== STUDENT EXAM ====================
@@ -295,7 +304,7 @@ export const SUBJECTS = [
   "Tin Học",
 ] as const;
 
-export const GRADES = [6, 7, 8, 9, 10, 11, 12] as const;
+export const GRADES = [6, 7, 8, 9] as const;
 
 export type Subject = (typeof SUBJECTS)[number];
 export type Grade = (typeof GRADES)[number];

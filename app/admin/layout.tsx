@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, User as UserIcon, KeyRound, LogOut } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { Loading } from "@/components/atoms/Loading";
+import { CoreLoading } from "@/components/atoms/CoreLoading";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,7 +63,7 @@ export default function AdminLayout({
   };
 
   if (!user || !isAuthorized) {
-    return <Loading message="Checking authorization..." fullScreen />;
+    return <CoreLoading message="Checking authorization..." fullScreen />;
   }
 
   return (

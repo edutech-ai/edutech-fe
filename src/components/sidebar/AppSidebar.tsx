@@ -35,8 +35,13 @@ const teacherMenuItems: MenuItem[] = [
   },
   {
     title: "Tạo đề thi",
-    url: "/dashboard/quiz-generator",
+    url: "/dashboard/quiz",
     icon: FileQuestion,
+  },
+  {
+    title: "Thư viện",
+    url: "/dashboard/library",
+    icon: Library,
   },
   {
     title: "Ma trận đề thi",
@@ -47,11 +52,6 @@ const teacherMenuItems: MenuItem[] = [
     title: "Quản lý lớp học",
     url: "/dashboard/classroom",
     icon: Users,
-  },
-  {
-    title: "Thư viện",
-    url: "/dashboard/library",
-    icon: Library,
   },
   {
     title: "Thống kê",

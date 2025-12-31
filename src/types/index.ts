@@ -7,17 +7,18 @@ export enum UserRole {
 }
 
 export enum QuestionType {
+  SINGLE_CHOICE = "SINGLE_CHOICE",
   MULTIPLE_CHOICE = "MULTIPLE_CHOICE",
-  ESSAY = "ESSAY",
   TRUE_FALSE = "TRUE_FALSE",
   SHORT_ANSWER = "SHORT_ANSWER",
+  ESSAY = "ESSAY",
 }
 
 export enum Difficulty {
-  EASY = "EASY",
-  MEDIUM = "MEDIUM",
-  HARD = "HARD",
-  MIXED = "MIXED",
+  RECOGNITION = "RECOGNITION", // Nhận biết
+  COMPREHENSION = "COMPREHENSION", // Thông hiểu
+  APPLICATION = "APPLICATION", // Vận dụng
+  HIGH_APPLICATION = "HIGH_APPLICATION", // Vận dụng cao
 }
 
 export enum QuizStatus {
@@ -91,8 +92,9 @@ export interface Question {
   id: string;
   type: QuestionType;
   content: string;
-  options?: string[]; // For multiple choice
-  correctAnswer?: string | number; // Index or text
+  options?: string[]; // For single/multiple choice
+  correctAnswer?: string | number; // Index or text (for single choice, true/false, short answer)
+  correctAnswers?: (string | number)[]; // For multiple choice (multiple correct answers)
   explanation?: string;
   points: number;
   difficulty: Difficulty;

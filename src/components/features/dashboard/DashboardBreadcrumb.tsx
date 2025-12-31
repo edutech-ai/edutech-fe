@@ -13,7 +13,11 @@ export function DashboardBreadcrumb() {
   const pageNames: Record<string, string> = {
     "/dashboard": "Tổng quan",
     "/dashboard/library": "Thư viện",
-    "/dashboard/quiz-generator": "Tạo đề thi",
+    "/dashboard/quiz": "Tạo đề thi",
+    "/dashboard/quiz/new": "Tạo đề mới",
+    "/dashboard/quiz/matrix": "Từ ma trận",
+    "/dashboard/quiz/upload": "Từ tài liệu",
+    "/dashboard/quiz/prompt": "Từ chủ đề",
     "/dashboard/exam-matrix": "Ma trận đề thi",
     "/dashboard/classroom": "Quản lý lớp học",
     "/dashboard/slide-creator": "Slide bài giảng",

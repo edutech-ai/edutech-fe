@@ -308,7 +308,7 @@ export function ExamCreationTemplate() {
         onValueChange={(value) => {
           const params = new URLSearchParams();
           params.set("tab", value);
-          router.push(`/dashboard/quiz-generator?${params.toString()}`);
+          router.push(`/dashboard/quiz?${params.toString()}`);
         }}
         className="w-full"
       >

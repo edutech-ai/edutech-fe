@@ -174,7 +174,7 @@ export function LibraryTemplate() {
   };
 
   const handleEditQuiz = (quizId: string) => {
-    router.push(`/dashboard/quiz-generator?exam=${quizId}`);
+    router.push(`/dashboard/quiz?exam=${quizId}`);
   };
 
   const handleDuplicateQuiz = (quizId: string) => {
@@ -200,7 +200,7 @@ export function LibraryTemplate() {
     // eslint-disable-next-line no-console
     console.log("Create new quiz");
     // TODO: Navigate to quiz creation page
-    router.push("/dashboard/quiz-generator");
+    router.push("/dashboard/quiz");
   };
 
   const filteredQuizzes = quizzes.filter(

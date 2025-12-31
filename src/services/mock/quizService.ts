@@ -122,12 +122,14 @@ const generateMockQuestions = (request: QuizGenerateRequest): Question[] => {
 
     // Select a template and customize it
     const template = templates[i % templates.length];
-    const difficulty =
-      request.difficulty === Difficulty.MIXED
-        ? [Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD][i % 3]
-        : request.difficulty;
+    const difficulty = [
+      Difficulty.RECOGNITION,
+      Difficulty.COMPREHENSION,
+      Difficulty.APPLICATION,
+      Difficulty.HIGH_APPLICATION,
+    ][i % 4];
 
-    if (type === QuestionType.MULTIPLE_CHOICE && template.options) {
+    if (type === QuestionType.SINGLE_CHOICE && template.options) {
       questions.push({
         id: `q-${Date.now()}-${i}`,
         type,
@@ -135,7 +137,19 @@ const generateMockQuestions = (request: QuizGenerateRequest): Question[] => {
         options: template.options,
         correctAnswer: template.correctAnswer as number,
         explanation: template.explanation,
-        points: difficulty === Difficulty.HARD ? 2 : 1,
+        points: difficulty === Difficulty.HIGH_APPLICATION ? 2 : 1,
+        difficulty,
+        tags: [request.subject, request.topic || ""],
+      });
+    } else if (type === QuestionType.MULTIPLE_CHOICE && template.options) {
+      questions.push({
+        id: `q-${Date.now()}-${i}`,
+        type,
+        content: template.content.replace("${topic}", request.topic || ""),
+        options: template.options,
+        correctAnswers: [template.correctAnswer as number],
+        explanation: template.explanation,
+        points: difficulty === Difficulty.HIGH_APPLICATION ? 2 : 1,
         difficulty,
         tags: [request.subject, request.topic || ""],
       });
@@ -144,10 +158,10 @@ const generateMockQuestions = (request: QuizGenerateRequest): Question[] => {
       questions.push({
         id: `q-${Date.now()}-${i}`,
         type,
-        content: `Phân tích và trình bày ${request.topic ? `về ${request.topic}` : "nội dung"} (${difficulty === Difficulty.HARD ? "phân tích chuyên sâu" : "trình bày ngắn gọn"})`,
+        content: `Phân tích và trình bày ${request.topic ? `về ${request.topic}` : "nội dung"} (${difficulty === Difficulty.HIGH_APPLICATION ? "phân tích chuyên sâu" : "trình bày ngắn gọn"})`,
         correctAnswer: `Học sinh cần phân tích và trình bày các điểm chính về ${request.topic || "nội dung"}, có dẫn chứng và lập luận rõ ràng.`,
         explanation: "Câu hỏi tự luận, cần phân tích toàn diện và logic.",
-        points: difficulty === Difficulty.HARD ? 3 : 2,
+        points: difficulty === Difficulty.HIGH_APPLICATION ? 3 : 2,
         difficulty,
         tags: [request.subject, request.topic || ""],
       });

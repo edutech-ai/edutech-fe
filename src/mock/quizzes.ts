@@ -4,7 +4,7 @@ import { QuestionType, Difficulty, QuizStatus } from "@/types";
 export const mockQuestions: Question[] = [
   {
     id: "q1",
-    type: QuestionType.MULTIPLE_CHOICE,
+    type: QuestionType.SINGLE_CHOICE,
     content: "Phương trình bậc nhất một ẩn có dạng tổng quát là gì?",
     options: [
       "ax + b = 0 (a ≠ 0)",
@@ -15,18 +15,18 @@ export const mockQuestions: Question[] = [
     correctAnswer: 0,
     explanation: "Phương trình bậc nhất một ẩn có dạng ax + b = 0 với a ≠ 0",
     points: 1,
-    difficulty: Difficulty.EASY,
+    difficulty: Difficulty.RECOGNITION,
     tags: ["đại số", "phương trình"],
   },
   {
     id: "q2",
-    type: QuestionType.MULTIPLE_CHOICE,
+    type: QuestionType.SINGLE_CHOICE,
     content: "Nghiệm của phương trình 2x + 6 = 0 là?",
     options: ["-3", "3", "-2", "2"],
     correctAnswer: 0,
     explanation: "2x + 6 = 0 ⇒ 2x = -6 ⇒ x = -3",
     points: 1,
-    difficulty: Difficulty.MEDIUM,
+    difficulty: Difficulty.COMPREHENSION,
     tags: ["đại số", "phương trình"],
   },
   {
@@ -37,7 +37,7 @@ export const mockQuestions: Question[] = [
     correctAnswer: "x = 5",
     explanation: "3x - 6 + 5 = 2x + 2 ⇒ 3x - 1 = 2x + 2 ⇒ x = 3",
     points: 2,
-    difficulty: Difficulty.HARD,
+    difficulty: Difficulty.APPLICATION,
     tags: ["đại số", "phương trình"],
   },
 ];

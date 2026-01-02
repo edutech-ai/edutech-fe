@@ -38,7 +38,7 @@ export function QuizGeneratorForm({
     grade: 8,
     topic: "",
     numQuestions: 10,
-    difficulty: Difficulty.MEDIUM,
+    difficulty: Difficulty.COMPREHENSION,
     questionTypes: [QuestionType.MULTIPLE_CHOICE],
     learningObjectives: "",
   });
@@ -152,10 +152,16 @@ export function QuizGeneratorForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={Difficulty.EASY}>Dễ</SelectItem>
-                <SelectItem value={Difficulty.MEDIUM}>Trung bình</SelectItem>
-                <SelectItem value={Difficulty.HARD}>Khó</SelectItem>
-                <SelectItem value={Difficulty.MIXED}>Trộn lẫn</SelectItem>
+                <SelectItem value={Difficulty.RECOGNITION}>
+                  Nhận biết
+                </SelectItem>
+                <SelectItem value={Difficulty.COMPREHENSION}>
+                  Thông hiểu
+                </SelectItem>
+                <SelectItem value={Difficulty.APPLICATION}>Vận dụng</SelectItem>
+                <SelectItem value={Difficulty.HIGH_APPLICATION}>
+                  Vận dụng cao
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -199,7 +205,7 @@ export function QuizGeneratorForm({
             onChange={(e) =>
               setFormData({ ...formData, learningObjectives: e.target.value })
             }
-            className="mt-1.5 min-h-[100px]"
+            className="mt-1.5 min-h-25"
           />
         </div>
 
@@ -207,7 +213,7 @@ export function QuizGeneratorForm({
         <Button
           onClick={handleGenerate}
           disabled={isGenerating || !formData.topic}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-12"
+          className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-12"
         >
           {isGenerating ? (
             <>

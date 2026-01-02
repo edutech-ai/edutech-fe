@@ -80,13 +80,11 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
               <div
                 key={plan.id}
                 className={`relative border-2 rounded-lg p-6 ${
-                  plan.popular
-                    ? "border-purple-500 shadow-lg"
-                    : "border-gray-200"
+                  plan.popular ? "border-primary shadow-lg" : "border-gray-200"
                 }`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-sm font-semibold">
                     Phổ biến nhất
                   </div>
                 )}
@@ -99,9 +97,7 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
                   >
                     <Icon
                       className={`w-8 h-8 ${
-                        plan.color === "blue"
-                          ? "text-blue-600"
-                          : "text-purple-600"
+                        plan.color === "blue" ? "text-blue-600" : "text-primary"
                       }`}
                     />
                   </div>
@@ -128,7 +124,7 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
                   onClick={() => handlePurchase(plan.id)}
                   className={`w-full py-3 rounded-lg font-semibold transition ${
                     plan.popular
-                      ? "bg-purple-600 text-white hover:bg-purple-700"
+                      ? "bg-primary text-white hover:bg-primary/90"
                       : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
                 >
@@ -139,7 +135,7 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
           })}
         </div>
 
-        <div className="mt-6 text-center text-sm text-gray-500">
+        <div className="mt-6 text-center text-md text-primary">
           <p>Thanh toán an toàn • Hoàn tiền trong 7 ngày • Hỗ trợ 24/7</p>
         </div>
       </DialogContent>

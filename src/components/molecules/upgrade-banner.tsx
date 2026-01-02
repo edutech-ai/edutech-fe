@@ -26,7 +26,7 @@ export function UpgradeBanner({ onUpgradeClick }: UpgradeBannerProps) {
       <div className="flex items-center gap-4">
         <div className="flex-1">
           <h3 className="text-white font-semibold text-lg mb-1">
-            Nâng cấp lên Premium để mở khóa đầy đủ tính năng
+            Nâng cấp tài khoản để mở khóa đầy đủ tính năng
           </h3>
           <p className="text-white/90 text-sm mb-4">
             Truy cập không giới hạn AI tạo đề thi, giáo án và nhiều tính năng

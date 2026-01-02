@@ -192,10 +192,10 @@ export default function QuizNewPage() {
             disabled={isSaving}
           >
             <Save className="w-4 h-4 mr-2" />
-            Lưu nháp
+            Lưu bản nháp
           </Button>
           <Button onClick={() => handleSave(false)} disabled={isSaving}>
-            Xuất bản
+            Xuất bản đề thi
           </Button>
         </div>
       </div>

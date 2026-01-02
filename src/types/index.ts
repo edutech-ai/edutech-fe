@@ -293,18 +293,7 @@ export interface ApiResponse<T> {
 }
 
 // ==================== SUBJECTS & GRADES ====================
-export const SUBJECTS = [
-  "Toán",
-  "Ngữ Văn",
-  "Tiếng Anh",
-  "Vật Lý",
-  "Hóa Học",
-  "Sinh Học",
-  "Lịch Sử",
-  "Địa Lý",
-  "GDCD",
-  "Tin Học",
-] as const;
+export const SUBJECTS = ["Toán", "Ngữ Văn", "Tiếng Anh"] as const;
 
 export const GRADES = [6, 7, 8, 9] as const;
 

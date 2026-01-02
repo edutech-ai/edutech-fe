@@ -31,7 +31,7 @@ export function QuizInfoTab({ quiz, onUpdate }: QuizInfoTabProps) {
             id="title"
             value={quiz.title || ""}
             onChange={(e) => onUpdate({ title: e.target.value })}
-            placeholder="Ví dụ: Kiểm tra giữa kỳ 1 - Toán 10"
+            placeholder="Ví dụ: Kiểm tra giữa kỳ 1 - Toán 8"
           />
         </div>
 
@@ -46,10 +46,10 @@ export function QuizInfoTab({ quiz, onUpdate }: QuizInfoTabProps) {
               <SelectValue placeholder="Chọn thư mục" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default">Mặc định</SelectItem>
-              <SelectItem value="midterm">Giữa kỳ</SelectItem>
-              <SelectItem value="final">Cuối kỳ</SelectItem>
-              <SelectItem value="practice">Luyện tập</SelectItem>
+              <SelectItem value="default">Toán 6A</SelectItem>
+              <SelectItem value="midterm">Toán 6B</SelectItem>
+              <SelectItem value="final">Toán 8A</SelectItem>
+              <SelectItem value="practice">Toán 8B</SelectItem>
             </SelectContent>
           </Select>
         </div>

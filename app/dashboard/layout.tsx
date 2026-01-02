@@ -143,7 +143,7 @@ export default function DashboardLayout({
           </main>
         </div>
       </div>
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" closeButton richColors />
     </SidebarProvider>
   );
 }

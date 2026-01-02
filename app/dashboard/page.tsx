@@ -16,11 +16,14 @@ import type { AnalyticsData, User } from "@/types";
 import { useUserStore } from "@/store/useUserStore";
 import { UpgradeBanner } from "@/components/molecules/upgrade-banner";
 import { PricingModal } from "@/components/organisms/dashboard/pricing-modal";
+import { InviteFriendModal } from "@/components/organisms/dashboard/invite-friend-modal";
+import Image from "next/image";
 
 export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+  const [isInviteFriendModalOpen, setIsInviteFriendModalOpen] = useState(false);
 
   const { user, setUser, isPaidUser } = useUserStore();
 
@@ -63,7 +66,7 @@ export default function DashboardPage() {
       icon: FileQuestion,
       bgColor: "bg-blue-100",
       iconColor: "text-blue-600",
-      href: "/dashboard/library",
+      href: "/dashboard/library?tab=quizzes",
     },
     {
       name: "Giáo án",
@@ -71,7 +74,7 @@ export default function DashboardPage() {
       icon: BookOpen,
       bgColor: "bg-green-100",
       iconColor: "text-green-600",
-      href: "/dashboard/library",
+      href: "/dashboard/library?tab=lessons",
     },
     {
       name: "Học sinh",
@@ -79,7 +82,7 @@ export default function DashboardPage() {
       icon: Users,
       bgColor: "bg-purple-100",
       iconColor: "text-purple-600",
-      href: "/dashboard/analytics",
+      href: "/dashboard/classroom?tab=data",
     },
     {
       name: "Điểm trung bình",
@@ -87,7 +90,7 @@ export default function DashboardPage() {
       icon: TrendingUp,
       bgColor: "bg-orange-100",
       iconColor: "text-orange-600",
-      href: "/dashboard/analytics",
+      href: "/dashboard/classroom?tab=data",
     },
   ];
 
@@ -95,19 +98,19 @@ export default function DashboardPage() {
     {
       title: "Tạo đề thi với AI",
       description: "Tạo đề kiểm tra tự động trong vài phút",
-      href: "/dashboard/quiz-generator?tab=ai",
+      href: "/dashboard/quiz",
       color: "blue",
     },
     {
       title: "Tạo giáo án",
       description: "Soạn giáo án nhanh chóng với AI",
-      href: "/dashboard/lesson-plan",
+      href: "/dashboard/library?tab=lessons",
       color: "green",
     },
     {
       title: "Ma trận đề thi",
       description: "Xây dựng ma trận đề chuẩn kiến thức",
-      href: "/dashboard/matrix",
+      href: "/dashboard/exam-matrix",
       color: "purple",
     },
   ];
@@ -239,9 +242,48 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          Hoạt động khác
+        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2">
+          <div
+            onClick={() => setIsInviteFriendModalOpen(true)}
+            className="group"
+          >
+            <div className="flex items-center flex-row gap-2 bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition cursor-pointer">
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-gray-900 mb-2">
+                  Mời bạn bè, thầy cô
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Chia sẻ Edutech với thầy cô, bạn bè khác!
+                </p>
+                <div className="flex items-center text-blue-600 text-sm font-medium group-hover:translate-x-1 transition-transform w-max">
+                  Mời ngay
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </div>
+              </div>
+              <Image
+                src="/images/banner/invite-friend.svg"
+                width={100}
+                height={80}
+                alt="Invite Friends Illustration"
+                className="mt-4 hidden lg:block"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <PricingModal
         isOpen={isPricingModalOpen}
         onClose={() => setIsPricingModalOpen(false)}
+      />
+
+      <InviteFriendModal
+        isOpen={isInviteFriendModalOpen}
+        onClose={() => setIsInviteFriendModalOpen(false)}
       />
     </div>
   );

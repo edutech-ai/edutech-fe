@@ -1,0 +1,73 @@
+{
+  "name": "EduTech AI - Hệ thống tạo đề thi thông minh",
+  "short_name": "EduTech AI",
+  "description": "Hệ thống tạo đề thi thông minh, hỗ trợ giáo viên tạo, quản lý và chia sẻ đề thi hiệu quả",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "vi",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/images/logo/logo.svg",
+      "sizes": "109x116",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/banner/desktop-home.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Trang chủ EduTech AI trên desktop"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Tạo đề thi mới",
+      "short_name": "Đề thi mới",
+      "description": "Tạo đề thi mới nhanh chóng",
+      "url": "/lesson-plan/create",
+      "icons": [
+        {
+          "src": "/icons/lesson-plan.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Chấm điểm tự động",
+      "short_name": "Chấm điểm",
+      "description": "Truy cập tính năng chấm điểm tự động",
+      "url": "/auto-grading",
+      "icons": [
+        {
+          "src": "/icons/exam.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Thi trực tuyến",
+      "short_name": "Thi online",
+      "description": "Tạo và quản lý bài thi trực tuyến",
+      "url": "/exam",
+      "icons": [
+        {
+          "src": "/icons/exam.svg",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

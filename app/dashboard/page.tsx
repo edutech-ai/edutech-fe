@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { CoreLoading } from "@/components/atoms/CoreLoading";
 import { analyticsMockService } from "@/services/mock";
-import type { AnalyticsData, User } from "@/types";
+import type { AnalyticsData } from "@/types";
 import { useUserStore } from "@/store/useUserStore";
 import { UpgradeBanner } from "@/components/molecules/upgrade-banner";
 import { PricingModal } from "@/components/organisms/dashboard/pricing-modal";
@@ -25,20 +25,7 @@ export default function DashboardPage() {
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isInviteFriendModalOpen, setIsInviteFriendModalOpen] = useState(false);
 
-  const { user, setUser, isPaidUser } = useUserStore();
-
-  useEffect(() => {
-    // Load user from localStorage if not in store
-    const userData = localStorage.getItem("user");
-    if (userData && !user) {
-      try {
-        const parsedUser: User = JSON.parse(userData);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error("Failed to parse user data:", error);
-      }
-    }
-  }, [user, setUser]);
+  const { isPaidUser } = useUserStore();
 
   useEffect(() => {
     const fetchAnalytics = async () => {

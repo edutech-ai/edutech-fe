@@ -16,11 +16,19 @@ export const axiosInstance = axios.create({
 // Request interceptor - add auth token
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Get token from localStorage (client-side only)
+    // Get token from Zustand store
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
+      const storage = localStorage.getItem("edutech-storage");
+      if (storage) {
+        try {
+          const { state } = JSON.parse(storage);
+          const token = state?.user?.token;
+          if (token && config.headers) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+        } catch {
+          // console.error("Failed to parse auth storage:", error);
+        }
       }
     }
     return config;
@@ -39,9 +47,15 @@ axiosInstance.interceptors.response.use(
     // Handle 401 Unauthorized - redirect to login
     if (error.response?.status === 401) {
       if (typeof window !== "undefined") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        window.location.href = "/login";
+        const isAuthPage =
+          window.location.pathname.startsWith("/login") ||
+          window.location.pathname.startsWith("/register");
+
+        // Chỉ relaod nếu không phải trang đăng nhập/đăng ký
+        if (!isAuthPage) {
+          localStorage.removeItem("edutech-storage");
+          window.location.href = "/login";
+        }
       }
     }
 

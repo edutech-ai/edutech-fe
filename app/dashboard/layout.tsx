@@ -17,13 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { DashboardBreadcrumb } from "@/components/features/dashboard/DashboardBreadcrumb";
 import { Toaster } from "@/components/ui/sonner";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import type { User } from "@/types";
+import { useUserStore } from "@/store/useUserStore";
 
 export default function DashboardLayout({
   children,
@@ -31,25 +26,33 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const { user: storeUser, isAuthenticated } = useUserStore();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Check authentication and load user data
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-
-    if (!token || !userData) {
+    // Check authentication from Zustand store
+    if (!isAuthenticated()) {
       router.push("/login");
-    } else if (!user) {
-      // Only parse and set user if not already loaded
-      setUser(JSON.parse(userData));
+      return;
+    }
+
+    // Load user data from Zustand store
+    if (storeUser && !user) {
+      setUser({
+        id: storeUser.id,
+        name: storeUser.name || storeUser.email || "User",
+        email: storeUser.email || "",
+        role: storeUser.role || "TEACHER",
+        createdAt: storeUser.createdAt,
+        isPaidUser: storeUser.isPaidUser || false,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+  }, [router, isAuthenticated, storeUser]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    // Clear Zustand store
+    useUserStore.getState().clearUser();
     router.push("/login");
   };
 

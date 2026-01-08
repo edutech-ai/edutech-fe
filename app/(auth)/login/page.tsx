@@ -3,34 +3,85 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authMockService } from "@/services/mock";
+import { useLoginService } from "@/services/authService";
+import { useUserStore } from "@/store/useUserStore";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
+  const setUser = useUserStore((state) => state.setUser);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const loginMutation = useLoginService();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setIsLoading(true);
+    e.stopPropagation();
+
+    if (!email || !password) {
+      toast.error("Vui lòng nhập đầy đủ email và mật khẩu");
+      return;
+    }
 
     try {
-      const response = await authMockService.login({ email, password });
-      localStorage.setItem("token", response.token);
-      localStorage.setItem("user", JSON.stringify(response.user));
+      loginMutation.mutate(
+        { email, password },
+        {
+          onSuccess: (response) => {
+            try {
+              const responseData = response.data?.data || response.data;
+              const { user, token } = responseData;
 
-      if (response.user.role?.toUpperCase() === "ADMIN") {
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/dashboard");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Đăng nhập thất bại");
-    } finally {
-      setIsLoading(false);
+              if (!user || !token) {
+                toast.error("Dữ liệu đăng nhập không hợp lệ");
+                return;
+              }
+
+              const userWithToken = { ...user, token };
+              setUser(userWithToken);
+
+              const storageData = {
+                state: { user: userWithToken },
+                version: 0,
+              };
+              localStorage.setItem(
+                "edutech-storage",
+                JSON.stringify(storageData)
+              );
+
+              toast.success("Đăng nhập thành công!");
+
+              setTimeout(() => {
+                if (user.role?.toUpperCase() === "ADMIN") {
+                  router.push("/admin/dashboard");
+                } else if (user.role?.toUpperCase() === "TEACHER") {
+                  router.push("/dashboard");
+                } else {
+                  router.push("/app");
+                }
+              }, 100);
+            } catch {
+              toast.error("Có lỗi xảy ra khi xử lý đăng nhập");
+            }
+          },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onError: (error: any) => {
+            const errorMessage =
+              error?.response?.data?.message ||
+              error?.response?.data ||
+              error?.message ||
+              "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.";
+
+            toast.error(
+              typeof errorMessage === "string"
+                ? errorMessage
+                : JSON.stringify(errorMessage)
+            );
+          },
+        }
+      );
+    } catch {
+      toast.error("Có lỗi không mong muốn xảy ra");
     }
   };
 
@@ -47,11 +98,11 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
+        {/* {loginMutation.isError && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
-            {error}
+            {loginMutation.error?.message || "Đăng nhập thất bại"}
           </div>
-        )}
+        )} */}
 
         <div className="space-y-4">
           <div>
@@ -108,10 +159,10 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={loginMutation.isPending}
           className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
-          {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+          {loginMutation.isPending ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
 
         <div className="text-center text-sm">

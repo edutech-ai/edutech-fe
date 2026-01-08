@@ -51,15 +51,13 @@ export default function LoginPage() {
 
               toast.success("Đăng nhập thành công!");
 
-              setTimeout(() => {
-                if (user.role?.toUpperCase() === "ADMIN") {
-                  router.push("/admin/dashboard");
-                } else if (user.role?.toUpperCase() === "TEACHER") {
-                  router.push("/dashboard");
-                } else {
-                  router.push("/app");
-                }
-              }, 100);
+              if (user.role?.toUpperCase() === "ADMIN") {
+                router.push("/admin/dashboard");
+              } else if (user.role?.toUpperCase() === "TEACHER") {
+                router.push("/dashboard");
+              } else {
+                router.push("/app");
+              }
             } catch {
               toast.error("Có lỗi xảy ra khi xử lý đăng nhập");
             }

@@ -133,10 +133,8 @@ export default function RegisterPage() {
 
           toast.success("Xác thực thành công! Chào mừng bạn đến với EduTech!");
 
-          // Small delay before redirect
-          setTimeout(() => {
-            router.push("/dashboard");
-          }, 100);
+          // Redirect after successful verification
+          router.push("/dashboard");
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onError: (error: any) => {

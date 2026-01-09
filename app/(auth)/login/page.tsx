@@ -106,10 +106,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleLoginGoogle = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
-  };
-
   return (
     <div className="w-full max-w-sm space-y-6 px-4">
       <div>
@@ -214,46 +210,6 @@ export default function LoginPage() {
           </Link>
         </div>
       </form>
-      <div className="relative flex items-center justify-center my-4">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300" />
-        </div>
-        <div className="relative bg-white px-4 text-sm text-gray-500">
-          Hoặc đăng nhập với
-        </div>
-      </div>
-      <div>
-        <button
-          onClick={() => {
-            handleLoginGoogle();
-          }}
-          className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition"
-        >
-          <svg
-            className="w-5 h-5"
-            viewBox="0 0 533.5 544.3"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M533.5 278.4c0-17.4-1.6-34.1-4.6-50.4H272v95.5h147.1c-6.4 34.7-25.4 64.1-54.4 83.8v69.5h87.9c51.4-47.3 81.9-117.1 81.9-198.4z"
-              fill="#4285F4"
-            />
-            <path
-              d="M272 544.3c73.7 0 135.6-24.4 180.8-66.1l-87.9-69.5c-24.4 16.4-55.5 26-92.9 26-71.4 0-131.9-48.2-153.5-112.8H29.6v70.7C74.3 486.1 167.1 544.3 272 544.3z"
-              fill="#34A853"
-            />
-            <path
-              d="M118.5 324.9c-11.4-34-1-11.4-70.7 0-105.8V148.4H29.6c-38.3 76.6-38.3 167.1 0 243.7l88.9-67.2z"
-              fill="#FBBC05"
-            />
-            <path
-              d="M272 107.7c39.9-.6 78.3 14.1 107.4 40.4l80.6-80.6C407.4 24.3 341.1-1.3 272 0 167.1 0 74.3 58.2 29.6 148.4l88.9 70.7C140.1 156 200.6 107.7 272 107.7z"
-              fill="#EA4335"
-            />
-          </svg>
-          Đăng nhập với Google
-        </button>
-      </div>
     </div>
   );
 }

@@ -6,13 +6,27 @@ import Link from "next/link";
 import { useLoginService } from "@/services/authService";
 import { useUserStore } from "@/store/useUserStore";
 import { toast } from "sonner";
+import { GoogleLoginButton } from "@/components/atoms/GoogleLoginButton";
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
 export default function LoginPage() {
   const router = useRouter();
   const setUser = useUserStore((state) => state.setUser);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const loginMutation = useLoginService();
+
+  const handleGoogleLogin = () => {
+    try {
+      setIsGoogleLoading(true);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      window.location.href = `${apiUrl}${API_ENDPOINTS.AUTH.GOOGLE}`;
+    } catch {
+      setIsGoogleLoading(false);
+      toast.error("Không thể kết nối đến Google");
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,6 +189,20 @@ export default function LoginPage() {
         >
           {loginMutation.isPending ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Hoặc</span>
+          </div>
+        </div>
+
+        <GoogleLoginButton
+          onLogin={handleGoogleLogin}
+          isLoading={isGoogleLoading}
+        />
 
         <div className="text-center text-sm">
           <span className="text-gray-600">Chưa có tài khoản? </span>

@@ -9,6 +9,8 @@ import {
 } from "@/services/authService";
 import { useUserStore } from "@/store/useUserStore";
 import { toast } from "sonner";
+import { GoogleLoginButton } from "@/components/atoms/GoogleLoginButton";
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
 type Subject = "TOAN" | "VAN" | "ANH" | string;
 
@@ -21,6 +23,7 @@ export default function RegisterPage() {
   const [step, setStep] = useState<"register" | "verify">("register");
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -32,6 +35,18 @@ export default function RegisterPage() {
 
   const registerMutation = useRegisterService();
   const verifyMutation = useVerifyRegisterService();
+
+  const handleGoogleSignup = () => {
+    try {
+      setIsGoogleLoading(true);
+      // Redirect to backend Google OAuth endpoint
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      window.location.href = `${apiUrl}${API_ENDPOINTS.AUTH.GOOGLE}`;
+    } catch {
+      setIsGoogleLoading(false);
+      toast.error("Không thể kết nối đến Google");
+    }
+  };
 
   // Restore state from sessionStorage on mount (prevent loss on reload)
   useEffect(() => {
@@ -266,6 +281,21 @@ export default function RegisterPage() {
           >
             {registerMutation.isPending ? "Đang đăng ký..." : "Đăng ký"}
           </button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Hoặc</span>
+            </div>
+          </div>
+
+          <GoogleLoginButton
+            onLogin={handleGoogleSignup}
+            isLoading={isGoogleLoading}
+            text="Đăng ký với Google"
+          />
 
           <div className="text-center text-sm">
             <span className="text-gray-600">Đã có tài khoản? </span>

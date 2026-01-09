@@ -1,5 +1,18 @@
 import type { NextConfig } from "next";
 
+// Get API base URL from environment variable
+const getApiBaseUrl = () => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+  try {
+    const url = new URL(apiUrl);
+    return url.origin;
+  } catch {
+    return "https://edutech-backend-eh72.onrender.com";
+  }
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
 const nextConfig: NextConfig = {
   /* config options here */
 
@@ -42,8 +55,8 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value:
               process.env.NODE_ENV === "development"
-                ? "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://edutech-backend-eh72.onrender.com ws: wss:;"
-                : "default-src 'self'; img-src 'self' data: https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://edutech-backend-eh72.onrender.com https://*.vercel.app; frame-src 'self';",
+                ? `default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' ${API_BASE_URL} ws: wss:;`
+                : `default-src 'self'; img-src 'self' data: https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' ${API_BASE_URL} https://*.vercel.app; frame-src 'self';`,
           },
         ],
       },

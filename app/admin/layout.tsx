@@ -34,31 +34,40 @@ export default function AdminLayout({
 
   useEffect(() => {
     // Check authentication and authorization
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
+    const storage = localStorage.getItem("edutech-storage");
 
-    if (!token || !userData) {
+    if (!storage) {
       router.push("/login");
       return;
     }
 
-    const parsedUser = JSON.parse(userData);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUser(parsedUser);
+    try {
+      const { state } = JSON.parse(storage);
+      const userData = state?.user;
 
-    // Check if user is admin (handle both "ADMIN" and "admin")
-    if (parsedUser.role?.toUpperCase() !== "ADMIN") {
-      // Redirect non-admin users to regular dashboard
-      router.push("/dashboard");
-      return;
+      if (!userData || !userData.accessToken) {
+        router.push("/login");
+        return;
+      }
+
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setUser(userData);
+
+      // Check if user is admin (handle both "ADMIN" and "admin")
+      if (userData.role?.toUpperCase() !== "ADMIN") {
+        // Redirect non-admin users to regular dashboard
+        router.push("/dashboard");
+        return;
+      }
+
+      setIsAuthorized(true);
+    } catch {
+      router.push("/login");
     }
-
-    setIsAuthorized(true);
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("edutech-storage");
     router.push("/login");
   };
 

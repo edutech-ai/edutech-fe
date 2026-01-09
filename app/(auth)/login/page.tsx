@@ -30,14 +30,23 @@ export default function LoginPage() {
           onSuccess: (response) => {
             try {
               const responseData = response.data?.data || response.data;
-              const { user, token } = responseData;
+              const { user, accessToken, refreshToken, expiresIn } =
+                responseData;
 
-              if (!user || !token) {
+              if (!user || !accessToken) {
                 toast.error("Dữ liệu đăng nhập không hợp lệ");
                 return;
               }
 
-              const userWithToken = { ...user, token };
+              // Calculate token expiry timestamp
+              const tokenExpiryTime = Date.now() + (expiresIn || 900) * 1000; // expiresIn is in seconds
+
+              const userWithToken = {
+                ...user,
+                accessToken,
+                refreshToken,
+                tokenExpiryTime,
+              };
               setUser(userWithToken);
 
               const storageData = {

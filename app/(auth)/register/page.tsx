@@ -119,7 +119,7 @@ export default function RegisterPage() {
           const userWithToken = {
             id: userId,
             email: registeredEmail,
-            token,
+            accessToken: token,
           };
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           setUser(userWithToken as any);

@@ -3,7 +3,9 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import type { User as BaseUser } from "@/types";
 
 interface User extends BaseUser {
-  token?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenExpiryTime?: number; // Timestamp in milliseconds
 }
 
 interface UserState {
@@ -28,7 +30,7 @@ export const useUserStore = create<UserState>()(
       isPaidUser: () => get().user?.isPaidUser ?? false,
       isAuthenticated: () => {
         const { user } = get();
-        return user !== null && !!user.token;
+        return user !== null && !!user.accessToken;
       },
     }),
     {

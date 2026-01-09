@@ -26,7 +26,9 @@ export interface LoginResponse {
   message: string;
   data: {
     user: User;
-    token: string;
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
   };
 }
 

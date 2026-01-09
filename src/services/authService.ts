@@ -100,3 +100,7 @@ export const useVerifyOtpService = createMutationHook(
   "verify-otp",
   API_ENDPOINTS.AUTH.VERIFY_OTP
 );
+export const useLoginGoogleService = createMutationHook(
+  "login-google",
+  API_ENDPOINTS.AUTH.GOOGLE
+);

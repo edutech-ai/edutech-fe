@@ -10,6 +10,8 @@ export const API_ENDPOINTS = {
     FORGOT_PASSWORD: "/auth/forgot-password",
     VERIFY_OTP: "/auth/verify-otp",
     RESET_PASSWORD: "/auth/reset-password",
+    GOOGLE: "/auth/google",
+    GOOGLE_CALLBACK: "/auth/google/callback",
   },
 
   // Profile endpoints

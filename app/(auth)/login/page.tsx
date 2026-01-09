@@ -206,7 +206,7 @@ export default function LoginPage() {
             href="/register"
             className="text-blue-600 hover:text-blue-500 font-medium"
           >
-            Đăng ký ngay
+            Đăng ký tại đây
           </Link>
         </div>
       </form>

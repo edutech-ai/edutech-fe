@@ -55,8 +55,8 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value:
               process.env.NODE_ENV === "development"
-                ? `default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' ${API_BASE_URL} ws: wss:;`
-                : `default-src 'self'; img-src 'self' data: https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' ${API_BASE_URL} https://*.vercel.app; frame-src 'self';`,
+                ? `default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' ${API_BASE_URL} https://api.cloudinary.com https://res.cloudinary.com ws: wss:;`
+                : `default-src 'self'; img-src 'self' data: https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' ${API_BASE_URL} https://api.cloudinary.com https://res.cloudinary.com https://*.vercel.app; frame-src 'self';`,
           },
         ],
       },

@@ -8,6 +8,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { toast } from "sonner";
 import { GoogleLoginButton } from "@/components/atoms/GoogleLoginButton";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
+import { getProfile } from "@/services/profileService";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function LoginPage() {
       loginMutation.mutate(
         { email, password },
         {
-          onSuccess: (response) => {
+          onSuccess: async (response) => {
             try {
               const responseData = response.data?.data || response.data;
               const { user, accessToken, refreshToken, expiresIn } =
@@ -61,7 +62,6 @@ export default function LoginPage() {
                 refreshToken,
                 tokenExpiryTime,
               };
-              setUser(userWithToken);
 
               const storageData = {
                 state: { user: userWithToken },
@@ -71,6 +71,21 @@ export default function LoginPage() {
                 "edutech-storage",
                 JSON.stringify(storageData)
               );
+
+              try {
+                const profile = await getProfile();
+                userWithToken.name = profile.name || user.email;
+
+                storageData.state.user = userWithToken;
+                localStorage.setItem(
+                  "edutech-storage",
+                  JSON.stringify(storageData)
+                );
+              } catch {
+                userWithToken.name = user.email;
+              }
+
+              setUser(userWithToken);
 
               toast.success("Đăng nhập thành công!");
 

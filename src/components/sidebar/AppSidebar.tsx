@@ -60,7 +60,7 @@ const teacherMenuItems: MenuItem[] = [
   },
   {
     title: "Cài đặt",
-    url: "/dashboard/settings",
+    url: "/dashboard/profile",
     icon: Settings,
   },
 ];

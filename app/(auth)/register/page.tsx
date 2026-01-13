@@ -11,6 +11,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { toast } from "sonner";
 import { GoogleLoginButton } from "@/components/atoms/GoogleLoginButton";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
+import { getProfile } from "@/services/profileService";
 
 type Subject = "TOAN" | "VAN" | "ANH" | string;
 
@@ -122,7 +123,7 @@ export default function RegisterPage() {
         otpCode,
       },
       {
-        onSuccess: (response) => {
+        onSuccess: async (response) => {
           const responseData = response.data?.data || response.data;
           const { token, userId } = responseData;
 
@@ -136,8 +137,6 @@ export default function RegisterPage() {
             email: registeredEmail,
             accessToken: token,
           };
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setUser(userWithToken as any);
 
           // CRITICAL: Force sync to localStorage (prevent redirect loop)
           const storageData = {
@@ -145,6 +144,24 @@ export default function RegisterPage() {
             version: 0,
           };
           localStorage.setItem("edutech-storage", JSON.stringify(storageData));
+
+          try {
+            const profile = await getProfile();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (userWithToken as any).name = profile.name || registeredEmail;
+
+            storageData.state.user = userWithToken;
+            localStorage.setItem(
+              "edutech-storage",
+              JSON.stringify(storageData)
+            );
+          } catch {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (userWithToken as any).name = registeredEmail;
+          }
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setUser(userWithToken as any);
 
           toast.success("Xác thực thành công! Chào mừng bạn đến với EduTech!");
 

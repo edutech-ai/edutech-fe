@@ -14,13 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import { useUserStore } from "@/store/useUserStore";
+import type { User } from "@/types";
 
 export default function AdminLayout({
   children,
@@ -28,50 +23,37 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const { user: storeUser, isAuthenticated } = useUserStore();
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Check authentication and authorization
-    const storage = localStorage.getItem("edutech-storage");
-
-    if (!storage) {
+    // Check authentication from Zustand store
+    if (!isAuthenticated()) {
       router.push("/login");
       return;
     }
 
-    try {
-      const { state } = JSON.parse(storage);
-      const userData = state?.user;
-
-      if (!userData || !userData.accessToken) {
-        router.push("/login");
-        return;
-      }
-
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setUser(userData);
-
-      // Check if user is admin (handle both "ADMIN" and "admin")
-      if (userData.role?.toUpperCase() !== "ADMIN") {
-        // Redirect non-admin users to regular dashboard
-        router.push("/dashboard");
-        return;
-      }
-
-      setIsAuthorized(true);
-    } catch {
-      router.push("/login");
+    // Load user data from Zustand store
+    if (storeUser && !user) {
+      setUser({
+        id: storeUser.id,
+        name: storeUser.name || storeUser.email || "User",
+        email: storeUser.email || "",
+        role: storeUser.role || "TEACHER",
+        createdAt: storeUser.createdAt,
+        isPaidUser: storeUser.isPaidUser || false,
+      });
     }
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router, isAuthenticated, storeUser]);
 
   const handleLogout = () => {
-    localStorage.removeItem("edutech-storage");
+    useUserStore.getState().clearUser();
     router.push("/login");
   };
 
-  if (!user || !isAuthorized) {
+  if (!user) {
     return <CoreLoading message="Checking authorization..." fullScreen />;
   }
 
@@ -119,15 +101,10 @@ export default function AdminLayout({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-sm">
-                    {user.name?.charAt(0).toUpperCase() || "A"}
-                  </div>
+                  <UserIcon className="h-5 w-5" />
                   <div className="hidden md:block text-left">
                     <p className="text-sm font-medium">
                       {user.name || "Admin"}
-                    </p>
-                    <p className="text-xs text-gray-500 capitalize">
-                      {user.role || "admin"}
                     </p>
                   </div>
                 </Button>

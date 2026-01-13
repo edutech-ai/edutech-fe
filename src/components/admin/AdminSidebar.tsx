@@ -13,7 +13,6 @@ import {
   Settings,
   HeadphonesIcon,
   Package,
-  ChevronLeft,
   Menu,
   X,
   ChevronDown,
@@ -32,53 +31,53 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    title: "Dashboard",
+    title: "Trang chủ",
     href: "/admin/dashboard",
     icon: LayoutDashboard,
   },
   {
-    title: "Customers",
+    title: "Khách hàng",
     href: "/admin/customers",
     icon: Building2,
   },
   {
-    title: "Users",
+    title: "Người dùng",
     href: "/admin/users",
     icon: Users,
   },
   {
-    title: "Revenue",
+    title: "Doanh thu",
     icon: DollarSign,
     children: [
       {
-        title: "Subscriptions",
+        title: "Các gói đăng ký",
         href: "/admin/subscriptions",
         icon: Package,
       },
       {
-        title: "Billing",
+        title: "Thanh toán",
         href: "/admin/billing",
         icon: CreditCard,
       },
     ],
   },
   {
-    title: "Content",
+    title: "Nội dung",
     href: "/admin/content",
     icon: FileText,
   },
   {
-    title: "Analytics",
+    title: "Phân tích",
     href: "/admin/analytics",
     icon: BarChart3,
   },
   {
-    title: "Settings",
+    title: "Cài đặt",
     href: "/admin/settings",
     icon: Settings,
   },
   {
-    title: "Support",
+    title: "Hỗ trợ",
     href: "/admin/support",
     icon: HeadphonesIcon,
     badge: "3",
@@ -156,7 +155,7 @@ export function AdminSidebar({
         className={cn(
           "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors relative",
           isActive
-            ? "bg-blue-50 text-blue-600"
+            ? "bg-primary text-blue-50"
             : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
           isCollapsed && "justify-center",
           isChild && "py-2"
@@ -206,8 +205,8 @@ export function AdminSidebar({
         <div className="flex h-16 items-center justify-between border-b bg-white px-4">
           {!isCollapsed && (
             <div>
-              <h2 className="text-lg font-bold text-blue-600">EduTech Admin</h2>
-              <p className="text-xs text-gray-500">Control Panel</p>
+              <h2 className="text-lg font-bold text-blue-600">EduTech</h2>
+              <p className="text-xs text-gray-500">Bảng điều khiển</p>
             </div>
           )}
           <Button
@@ -236,7 +235,7 @@ export function AdminSidebar({
         </nav>
 
         {/* Footer */}
-        <div className="border-t bg-white p-4">
+        {/* <div className="border-t bg-white p-4">
           <Link href="/dashboard">
             <Button
               variant="outline"
@@ -251,7 +250,7 @@ export function AdminSidebar({
               {!isCollapsed && "Back to Dashboard"}
             </Button>
           </Link>
-        </div>
+        </div> */}
       </div>
     </>
   );

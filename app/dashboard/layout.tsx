@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { DashboardBreadcrumb } from "@/components/features/dashboard/DashboardBreadcrumb";
-import { Toaster } from "@/components/ui/sonner";
 import type { User } from "@/types";
 import { useUserStore } from "@/store/useUserStore";
 
@@ -133,7 +132,6 @@ export default function DashboardLayout({
           </main>
         </div>
       </div>
-      <Toaster position="top-right" closeButton richColors />
     </SidebarProvider>
   );
 }

@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, User as UserIcon, KeyRound, LogOut } from "lucide-react";
+import { Bell, User as UserIcon, KeyRound, LogOut, Menu } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { CoreLoading } from "@/components/atoms/CoreLoading";
-import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,6 +30,7 @@ export default function AdminLayout({
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     // Check authentication and authorization
@@ -78,17 +78,33 @@ export default function AdminLayout({
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       {/* Sidebar */}
-      <AdminSidebar />
+      <AdminSidebar
+        isMobileOpen={isMobileMenuOpen}
+        onMobileClose={() => setIsMobileMenuOpen(false)}
+      />
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex h-16 items-center justify-between border-b bg-white px-8">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Admin Panel</h1>
-            <p className="text-sm text-gray-500">
-              Manage your platform and customers
-            </p>
+        <header className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-8">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900">
+                Admin Panel
+              </h1>
+              <p className="text-sm text-gray-500 hidden sm:block">
+                Manage your platform and customers
+              </p>
+            </div>
           </div>
 
           {/* Right side: Notification + User */}
@@ -148,10 +164,8 @@ export default function AdminLayout({
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-8">{children}</main>
+        <main className="flex-1 overflow-auto p-4 md:p-8">{children}</main>
       </div>
-
-      <Toaster />
     </div>
   );
 }

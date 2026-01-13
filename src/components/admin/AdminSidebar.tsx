@@ -85,7 +85,13 @@ const navItems: NavItem[] = [
   },
 ];
 
-export function AdminSidebar() {
+export function AdminSidebar({
+  isMobileOpen = false,
+  onMobileClose,
+}: {
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
+}) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>(["Revenue"]);
@@ -142,6 +148,11 @@ export function AdminSidebar() {
       <Link
         key={item.href}
         href={item.href!}
+        onClick={() => {
+          if (window.innerWidth < 768) {
+            onMobileClose?.();
+          }
+        }}
         className={cn(
           "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors relative",
           isActive
@@ -173,56 +184,75 @@ export function AdminSidebar() {
   };
 
   return (
-    <div
-      className={cn(
-        "flex h-screen flex-col border-r bg-gray-50 transition-all duration-300",
-        isCollapsed ? "w-16" : "w-64"
+    <>
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={onMobileClose}
+        />
       )}
-    >
-      {/* Header */}
-      <div className="flex h-16 items-center justify-between border-b bg-white px-4">
-        {!isCollapsed && (
-          <div>
-            <h2 className="text-lg font-bold text-blue-600">EduTech Admin</h2>
-            <p className="text-xs text-gray-500">Control Panel</p>
-          </div>
+
+      {/* Sidebar */}
+      <div
+        className={cn(
+          "flex h-screen flex-col border-r bg-gray-50 transition-all duration-300",
+          "hidden md:flex",
+          isCollapsed ? "md:w-16" : "md:w-64",
+          "md:relative fixed inset-y-0 left-0 z-50 w-64",
+          isMobileOpen ? "flex" : "hidden md:flex"
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={cn("shrink-0", isCollapsed && "mx-auto")}
-        >
-          {isCollapsed ? (
-            <Menu className="h-5 w-5" />
-          ) : (
-            <X className="h-5 w-5" />
+      >
+        <div className="flex h-16 items-center justify-between border-b bg-white px-4">
+          {!isCollapsed && (
+            <div>
+              <h2 className="text-lg font-bold text-blue-600">EduTech Admin</h2>
+              <p className="text-xs text-gray-500">Control Panel</p>
+            </div>
           )}
-        </Button>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-        {navItems.map((item) => renderNavItem(item))}
-      </nav>
-
-      {/* Footer */}
-      <div className="border-t bg-white p-4">
-        <Link href="/dashboard">
           <Button
-            variant="outline"
-            className={cn(
-              "w-full",
-              isCollapsed ? "justify-center" : "justify-start"
-            )}
-            size="sm"
-            title={isCollapsed ? "Back to Dashboard" : undefined}
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              if (window.innerWidth < 768) {
+                onMobileClose?.();
+              } else {
+                setIsCollapsed(!isCollapsed);
+              }
+            }}
+            className={cn("shrink-0", isCollapsed && "mx-auto")}
           >
-            <ChevronLeft className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
-            {!isCollapsed && "Back to Dashboard"}
+            {isCollapsed ? (
+              <Menu className="h-5 w-5" />
+            ) : (
+              <X className="h-5 w-5" />
+            )}
           </Button>
-        </Link>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 space-y-1 overflow-y-auto p-4">
+          {navItems.map((item) => renderNavItem(item))}
+        </nav>
+
+        {/* Footer */}
+        <div className="border-t bg-white p-4">
+          <Link href="/dashboard">
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full",
+                isCollapsed ? "justify-center" : "justify-start"
+              )}
+              size="sm"
+              title={isCollapsed ? "Back to Dashboard" : undefined}
+            >
+              <ChevronLeft className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
+              {!isCollapsed && "Back to Dashboard"}
+            </Button>
+          </Link>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

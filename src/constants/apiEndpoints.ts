@@ -30,19 +30,25 @@ export const API_ENDPOINTS = {
   },
 
   // Quiz endpoints
-  // QUIZ: {
-  //   BASE: "/quizzes",
-  //   BY_ID: (id: string) => `/quizzes/${id}`,
-  //   GENERATE: "/quizzes/generate",
-  // },
+  QUIZ: {
+    BASE: "/quizzes",
+    MY_QUIZZES: "/quizzes/my-quizzes",
+    PUBLIC: "/quizzes/public",
+    BY_ID: (id: string) => `/quizzes/${id}`,
+    BY_EXAM_CODE: (examCode: string) => `/quizzes/exam-code/${examCode}`,
+    QUESTIONS: (id: string) => `/quizzes/${id}/questions`,
+    STATS: (id: string) => `/quizzes/${id}/stats`,
+  },
 
-  // Exam endpoints
-  // EXAM: {
-  //   BASE: "/exams",
-  //   BY_ID: (id: string) => `/exams/${id}`,
-  //   INSTANCES: "/exam-instances",
-  //   SUBMIT: (code: string) => `/exam-instances/${code}/submit`,
-  // },
+  // Question endpoints
+  QUESTION: {
+    BASE: "/questions",
+    BULK: "/questions/bulk",
+    BY_ID: (id: string) => `/questions/${id}`,
+    BY_QUIZ_ID: (quizId: string) => `/questions/quiz/${quizId}`,
+    DELETE_BY_QUIZ_ID: (quizId: string) => `/questions/quiz/${quizId}`,
+    BY_DOCUMENT_ID: (documentId: string) => `/questions/document/${documentId}`,
+  },
 } as const;
 
 export type ApiEndpoint = (typeof API_ENDPOINTS)[keyof typeof API_ENDPOINTS];

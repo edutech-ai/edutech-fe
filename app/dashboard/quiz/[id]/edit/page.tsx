@@ -2,51 +2,44 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Save, Loader2 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { Save, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QuizInfoTab } from "@/components/organisms/quiz/QuizInfoTab";
 import { QuestionListTab } from "@/components/organisms/quiz/QuestionListTab";
 import { PDFPreview } from "@/components/features/quiz-generator/PDFPreview";
-import type { Quiz, CreateQuizRequest } from "@/types/quiz";
+import type { Quiz, UpdateQuizRequest } from "@/types/quiz";
 import type { Question } from "@/types/question";
 import { toast } from "sonner";
 import {
-  useCreateQuiz,
   useQuizById,
   useQuizQuestions,
+  useUpdateQuiz,
 } from "@/services/quizService";
-import { useBulkCreateQuestions } from "@/services/questionService";
+import {
+  useBulkCreateQuestions,
+  useDeleteQuestionsByQuizId,
+} from "@/services/questionService";
 
-export default function QuizNewPage() {
+export default function QuizEditPage() {
+  const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  // MANUAL or AI
-  // const type = searchParams.get("type");
-  const aiGenRequestId = searchParams.get("aiGenRequestId");
-  const duplicateFromId = searchParams.get("duplicateFrom");
+  const quizId = params.id as string;
 
   const [activeTab, setActiveTab] = useState("info");
   const [isSaving, setIsSaving] = useState(false);
   const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // API mutations
-  const createQuizMutation = useCreateQuiz();
+  // API hooks
+  const { data: quizResponse, isLoading: isLoadingQuiz } = useQuizById(quizId);
+  const { data: questionsResponse, isLoading: isLoadingQuestions } =
+    useQuizQuestions(quizId, true);
+
+  const updateQuizMutation = useUpdateQuiz();
   const bulkCreateQuestionsMutation = useBulkCreateQuestions();
-
-  // Fetch quiz for duplication
-  const { data: duplicateQuizResponse } = useQuizById(
-    duplicateFromId || undefined,
-    {
-      enabled: !!duplicateFromId,
-    }
-  );
-  const { data: duplicateQuestionsResponse } = useQuizQuestions(
-    duplicateFromId || undefined,
-    true,
-    { enabled: !!duplicateFromId }
-  );
+  const deleteQuestionsMutation = useDeleteQuestionsByQuizId();
 
   // Quiz state (Quiz + questions array)
   const [quiz, setQuiz] = useState<Partial<Quiz & { questions: Question[] }>>({
@@ -60,81 +53,20 @@ export default function QuizNewPage() {
     questions: [],
   });
 
-  // Load quiz for duplication
+  // Load quiz data when fetched
   useEffect(() => {
-    if (
-      duplicateFromId &&
-      duplicateQuizResponse?.data &&
-      duplicateQuestionsResponse?.data
-    ) {
-      const sourceQuiz = duplicateQuizResponse.data;
-      const sourceQuestions = duplicateQuestionsResponse.data.questions;
+    if (quizResponse?.data && questionsResponse?.data && !isLoaded) {
+      const backendQuiz = quizResponse.data;
+      const backendQuestions = questionsResponse.data.questions;
 
       setQuiz({
-        title: `${sourceQuiz.title} (Copy)`,
-        description: sourceQuiz.description || "",
-        subject: sourceQuiz.subject,
-        grade: sourceQuiz.grade,
-        duration: sourceQuiz.duration,
-        difficulty: sourceQuiz.difficulty,
-        status: "draft", // Always draft for duplicates
-        questions: sourceQuestions,
+        ...backendQuiz,
+        questions: backendQuestions,
       });
 
-      toast.success("Đã tải dữ liệu để sao chép!");
+      setIsLoaded(true);
     }
-  }, [duplicateFromId, duplicateQuizResponse, duplicateQuestionsResponse]);
-
-  // Load AI-generated quiz if aiGenRequestId exists
-  useEffect(() => {
-    if (aiGenRequestId) {
-      // TODO: Fetch AI-generated quiz by ID
-      // console.log("Loading AI-generated quiz:", aiGenRequestId);
-      // Mock data with sample questions
-      setQuiz({
-        title: "Đề thi Toán học lớp 10 - Được tạo bởi AI",
-        description: "Đề kiểm tra về phương trình bậc hai và ứng dụng",
-        subject: "Toán",
-        grade: 10,
-        duration: 60,
-        questions: [
-          {
-            id: "q1",
-            type: "SINGLE_CHOICE" as any,
-            content: "Phương trình bậc hai có dạng tổng quát là gì?",
-            options: [
-              "ax + b = 0",
-              "ax² + bx + c = 0",
-              "ax³ + bx² + cx + d = 0",
-              "ax² + b = 0",
-            ],
-            correct_answer: "1",
-            point: 1,
-            difficulty: "RECOGNITION" as any,
-            quiz_id: "",
-            is_deleted: false,
-            created_at: "",
-            updated_at: "",
-          },
-          {
-            id: "q2",
-            type: "SINGLE_CHOICE" as any,
-            content:
-              "Delta (Δ) của phương trình ax² + bx + c = 0 được tính bằng công thức nào?",
-            options: ["b² - 4ac", "b² + 4ac", "b - 4ac", "b + 4ac"],
-            correct_answer: "0",
-            point: 1.5,
-            difficulty: "COMPREHENSION" as any,
-            quiz_id: "",
-            is_deleted: false,
-            created_at: "",
-            updated_at: "",
-          },
-        ],
-        status: "draft",
-      });
-    }
-  }, [aiGenRequestId]);
+  }, [quizResponse, questionsResponse, isLoaded]);
 
   const handleSave = async (isDraft: boolean = true) => {
     // Validation
@@ -153,10 +85,10 @@ export default function QuizNewPage() {
     setIsSaving(true);
 
     try {
-      // Step 1: Create quiz
-      const createData: CreateQuizRequest = {
-        title: quiz.title!,
-        description: quiz.description || undefined,
+      // Step 1: Update quiz info
+      const updateData: UpdateQuizRequest = {
+        title: quiz.title,
+        description: quiz.description ?? undefined,
         difficulty: quiz.difficulty,
         subject: quiz.subject,
         grade: quiz.grade,
@@ -164,18 +96,18 @@ export default function QuizNewPage() {
         status: isDraft ? "draft" : "public",
       };
 
-      const quizResponse = await createQuizMutation.mutateAsync(createData);
+      await updateQuizMutation.mutateAsync({
+        id: quizId,
+        data: updateData,
+      });
 
-      if (!quizResponse.success || !quizResponse.data) {
-        throw new Error("Failed to create quiz");
-      }
+      // Step 2: Delete all old questions
+      await deleteQuestionsMutation.mutateAsync(quizId);
 
-      const newQuizId = quizResponse.data.id;
-
-      // Step 2: Create questions if any
+      // Step 3: Create new questions
       if (quiz.questions && quiz.questions.length > 0) {
         await bulkCreateQuestionsMutation.mutateAsync({
-          quiz_id: newQuizId,
+          quiz_id: quizId,
           questions: quiz.questions.map((q) => ({
             content: q.content,
             options: q.options ?? undefined,
@@ -188,27 +120,21 @@ export default function QuizNewPage() {
         });
 
         toast.success(
-          isDraft
-            ? `Đã lưu bản nháp với ${quiz.questions.length} câu hỏi!`
-            : `Đã xuất bản đề thi với ${quiz.questions.length} câu hỏi!`
+          `Đã cập nhật đề thi với ${quiz.questions.length} câu hỏi!`
         );
       } else {
-        toast.success(
-          isDraft
-            ? "Đã lưu bản nháp thành công!"
-            : "Đã xuất bản đề thi thành công!"
-        );
+        toast.success("Đã cập nhật đề thi thành công!");
       }
 
-      // Navigate to library
-      router.push("/dashboard/library?tab=quizzes");
+      // Navigate back to detail page
+      router.push(`/dashboard/quiz/${quizId}`);
     } catch (error: any) {
-      console.error("Error saving quiz:", error);
+      console.error("Error updating quiz:", error);
 
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||
-        "Có lỗi xảy ra khi lưu đề thi";
+        "Có lỗi xảy ra khi cập nhật đề thi";
 
       toast.error(errorMessage);
     } finally {
@@ -226,6 +152,10 @@ export default function QuizNewPage() {
       return;
     }
     setShowPDFPreview(true);
+  };
+
+  const handleBack = () => {
+    router.push(`/dashboard/quiz/${quizId}`);
   };
 
   const updateQuizInfo = (updates: Partial<Quiz>) => {
@@ -258,21 +188,27 @@ export default function QuizNewPage() {
     points: q.point,
   }));
 
+  if (isLoadingQuiz || isLoadingQuestions || !isLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-100">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <span className="ml-3 text-gray-600">Đang tải dữ liệu...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 w-full mx-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={handleBack}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              {quiz.title || "Tạo đề thi mới"}
+              {quiz.title || "Chỉnh sửa đề thi"}
             </h1>
-            <p className="text-gray-600 text-sm">
-              {duplicateFromId
-                ? "Sao chép từ đề thi có sẵn"
-                : aiGenRequestId
-                  ? "Chỉnh sửa đề thi được tạo bởi AI"
-                  : "Tạo đề thi thủ công"}
-            </p>
+            <p className="text-gray-600 text-sm">Chỉnh sửa thông tin đề thi</p>
           </div>
         </div>
 
@@ -297,10 +233,10 @@ export default function QuizNewPage() {
             {isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Đang xuất bản...
+                Đang cập nhật...
               </>
             ) : (
-              "Xuất bản đề thi"
+              "Cập nhật đề thi"
             )}
           </Button>
         </div>

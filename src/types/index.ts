@@ -87,49 +87,6 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
-// ==================== QUIZ/EXAM ====================
-export interface Question {
-  id: string;
-  type: QuestionType;
-  content: string;
-  options?: string[]; // For single/multiple choice
-  correctAnswer?: string | number; // Index or text (for single choice, true/false, short answer)
-  correctAnswers?: (string | number)[]; // For multiple choice (multiple correct answers)
-  explanation?: string;
-  points: number;
-  difficulty: Difficulty;
-  tags?: string[];
-  imageUrl?: string;
-}
-
-export interface Quiz {
-  id: string;
-  title: string;
-  description?: string;
-  subject: string;
-  grade: number;
-  totalQuestions: number;
-  totalPoints: number;
-  duration?: number; // minutes
-  questions: Question[];
-  status: QuizStatus;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  tags?: string[];
-}
-
-export interface QuizGenerateRequest {
-  topic: string;
-  subject: string;
-  grade: number;
-  numQuestions: number;
-  questionTypes: QuestionType[];
-  difficulty: Difficulty;
-  learningObjectives?: string;
-  language?: "vi" | "en";
-}
-
 // ==================== LESSON PLAN ====================
 export interface LessonPlan {
   id: string;
@@ -154,7 +111,6 @@ export interface LessonActivity {
   description: string;
   type: ActivityType;
 }
-
 export interface LessonPlanGenerateRequest {
   topic: string;
   subject: string;
@@ -302,3 +258,7 @@ export type Grade = (typeof GRADES)[number];
 
 // ==================== CLASSROOM ====================
 export * from "./classroom";
+
+// ==================== QUIZ & QUESTION (Backend API) ====================
+export * from "./quiz";
+export * from "./question";

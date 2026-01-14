@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Library,
@@ -10,10 +10,12 @@ import {
   List,
   Search,
   FileMinusCorner,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { QuizCard, type Quiz } from "@/components/molecules/quiz-card";
+import { QuizCard } from "@/components/molecules/quiz-card";
+import type { Quiz, QuizQueryParams } from "@/types/quiz";
 import { CreateQuizCard } from "@/components/molecules/quiz-card/CreateQuizCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FolderCard } from "@/components/features/library/FolderCard";
@@ -28,65 +30,47 @@ import {
   type File,
   type FolderColor,
 } from "@/data/library";
-import { ExamStorageService } from "@/services/storage/examStorage";
 import { toast } from "sonner";
+import { useMyQuizzes, useDeleteQuiz } from "@/services/quizService";
 
 export function LibraryTemplate() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [folders] = useState<Folder[]>(mockFolders);
   const [files] = useState<File[]>(mockFiles);
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("all");
+  const [deletingQuizId, setDeletingQuizId] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  // Load exams from localStorage
-  const loadExams = () => {
-    const savedExams = ExamStorageService.getAllExams();
-    const quizzes: Quiz[] = savedExams.map((exam) => ({
-      id: exam.id,
-      name: exam.examInfo.name,
-      subject: exam.examInfo.subject,
-      grade: exam.examInfo.grade,
-      durationMinutes: exam.examInfo.durationMinutes,
-      totalQuestions: exam.questions.length,
-      createdAt: exam.createdAt,
-      updatedAt: exam.updatedAt,
-    }));
-    setQuizzes(quizzes);
-  };
-
-  // Load exams on mount
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadExams();
-  }, []);
-
-  // Load folder, tab, and search from URL on mount
-  useEffect(() => {
+  // Derive values from URL params (avoid cascading setState in useEffect)
+  const currentFolderId = useMemo(() => {
     const folderId = searchParams.get("folder");
-    if (folderId && folderId !== "null") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCurrentFolderId(folderId);
-    } else {
-      setCurrentFolderId(null);
-    }
-
-    const tab = searchParams.get("tab");
-    if (tab) {
-      setActiveTab(tab);
-    }
-
-    const search = searchParams.get("search");
-    if (search) {
-      setSearchQuery(search);
-    }
+    return folderId && folderId !== "null" ? folderId : null;
   }, [searchParams]);
+
+  const activeTab = searchParams.get("tab") || "all";
+  const searchQuery = searchParams.get("search") || "";
+
+  // Fetch quizzes from backend API
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [quizFilters, setQuizFilters] = useState<QuizQueryParams>({
+    page: 1,
+    limit: 100, // Get all quizzes for now
+  });
+
+  const {
+    data: quizzesResponse,
+    isLoading: isLoadingQuizzes,
+    error: quizzesError,
+  } = useMyQuizzes(quizFilters);
+
+  const deleteQuizMutation = useDeleteQuiz();
+
+  // Get quizzes directly from API (no adapter needed)
+  const quizzes: Quiz[] = quizzesResponse?.data ?? [];
 
   // Get current folder content
   const getCurrentFolders = () => {
@@ -104,7 +88,6 @@ export function LibraryTemplate() {
     params.set("tab", "all");
 
     router.push(`/dashboard/library?${params.toString()}`);
-    setCurrentFolderId(folderId);
     setSelectedItems(new Set());
   };
 
@@ -146,7 +129,6 @@ export function LibraryTemplate() {
 
     // Close dialog and navigate back to root library
     setCreateFolderOpen(false);
-    setCurrentFolderId(null);
     setSelectedItems(new Set());
 
     const params = new URLSearchParams();
@@ -168,32 +150,23 @@ export function LibraryTemplate() {
 
   // Quiz handlers
   const handleViewQuiz = (quizId: string) => {
-    // eslint-disable-next-line no-console
-    console.log("View quiz:", quizId);
-    // TODO: Navigate to quiz detail page
+    router.push(`/dashboard/quiz/${quizId}`);
   };
 
   const handleEditQuiz = (quizId: string) => {
-    router.push(`/dashboard/quiz?exam=${quizId}`);
+    router.push(`/dashboard/quiz/${quizId}/edit`);
   };
 
-  const handleDuplicateQuiz = (quizId: string) => {
-    const exam = ExamStorageService.getExamById(quizId);
-    if (exam) {
-      // Create a copy without the ID
-      ExamStorageService.saveExam(
-        { ...exam.examInfo, name: `${exam.examInfo.name} (Copy)` },
-        exam.questions
-      );
-      loadExams(); // Reload to show the new copy
-      toast.success("Đã tạo bản sao đề thi!");
-    }
+  const handleDuplicateQuiz = async (quizId: string) => {
+    // Navigate to new quiz page with duplicateFrom param
+    // The new page will load and copy the quiz data
+    router.push(`/dashboard/quiz/new?duplicateFrom=${quizId}`);
+    toast.info("Đang tải đề thi để sao chép...");
   };
 
   const handleDeleteQuiz = (quizId: string) => {
-    ExamStorageService.deleteExam(quizId);
-    loadExams(); // Reload after delete
-    toast.success("Đã xóa đề thi!");
+    setDeletingQuizId(quizId);
+    setDeleteConfirmOpen(true);
   };
 
   const handleCreateQuiz = () => {
@@ -203,11 +176,19 @@ export function LibraryTemplate() {
     router.push("/dashboard/quiz");
   };
 
+  // Client-side filtering (since we load all quizzes)
   const filteredQuizzes = quizzes.filter(
     (quiz) =>
-      quiz.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       quiz.subject.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Show error toast if fetch fails
+  useEffect(() => {
+    if (quizzesError) {
+      toast.error("Không thể tải danh sách đề thi. Vui lòng thử lại!");
+    }
+  }, [quizzesError]);
 
   const currentFolders = getCurrentFolders();
   const currentFiles = getCurrentFiles();
@@ -226,7 +207,6 @@ export function LibraryTemplate() {
               value={searchQuery}
               onChange={(e) => {
                 const value = e.target.value;
-                setSearchQuery(value);
 
                 // Update URL with search parameter
                 const params = new URLSearchParams(searchParams.toString());
@@ -241,8 +221,6 @@ export function LibraryTemplate() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && searchQuery) {
                   // Navigate to quizzes tab when pressing Enter
-                  setActiveTab("quizzes");
-                  setCurrentFolderId(null);
                   setSelectedItems(new Set());
 
                   const params = new URLSearchParams();
@@ -296,25 +274,12 @@ export function LibraryTemplate() {
       <Tabs
         value={activeTab}
         onValueChange={(value) => {
-          setActiveTab(value);
           // Update URL with tab
           const params = new URLSearchParams();
           params.set("tab", value);
 
-          // Only keep folder parameter for "all" tab
-          if (value === "all") {
-            // When clicking "all" tab, clear folder and go back to root
-            if (currentFolderId) {
-              setCurrentFolderId(null);
-              setSelectedItems(new Set());
-            }
-          } else {
-            // When switching to other tabs, clear folder
-            if (currentFolderId) {
-              setCurrentFolderId(null);
-              setSelectedItems(new Set());
-            }
-          }
+          // Clear selection when changing tabs
+          setSelectedItems(new Set());
 
           // Add search parameter if exists
           if (searchQuery) {
@@ -332,7 +297,6 @@ export function LibraryTemplate() {
               onClick={() => {
                 // Always navigate to root when clicking "Tất cả"
                 if (currentFolderId) {
-                  setCurrentFolderId(null);
                   setSelectedItems(new Set());
 
                   const params = new URLSearchParams();
@@ -504,7 +468,12 @@ export function LibraryTemplate() {
 
         {/* Quizzes Tab */}
         <TabsContent value="quizzes" className="mt-6">
-          {viewMode === "grid" ? (
+          {isLoadingQuizzes ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <span className="ml-3 text-gray-600">Đang tải đề thi...</span>
+            </div>
+          ) : viewMode === "grid" ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               <CreateQuizCard onCreate={handleCreateQuiz} />
               {filteredQuizzes.map((quiz) => (
@@ -515,6 +484,7 @@ export function LibraryTemplate() {
                   onEdit={handleEditQuiz}
                   onDuplicate={handleDuplicateQuiz}
                   onDelete={handleDeleteQuiz}
+                  isDeleting={deletingQuizId === quiz.id}
                 />
               ))}
             </div>
@@ -532,11 +502,11 @@ export function LibraryTemplate() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 truncate">
-                        {quiz.name}
+                        {quiz.title}
                       </p>
                       <p className="text-sm text-gray-500">
                         {quiz.subject} • Lớp {quiz.grade} •{" "}
-                        {quiz.totalQuestions} câu • {quiz.durationMinutes} phút
+                        {quiz.total_questions} câu • {quiz.duration} phút
                       </p>
                     </div>
                   </div>
@@ -545,10 +515,14 @@ export function LibraryTemplate() {
             </div>
           )}
 
-          {filteredQuizzes.length === 0 && (
+          {!isLoadingQuizzes && filteredQuizzes.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               <Library className="w-16 h-16 mx-auto mb-3 opacity-20" />
-              <p>Không tìm thấy đề thi nào</p>
+              <p>
+                {searchQuery
+                  ? "Không tìm thấy đề thi phù hợp"
+                  : "Chưa có đề thi nào. Tạo đề thi đầu tiên!"}
+              </p>
             </div>
           )}
         </TabsContent>
@@ -580,6 +554,23 @@ export function LibraryTemplate() {
         onConfirm={handleBulkDelete}
         itemCount={selectedItems.size}
         itemType="folder"
+      />
+
+      {/* Delete Quiz Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        onConfirm={() => {
+          if (deletingQuizId) {
+            deleteQuizMutation.mutate(deletingQuizId);
+            toast.success("Đã xóa đề thi thành công!");
+          } else {
+            toast.error("Không thể xóa đề thi. Vui lòng thử lại!");
+          }
+          setDeleteConfirmOpen(false);
+        }}
+        itemCount={1}
+        itemType="quiz"
       />
     </div>
   );

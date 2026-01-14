@@ -39,8 +39,8 @@ export function QuizInfoTab({ quiz, onUpdate }: QuizInfoTabProps) {
         <div className="space-y-2">
           <Label htmlFor="folder">Lưu vào thư mục</Label>
           <Select
-            value={quiz.tags?.[0] || ""}
-            onValueChange={(value) => onUpdate({ tags: [value] })}
+            value={quiz.folder || ""}
+            onValueChange={(value) => onUpdate({ folder: value })}
           >
             <SelectTrigger id="folder">
               <SelectValue placeholder="Chọn thư mục" />
@@ -55,7 +55,7 @@ export function QuizInfoTab({ quiz, onUpdate }: QuizInfoTabProps) {
         </div>
 
         {/* Subject & Grade */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="subject">
               Môn học <span className="text-red-500">*</span>
@@ -97,25 +97,24 @@ export function QuizInfoTab({ quiz, onUpdate }: QuizInfoTabProps) {
               </SelectContent>
             </Select>
           </div>
-        </div>
-
-        {/* Duration */}
-        <div className="space-y-2">
-          <Label htmlFor="duration">
-            Thời gian làm bài (phút) <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="duration"
-            type="number"
-            min="1"
-            max="300"
-            value={quiz.duration || ""}
-            onChange={(e) => onUpdate({ duration: parseInt(e.target.value) })}
-            placeholder="Ví dụ: 60"
-          />
-          <p className="text-xs text-gray-500">
-            Thời gian tối đa học sinh có thể làm bài (tính bằng phút)
-          </p>
+          {/* Duration */}
+          <div className="space-y-2">
+            <Label htmlFor="duration">
+              Thời gian làm bài (phút) <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="duration"
+              type="number"
+              min="1"
+              max="300"
+              value={quiz.duration || ""}
+              onChange={(e) => onUpdate({ duration: parseInt(e.target.value) })}
+              placeholder="Ví dụ: 60"
+            />
+            <p className="text-xs text-gray-500">
+              Thời gian tối đa học sinh có thể làm bài (tính bằng phút)
+            </p>
+          </div>
         </div>
 
         {/* Instructions */}

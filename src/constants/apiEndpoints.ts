@@ -49,6 +49,25 @@ export const API_ENDPOINTS = {
     DELETE_BY_QUIZ_ID: (quizId: string) => `/questions/quiz/${quizId}`,
     BY_DOCUMENT_ID: (documentId: string) => `/questions/document/${documentId}`,
   },
+
+  // Classroom endpoints
+  CLASSROOM: {
+    BASE: "/classrooms",
+    BY_ID: (id: string) => `/classrooms/${id}`,
+    STUDENTS: (classroomId: string) => `/classrooms/${classroomId}/students`,
+    STUDENT: (classroomId: string, studentId: string) =>
+      `/classrooms/${classroomId}/students/${studentId}`,
+    STUDENT_PERFORMANCE: (classroomId: string, studentId: string) =>
+      `/classrooms/${classroomId}/students/${studentId}/performance`,
+    LEADERBOARD: (classroomId: string) =>
+      `/classrooms/${classroomId}/leaderboard`,
+  },
+
+  // Student endpoints
+  STUDENT: {
+    BASE: "/students",
+    BY_ID: (id: string) => `/students/${id}`,
+  },
 } as const;
 
 export type ApiEndpoint = (typeof API_ENDPOINTS)[keyof typeof API_ENDPOINTS];

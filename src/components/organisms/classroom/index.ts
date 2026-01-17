@@ -4,3 +4,4 @@ export * from "./RandomPicker";
 export * from "./StudentDataTable";
 export * from "./StudentDetailPanel";
 export * from "./EndSessionDialog";
+export * from "./CreateClassroomModal";

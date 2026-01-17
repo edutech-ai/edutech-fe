@@ -18,6 +18,131 @@ export enum SessionStatus {
   ENDED = "ENDED",
 }
 
+export enum ClassroomStatus {
+  ACTIVE = "active",
+  ARCHIVED = "archived",
+  UNACTIVE = "unactive",
+}
+
+export enum ClassroomStudentStatus {
+  ACTIVE = "active",
+  COMPLETED = "completed",
+  DROPPED = "dropped",
+}
+
+// ==================== BACKEND API TYPES ====================
+export interface ClassroomBackend {
+  id: string;
+  teacher_id: string;
+  name: string;
+  school_year?: string;
+  description?: string;
+  avatar_url?: string;
+  status: string;
+  created_at: string;
+  student_count?: number;
+}
+
+export interface StudentBackend {
+  id: string;
+  full_name: string;
+  student_code?: string;
+  phone_number?: string;
+  parent_phone_number?: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface ClassroomStudentBackend {
+  id: string;
+  classroom_id: string;
+  student_id: string;
+  status: string;
+  joined_at: string;
+  // Joined student info
+  student?: StudentBackend;
+  full_name?: string;
+  student_code?: string;
+}
+
+export interface StudentPerformanceBackend {
+  id: string;
+  classroom_id: string;
+  student_id: string;
+  total_exams: number;
+  average_score: number;
+  subject_performance?: Record<string, number>;
+  strong_topic?: Record<string, unknown>;
+  weak_topic?: Record<string, unknown>;
+  updated_at: string;
+}
+
+// ==================== API REQUEST/RESPONSE TYPES ====================
+export interface ClassroomQueryParams {
+  page?: number;
+  limit?: number;
+  status?: string;
+}
+
+export interface CreateClassroomRequest {
+  name: string;
+  school_year?: string;
+  description?: string;
+  avatar_url?: string;
+  status?: string;
+}
+
+export interface UpdateClassroomRequest {
+  name?: string;
+  school_year?: string;
+  description?: string;
+  avatar_url?: string;
+  status?: string;
+}
+
+export interface AddStudentToClassroomRequest {
+  student_id: string;
+  status?: string;
+}
+
+export interface ClassroomApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+}
+
+export interface ClassroomListResponse {
+  success: boolean;
+  data: {
+    classrooms: ClassroomBackend[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+}
+
+export interface ClassroomStudentsResponse {
+  success: boolean;
+  data: ClassroomStudentBackend[];
+}
+
+export interface LeaderboardEntry {
+  student_id: string;
+  full_name: string;
+  student_code?: string;
+  average_score: number;
+  total_exams: number;
+  rank: number;
+}
+
+export interface LeaderboardResponse {
+  success: boolean;
+  data: LeaderboardEntry[];
+}
+
 // ==================== STUDENT ====================
 export interface Student {
   id: string;

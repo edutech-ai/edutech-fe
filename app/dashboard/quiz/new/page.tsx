@@ -89,28 +89,31 @@ export default function QuizNewPage() {
   useEffect(() => {
     if (aiGenRequestId) {
       // TODO: Fetch AI-generated quiz by ID
-      // console.log("Loading AI-generated quiz:", aiGenRequestId);
-      // Mock data with sample questions
+      // Mock data with 10 Math questions for grade 9 - Circle theory
       setQuiz({
-        title: "Đề thi Toán học lớp 10 - Được tạo bởi AI",
-        description: "Đề kiểm tra về phương trình bậc hai và ứng dụng",
+        title: "Đề kiểm tra Toán lớp 9 - Đường tròn",
+        description:
+          "Kiểm tra lý thuyết về góc nội tiếp, tứ giác nội tiếp và tam giác đồng dạng",
         subject: "Toán",
-        grade: 10,
-        duration: 60,
+        grade: 9,
+        duration: 45,
         questions: [
           {
             id: "q1",
-            type: "SINGLE_CHOICE" as any,
-            content: "Phương trình bậc hai có dạng tổng quát là gì?",
+            type: "SINGLE_CHOICE",
+            content:
+              "Góc ở tâm chắn cùng một cung với góc nội tiếp thì có số đo:",
             options: [
-              "ax + b = 0",
-              "ax² + bx + c = 0",
-              "ax³ + bx² + cx + d = 0",
-              "ax² + b = 0",
+              "Bằng góc nội tiếp",
+              "Lớn hơn góc nội tiếp",
+              "Gấp đôi góc nội tiếp",
+              "Bằng nửa góc nội tiếp",
             ],
-            correct_answer: "1",
-            point: 1,
-            difficulty: "RECOGNITION" as any,
+            correctAnswer: 2,
+            points: 0.5,
+            difficulty: "RECOGNITION",
+            explanation:
+              "Góc ở tâm có số đo bằng số đo cung bị chắn, góc nội tiếp có số đo bằng nửa số đo cung bị chắn. Vậy góc ở tâm gấp đôi góc nội tiếp cùng chắn một cung.",
             quiz_id: "",
             is_deleted: false,
             created_at: "",
@@ -118,19 +121,183 @@ export default function QuizNewPage() {
           },
           {
             id: "q2",
-            type: "SINGLE_CHOICE" as any,
-            content:
-              "Delta (Δ) của phương trình ax² + bx + c = 0 được tính bằng công thức nào?",
-            options: ["b² - 4ac", "b² + 4ac", "b - 4ac", "b + 4ac"],
-            correct_answer: "0",
-            point: 1.5,
-            difficulty: "COMPREHENSION" as any,
+            type: "SINGLE_CHOICE",
+            content: "Số đo góc nội tiếp bằng:",
+            options: [
+              "Số đo cung bị chắn",
+              "Nửa số đo cung bị chắn",
+              "Gấp đôi số đo cung bị chắn",
+              "Tổng hai cung kề",
+            ],
+            correctAnswer: 1,
+            points: 0.5,
+            difficulty: "RECOGNITION",
+            explanation:
+              "Định lý: Trong một đường tròn, số đo góc nội tiếp bằng nửa số đo cung bị chắn.",
             quiz_id: "",
             is_deleted: false,
             created_at: "",
             updated_at: "",
           },
-        ],
+          {
+            id: "q3",
+            type: "SINGLE_CHOICE",
+            content: "Góc nội tiếp chắn nửa đường tròn có số đo:",
+            options: ["30 độ", "45 độ", "60 độ", "90 độ"],
+            correctAnswer: 3,
+            points: 0.5,
+            difficulty: "RECOGNITION",
+            explanation:
+              "Nửa đường tròn có số đo 180°. Góc nội tiếp chắn nửa đường tròn có số đo = 180°/2 = 90°.",
+            quiz_id: "",
+            is_deleted: false,
+            created_at: "",
+            updated_at: "",
+          },
+          {
+            id: "q4",
+            type: "SINGLE_CHOICE",
+            content:
+              "Nếu một tứ giác có tổng hai góc đối bằng 180 độ thì tứ giác đó:",
+            options: [
+              "Là hình thang",
+              "Là hình chữ nhật",
+              "Nội tiếp được đường tròn",
+              "Là hình bình hành",
+            ],
+            correctAnswer: 2,
+            points: 0.5,
+            difficulty: "COMPREHENSION",
+            explanation:
+              "Định lý: Tứ giác nội tiếp đường tròn khi và chỉ khi tổng hai góc đối bằng 180°.",
+            quiz_id: "",
+            is_deleted: false,
+            created_at: "",
+            updated_at: "",
+          },
+          {
+            id: "q5",
+            type: "SINGLE_CHOICE",
+            content:
+              "Hai tiếp tuyến của một đường tròn cắt nhau tại một điểm thì:",
+            options: [
+              "Hai đoạn nối từ điểm đó đến tiếp điểm bằng nhau",
+              "Hai đoạn nối đó vuông góc",
+              "Hai đoạn nối đó song song",
+              "Không có mối liên hệ",
+            ],
+            correctAnswer: 0,
+            points: 0.5,
+            difficulty: "COMPREHENSION",
+            explanation:
+              "Tính chất hai tiếp tuyến cắt nhau: Nếu hai tiếp tuyến của một đường tròn cắt nhau tại một điểm thì điểm đó cách đều hai tiếp điểm.",
+            quiz_id: "",
+            is_deleted: false,
+            created_at: "",
+            updated_at: "",
+          },
+          {
+            id: "q6",
+            type: "SINGLE_CHOICE",
+            content: "Góc tạo bởi tia tiếp tuyến và dây cung bằng:",
+            options: [
+              "Góc ở tâm chắn cùng cung",
+              "Nửa góc ở tâm chắn cùng cung",
+              "Góc nội tiếp chắn cùng cung",
+              "Hai lần góc nội tiếp chắn cùng cung",
+            ],
+            correctAnswer: 2,
+            points: 0.5,
+            difficulty: "COMPREHENSION",
+            explanation:
+              "Định lý: Góc tạo bởi tia tiếp tuyến và dây cung bằng góc nội tiếp cùng chắn một cung.",
+            quiz_id: "",
+            is_deleted: false,
+            created_at: "",
+            updated_at: "",
+          },
+          {
+            id: "q7",
+            type: "SINGLE_CHOICE",
+            content: "Trong một đường tròn, dây lớn hơn thì:",
+            options: [
+              "Gần tâm hơn",
+              "Xa tâm hơn",
+              "Cách đều tâm",
+              "Không so sánh được",
+            ],
+            correctAnswer: 0,
+            points: 0.5,
+            difficulty: "COMPREHENSION",
+            explanation:
+              "Định lý: Trong hai dây của một đường tròn, dây nào lớn hơn thì gần tâm hơn và ngược lại.",
+            quiz_id: "",
+            is_deleted: false,
+            created_at: "",
+            updated_at: "",
+          },
+          {
+            id: "q8",
+            type: "SINGLE_CHOICE",
+            content: "Điều kiện đủ để một tứ giác nội tiếp đường tròn là:",
+            options: [
+              "Có hai cạnh đối song song",
+              "Có hai góc đối bằng nhau",
+              "Có hai góc kề bù nhau",
+              "Có hai góc đối bù nhau",
+            ],
+            correctAnswer: 3,
+            points: 0.5,
+            difficulty: "APPLICATION",
+            explanation:
+              "Dấu hiệu nhận biết tứ giác nội tiếp: Tứ giác có tổng hai góc đối bằng 180° (bù nhau) thì nội tiếp được đường tròn.",
+            quiz_id: "",
+            is_deleted: false,
+            created_at: "",
+            updated_at: "",
+          },
+          {
+            id: "q9",
+            type: "SINGLE_CHOICE",
+            content: "Hai tam giác đồng dạng khi:",
+            options: [
+              "Có hai cạnh bằng nhau",
+              "Có ba góc bằng nhau",
+              "Có một góc bằng nhau",
+              "Có diện tích bằng nhau",
+            ],
+            correctAnswer: 1,
+            points: 0.5,
+            difficulty: "RECOGNITION",
+            explanation:
+              "Trường hợp đồng dạng g.g.g: Nếu hai tam giác có ba góc tương ứng bằng nhau thì hai tam giác đó đồng dạng.",
+            quiz_id: "",
+            is_deleted: false,
+            created_at: "",
+            updated_at: "",
+          },
+          {
+            id: "q10",
+            type: "SINGLE_CHOICE",
+            content:
+              "Nếu một đường thẳng song song với một cạnh của tam giác thì:",
+            options: [
+              "Tạo ra tam giác bằng tam giác ban đầu",
+              "Cắt hai cạnh còn lại theo tỉ lệ bằng nhau",
+              "Luôn đi qua trung điểm",
+              "Tạo góc vuông với cạnh đó",
+            ],
+            correctAnswer: 1,
+            points: 0.5,
+            difficulty: "COMPREHENSION",
+            explanation:
+              "Định lý Ta-lét: Nếu một đường thẳng song song với một cạnh của tam giác và cắt hai cạnh còn lại thì nó định ra trên hai cạnh đó những đoạn thẳng tương ứng tỉ lệ.",
+            quiz_id: "",
+            is_deleted: false,
+            created_at: "",
+            updated_at: "",
+          },
+        ] as any,
         status: "draft",
       });
     }

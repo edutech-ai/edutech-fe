@@ -25,7 +25,7 @@ export function CoreLoading({
     <div className="flex flex-col items-center justify-center gap-3">
       <div className="relative" style={{ width: dimension, height: dimension }}>
         <Image
-          src="/loading/owl_loading.gif"
+          src="/loading/loading3.gif"
           alt="Loading"
           width={dimension}
           height={dimension}
@@ -44,14 +44,14 @@ export function CoreLoading({
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center z-[9999] bg-white/95">
+      <div className="fixed inset-0 flex items-center justify-center z-9999 bg-white">
         <div className="flex flex-col items-center justify-center gap-4">
-          <div className="relative w-32 h-32">
+          <div className="relative w-full h-full">
             <Image
-              src="/loading/owl_loading.gif"
+              src="/loading/loading3.gif"
               alt="Loading"
-              width={128}
-              height={128}
+              width={800}
+              height={800}
               className="object-contain"
               priority
               unoptimized

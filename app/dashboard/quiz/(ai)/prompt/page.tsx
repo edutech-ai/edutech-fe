@@ -367,7 +367,7 @@ export default function PromptBasedGeneratorPage() {
       {/* Info Box */}
       <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
         <h3 className="font-semibold text-purple-900 mb-2">
-          💡 Lưu ý khi tạo đề từ chủ đề
+          Lưu ý khi tạo đề từ chủ đề
         </h3>
         <ul className="space-y-1 text-sm text-purple-800">
           <li>• Cách linh hoạt và nhanh nhất để tạo đề thi với AI</li>
@@ -382,9 +382,7 @@ export default function PromptBasedGeneratorPage() {
 
       {/* Examples */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h3 className="font-semibold text-gray-900 mb-3">
-          📝 Ví dụ mô tả chủ đề
-        </h3>
+        <h3 className="font-semibold text-gray-900 mb-3">Ví dụ mô tả chủ đề</h3>
         <div className="space-y-3">
           <div className="bg-white rounded-lg p-3 border border-gray-200">
             <p className="text-xs text-gray-500 mb-1">Toán học</p>

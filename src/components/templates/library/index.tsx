@@ -309,11 +309,11 @@ export function LibraryTemplate() {
                 }
               }}
             >
-              Tất cả
+              Thư viện chung
             </TabsTrigger>
-            <TabsTrigger value="quizzes">Đề thi</TabsTrigger>
-            <TabsTrigger value="lessons">Giáo án</TabsTrigger>
-            <TabsTrigger value="documents">Tài liệu</TabsTrigger>
+            <TabsTrigger value="quizzes">Đề thi của tôi</TabsTrigger>
+            {/* <TabsTrigger value="lessons">Giáo án</TabsTrigger> */}
+            {/* <TabsTrigger value="documents">Tài liệu</TabsTrigger> */}
           </TabsList>
 
           {/* Delete Button - Show when items selected */}
@@ -525,18 +525,6 @@ export function LibraryTemplate() {
               </p>
             </div>
           )}
-        </TabsContent>
-
-        <TabsContent value="lessons" className="mt-6">
-          <div className="text-center py-12 text-gray-500">
-            <p>Chức năng đang phát triển</p>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="documents" className="mt-6">
-          <div className="text-center py-12 text-gray-500">
-            <p>Chức năng đang phát triển</p>
-          </div>
         </TabsContent>
       </Tabs>
 

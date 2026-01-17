@@ -6,12 +6,13 @@ export enum UserRole {
   STAFF = "STAFF",
 }
 
-export enum QuestionType {
-  SINGLE_CHOICE = "SINGLE_CHOICE",
-  MULTIPLE_CHOICE = "MULTIPLE_CHOICE",
+// Re-export QuestionType from question.ts (backend values: MCQ, MULTIPLE_ANSWER, TRUE_FALSE, ESSAY)
+// UI-friendly enum for form components (maps to backend values)
+export enum QuestionTypeUI {
+  SINGLE_CHOICE = "MCQ", // Single choice -> backend MCQ
+  MULTIPLE_CHOICE = "MULTIPLE_ANSWER", // Multiple choice -> backend MULTIPLE_ANSWER
   TRUE_FALSE = "TRUE_FALSE",
-  SHORT_ANSWER = "SHORT_ANSWER",
-  ESSAY = "ESSAY",
+  ESSAY = "ESSAY", // Essay/Short answer -> backend ESSAY
 }
 
 export enum Difficulty {
@@ -21,10 +22,39 @@ export enum Difficulty {
   HIGH_APPLICATION = "HIGH_APPLICATION", // Vận dụng cao
 }
 
+// Quiz status values match backend (lowercase)
+export type QuizStatusType = "draft" | "public" | "archived";
+
+// Legacy enum for backward compatibility with existing code
 export enum QuizStatus {
-  DRAFT = "DRAFT",
-  PUBLISHED = "PUBLISHED",
-  ARCHIVED = "ARCHIVED",
+  DRAFT = "draft",
+  PUBLISHED = "public",
+  ARCHIVED = "archived",
+}
+
+// ==================== QUIZ GENERATE REQUEST ====================
+export interface QuizGenerateRequest {
+  subject: string;
+  grade: number;
+  topic: string;
+  numQuestions: number;
+  difficulty: Difficulty;
+  questionTypes: string[];
+  learningObjectives?: string;
+}
+
+// ==================== UI QUESTION TYPE (for forms and local state) ====================
+export interface QuestionUI {
+  id: string;
+  type: string;
+  content: string;
+  options?: string[];
+  correctAnswer?: number | string;
+  correctAnswers?: number[];
+  points: number;
+  difficulty: Difficulty | string;
+  explanation?: string;
+  tags?: string[];
 }
 
 export enum LessonPlanStatus {

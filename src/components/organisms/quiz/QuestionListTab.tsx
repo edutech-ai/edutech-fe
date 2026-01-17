@@ -14,41 +14,42 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AddQuestionModal } from "./AddQuestionModal";
-import type { Question } from "@/types";
-import { QuestionType, Difficulty } from "@/types";
+import type { QuestionUI } from "@/types";
+import { QuestionTypeUI } from "@/types";
 
 interface QuestionListTabProps {
-  questions: Question[];
-  onUpdate: (questions: Question[]) => void;
+  questions: QuestionUI[];
+  onUpdate: (questions: QuestionUI[]) => void;
 }
 
-const questionTypeLabels: Record<QuestionType, string> = {
-  [QuestionType.SINGLE_CHOICE]: "Một đáp án",
-  [QuestionType.MULTIPLE_CHOICE]: "Nhiều đáp án",
-  [QuestionType.TRUE_FALSE]: "Đúng/Sai",
-  [QuestionType.SHORT_ANSWER]: "Trả lời ngắn",
-  [QuestionType.ESSAY]: "Tự luận",
+const questionTypeLabels: Record<string, string> = {
+  MCQ: "Một đáp án",
+  MULTIPLE_ANSWER: "Nhiều đáp án",
+  TRUE_FALSE: "Đúng/Sai",
+  ESSAY: "Tự luận",
 };
 
-const difficultyLabels: Record<Difficulty, string> = {
-  [Difficulty.RECOGNITION]: "Nhận biết",
-  [Difficulty.COMPREHENSION]: "Thông hiểu",
-  [Difficulty.APPLICATION]: "Vận dụng",
-  [Difficulty.HIGH_APPLICATION]: "Vận dụng cao",
+const difficultyLabels: Record<string, string> = {
+  RECOGNITION: "Nhận biết",
+  COMPREHENSION: "Thông hiểu",
+  APPLICATION: "Vận dụng",
+  HIGH_APPLICATION: "Vận dụng cao",
 };
 
 export function QuestionListTab({ questions, onUpdate }: QuestionListTabProps) {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState<QuestionUI | null>(
+    null
+  );
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-  const handleAddQuestion = (question: Question) => {
+  const handleAddQuestion = (question: QuestionUI) => {
     onUpdate([...questions, question]);
     setShowAddModal(false);
   };
 
-  const handleEditQuestion = (question: Question) => {
+  const handleEditQuestion = (question: QuestionUI) => {
     const newQuestions = questions.map((q) =>
       q.id === question.id ? question : q
     );
@@ -169,7 +170,7 @@ export function QuestionListTab({ questions, onUpdate }: QuestionListTabProps) {
                       <div className="space-y-1 mb-2">
                         {question.options.map((option, optIndex) => {
                           const isCorrect =
-                            question.type === QuestionType.MULTIPLE_CHOICE
+                            question.type === QuestionTypeUI.MULTIPLE_CHOICE
                               ? question.correctAnswers?.includes(optIndex)
                               : question.correctAnswer === optIndex;
 

@@ -17,13 +17,13 @@ import { Card } from "@/components/ui/card";
 import { quizMockService } from "@/services/mock/quizService";
 import {
   Difficulty,
-  QuestionType,
-  type Question,
+  QuestionTypeUI,
+  type QuestionUI,
   type QuizGenerateRequest,
 } from "@/types";
 
 interface QuizGeneratorFormProps {
-  onGenerate: (questions: Question[]) => void;
+  onGenerate: (questions: QuestionUI[]) => void;
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
 }
@@ -39,7 +39,7 @@ export function QuizGeneratorForm({
     topic: "",
     numQuestions: 10,
     difficulty: Difficulty.COMPREHENSION,
-    questionTypes: [QuestionType.MULTIPLE_CHOICE],
+    questionTypes: [QuestionTypeUI.SINGLE_CHOICE],
     learningObjectives: "",
   });
 
@@ -175,7 +175,7 @@ export function QuizGeneratorForm({
             onValueChange={(value) =>
               setFormData({
                 ...formData,
-                questionTypes: [value as QuestionType],
+                questionTypes: [value],
               })
             }
           >
@@ -183,14 +183,13 @@ export function QuizGeneratorForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={QuestionType.MULTIPLE_CHOICE}>
+              <SelectItem value={QuestionTypeUI.SINGLE_CHOICE}>
                 Trắc nghiệm
               </SelectItem>
-              <SelectItem value={QuestionType.TRUE_FALSE}>Đúng/Sai</SelectItem>
-              <SelectItem value={QuestionType.SHORT_ANSWER}>
-                Tự luận ngắn
+              <SelectItem value={QuestionTypeUI.TRUE_FALSE}>
+                Đúng/Sai
               </SelectItem>
-              <SelectItem value={QuestionType.ESSAY}>Tự luận dài</SelectItem>
+              <SelectItem value={QuestionTypeUI.ESSAY}>Tự luận</SelectItem>
             </SelectContent>
           </Select>
         </div>

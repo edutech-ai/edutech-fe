@@ -50,8 +50,8 @@ export function CoreLoading({
             <Image
               src="/loading/loading3.gif"
               alt="Loading"
-              width={800}
-              height={800}
+              width={400}
+              height={400}
               className="object-contain"
               priority
               unoptimized

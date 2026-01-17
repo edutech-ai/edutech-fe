@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
+import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import axiosInstance from "@/lib/axios";
@@ -38,11 +38,8 @@ export const QUIZ_KEYS = {
 /**
  * Get quizzes created by current teacher
  */
-export const useMyQuizzes = (
-  filters: QuizQueryParams = {},
-  options?: any
-): UseQueryResult<QuizListResponse, AxiosError> => {
-  return useQuery({
+export const useMyQuizzes = (filters: QuizQueryParams = {}, options?: any) => {
+  return useQuery<QuizListResponse, AxiosError>({
     queryKey: QUIZ_KEYS.myQuizzes(filters),
     queryFn: async () => {
       const { data } = await axiosInstance.get<QuizListResponse>(
@@ -61,8 +58,8 @@ export const useMyQuizzes = (
 export const usePublicQuizzes = (
   filters: QuizQueryParams = {},
   options?: any
-): UseQueryResult<QuizListResponse, AxiosError> => {
-  return useQuery({
+) => {
+  return useQuery<QuizListResponse, AxiosError>({
     queryKey: QUIZ_KEYS.publicQuizzes(filters),
     queryFn: async () => {
       const { data } = await axiosInstance.get<QuizListResponse>(
@@ -78,11 +75,8 @@ export const usePublicQuizzes = (
 /**
  * Get quiz by ID with details
  */
-export const useQuizById = (
-  id?: string,
-  options?: any
-): UseQueryResult<QuizApiResponse<QuizWithDetails>, AxiosError> => {
-  return useQuery({
+export const useQuizById = (id?: string, options?: any) => {
+  return useQuery<QuizApiResponse<QuizWithDetails>, AxiosError>({
     queryKey: QUIZ_KEYS.detail(id!),
     queryFn: async () => {
       const { data } = await axiosInstance.get<
@@ -98,11 +92,8 @@ export const useQuizById = (
 /**
  * Get quiz by exam code
  */
-export const useQuizByExamCode = (
-  examCode?: string,
-  options?: any
-): UseQueryResult<QuizApiResponse<Quiz>, AxiosError> => {
-  return useQuery({
+export const useQuizByExamCode = (examCode?: string, options?: any) => {
+  return useQuery<QuizApiResponse<Quiz>, AxiosError>({
     queryKey: QUIZ_KEYS.byExamCode(examCode!),
     queryFn: async () => {
       const { data } = await axiosInstance.get<QuizApiResponse<Quiz>>(
@@ -122,8 +113,8 @@ export const useQuizQuestions = (
   id?: string,
   includeAnswers: boolean = false,
   options?: any
-): UseQueryResult<QuizQuestionsResponse, AxiosError> => {
-  return useQuery({
+) => {
+  return useQuery<QuizQuestionsResponse, AxiosError>({
     queryKey: [...QUIZ_KEYS.questions(id!), includeAnswers],
     queryFn: async () => {
       const { data } = await axiosInstance.get<QuizQuestionsResponse>(
@@ -140,11 +131,8 @@ export const useQuizQuestions = (
 /**
  * Get quiz statistics
  */
-export const useQuizStats = (
-  id?: string,
-  options?: any
-): UseQueryResult<QuizApiResponse<QuizStats>, AxiosError> => {
-  return useQuery({
+export const useQuizStats = (id?: string, options?: any) => {
+  return useQuery<QuizApiResponse<QuizStats>, AxiosError>({
     queryKey: QUIZ_KEYS.stats(id!),
     queryFn: async () => {
       const { data } = await axiosInstance.get<QuizApiResponse<QuizStats>>(

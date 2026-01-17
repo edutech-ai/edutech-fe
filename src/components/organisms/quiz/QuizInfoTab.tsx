@@ -13,9 +13,14 @@ import {
 import type { Quiz } from "@/types";
 import { SUBJECTS, GRADES } from "@/types";
 
+// Extended Quiz type for UI with folder support (not in backend yet)
+interface QuizFormData extends Partial<Quiz> {
+  folder?: string;
+}
+
 interface QuizInfoTabProps {
-  quiz: Partial<Quiz>;
-  onUpdate: (updates: Partial<Quiz>) => void;
+  quiz: QuizFormData;
+  onUpdate: (updates: QuizFormData) => void;
 }
 
 export function QuizInfoTab({ quiz, onUpdate }: QuizInfoTabProps) {

@@ -23,23 +23,22 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import type { Question } from "@/types";
-import { QuestionType, Difficulty } from "@/types";
+import type { QuestionUI } from "@/types";
+import { QuestionTypeUI, Difficulty } from "@/types";
 import { toast } from "sonner";
 
 interface AddQuestionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (question: Question) => void;
-  question?: Question | null;
+  onSubmit: (question: QuestionUI) => void;
+  question?: QuestionUI | null;
 }
 
 const questionTypeOptions = [
-  { value: QuestionType.SINGLE_CHOICE, label: "Một đáp án" },
-  { value: QuestionType.MULTIPLE_CHOICE, label: "Nhiều đáp án" },
-  { value: QuestionType.TRUE_FALSE, label: "Đúng/Sai" },
-  { value: QuestionType.SHORT_ANSWER, label: "Trả lời ngắn" },
-  { value: QuestionType.ESSAY, label: "Tự luận" },
+  { value: QuestionTypeUI.SINGLE_CHOICE, label: "Một đáp án" },
+  { value: QuestionTypeUI.MULTIPLE_CHOICE, label: "Nhiều đáp án" },
+  { value: QuestionTypeUI.TRUE_FALSE, label: "Đúng/Sai" },
+  { value: QuestionTypeUI.ESSAY, label: "Tự luận" },
 ];
 
 const difficultyOptions = [
@@ -55,7 +54,7 @@ export function AddQuestionModal({
   onSubmit,
   question,
 }: AddQuestionModalProps) {
-  const [type, setType] = useState<QuestionType>(QuestionType.SINGLE_CHOICE);
+  const [type, setType] = useState<string>(QuestionTypeUI.SINGLE_CHOICE);
   const [content, setContent] = useState("");
   const [options, setOptions] = useState<string[]>(["", "", "", ""]);
   const [correctAnswer, setCorrectAnswer] = useState<number>(0);
@@ -77,14 +76,15 @@ export function AddQuestionModal({
         typeof question.correctAnswer === "number" ? question.correctAnswer : 0
       );
       setCorrectAnswers(
-        question.correctAnswers?.map((a) => (typeof a === "number" ? a : 0)) ||
-          []
+        question.correctAnswers?.map((a: number) =>
+          typeof a === "number" ? a : 0
+        ) || []
       );
       setShortAnswer(
         typeof question.correctAnswer === "string" ? question.correctAnswer : ""
       );
       setPoints(question.points.toString());
-      setDifficulty(question.difficulty);
+      setDifficulty(question.difficulty as Difficulty);
       setExplanation(question.explanation || "");
     } else {
       // eslint-disable-next-line react-hooks/immutability
@@ -93,7 +93,7 @@ export function AddQuestionModal({
   }, [question, open]);
 
   const resetForm = () => {
-    setType(QuestionType.SINGLE_CHOICE);
+    setType(QuestionTypeUI.SINGLE_CHOICE);
     setContent("");
     setOptions(["", "", "", ""]);
     setCorrectAnswer(0);
@@ -112,20 +112,23 @@ export function AddQuestionModal({
     }
 
     if (
-      (type === QuestionType.SINGLE_CHOICE ||
-        type === QuestionType.MULTIPLE_CHOICE) &&
+      (type === QuestionTypeUI.SINGLE_CHOICE ||
+        type === QuestionTypeUI.MULTIPLE_CHOICE) &&
       options.some((opt) => !opt.trim())
     ) {
       toast.error("Vui lòng nhập đầy đủ các đáp án");
       return;
     }
 
-    if (type === QuestionType.MULTIPLE_CHOICE && correctAnswers.length === 0) {
+    if (
+      type === QuestionTypeUI.MULTIPLE_CHOICE &&
+      correctAnswers.length === 0
+    ) {
       toast.error("Vui lòng chọn ít nhất một đáp án đúng");
       return;
     }
 
-    if (type === QuestionType.SHORT_ANSWER && !shortAnswer.trim()) {
+    if (type === QuestionTypeUI.ESSAY && !shortAnswer.trim()) {
       toast.error("Vui lòng nhập đáp án đúng");
       return;
     }
@@ -136,7 +139,7 @@ export function AddQuestionModal({
       return;
     }
 
-    const newQuestion: Question = {
+    const newQuestion: QuestionUI = {
       id: question?.id || `q-${Date.now()}`,
       type,
       content,
@@ -144,20 +147,20 @@ export function AddQuestionModal({
       difficulty,
       explanation: explanation || undefined,
       options:
-        type === QuestionType.SINGLE_CHOICE ||
-        type === QuestionType.MULTIPLE_CHOICE
+        type === QuestionTypeUI.SINGLE_CHOICE ||
+        type === QuestionTypeUI.MULTIPLE_CHOICE
           ? options
           : undefined,
       correctAnswer:
-        type === QuestionType.SINGLE_CHOICE
+        type === QuestionTypeUI.SINGLE_CHOICE
           ? correctAnswer
-          : type === QuestionType.TRUE_FALSE
+          : type === QuestionTypeUI.TRUE_FALSE
             ? correctAnswer
-            : type === QuestionType.SHORT_ANSWER
+            : type === QuestionTypeUI.ESSAY
               ? shortAnswer
               : undefined,
       correctAnswers:
-        type === QuestionType.MULTIPLE_CHOICE ? correctAnswers : undefined,
+        type === QuestionTypeUI.MULTIPLE_CHOICE ? correctAnswers : undefined,
     };
 
     onSubmit(newQuestion);
@@ -179,9 +182,9 @@ export function AddQuestionModal({
     setOptions(newOptions);
 
     // Adjust correct answers
-    if (type === QuestionType.SINGLE_CHOICE && correctAnswer === index) {
+    if (type === QuestionTypeUI.SINGLE_CHOICE && correctAnswer === index) {
       setCorrectAnswer(0);
-    } else if (type === QuestionType.MULTIPLE_CHOICE) {
+    } else if (type === QuestionTypeUI.MULTIPLE_CHOICE) {
       setCorrectAnswers(
         correctAnswers
           .filter((a) => a !== index)
@@ -222,10 +225,7 @@ export function AddQuestionModal({
             <Label>
               Loại câu hỏi <span className="text-red-500">*</span>
             </Label>
-            <Select
-              value={type}
-              onValueChange={(value) => setType(value as QuestionType)}
-            >
+            <Select value={type} onValueChange={(value) => setType(value)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -255,7 +255,7 @@ export function AddQuestionModal({
           </div>
 
           {/* Options for Single Choice */}
-          {type === QuestionType.SINGLE_CHOICE && (
+          {type === QuestionTypeUI.SINGLE_CHOICE && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label>
@@ -309,7 +309,7 @@ export function AddQuestionModal({
           )}
 
           {/* Options for Multiple Choice */}
-          {type === QuestionType.MULTIPLE_CHOICE && (
+          {type === QuestionTypeUI.MULTIPLE_CHOICE && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label>
@@ -363,7 +363,7 @@ export function AddQuestionModal({
           )}
 
           {/* True/False */}
-          {type === QuestionType.TRUE_FALSE && (
+          {type === QuestionTypeUI.TRUE_FALSE && (
             <div className="space-y-2">
               <Label>
                 Đáp án đúng <span className="text-red-500">*</span>
@@ -389,7 +389,7 @@ export function AddQuestionModal({
           )}
 
           {/* Short Answer */}
-          {type === QuestionType.SHORT_ANSWER && (
+          {type === QuestionTypeUI.ESSAY && (
             <div className="space-y-2">
               <Label htmlFor="shortAnswer">
                 Đáp án đúng <span className="text-red-500">*</span>

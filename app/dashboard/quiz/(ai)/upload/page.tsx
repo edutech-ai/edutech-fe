@@ -24,28 +24,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SUBJECTS, GRADES, QuestionType, Difficulty } from "@/types";
+import { SUBJECTS, GRADES, QuestionTypeUI, Difficulty } from "@/types";
 import { toast } from "sonner";
 
 interface QuestionTypeOption {
-  value: QuestionType;
+  value: string;
   label: string;
   allowMultiple: boolean;
 }
 
 const questionTypeOptions: QuestionTypeOption[] = [
   {
-    value: QuestionType.SINGLE_CHOICE,
+    value: QuestionTypeUI.SINGLE_CHOICE,
     label: "Một đáp án",
     allowMultiple: false,
   },
-  { value: QuestionType.TRUE_FALSE, label: "Đúng/Sai", allowMultiple: false },
-  {
-    value: QuestionType.SHORT_ANSWER,
-    label: "Trả lời ngắn",
-    allowMultiple: false,
-  },
-  { value: QuestionType.ESSAY, label: "Tự luận", allowMultiple: false },
+  { value: QuestionTypeUI.TRUE_FALSE, label: "Đúng/Sai", allowMultiple: false },
+  { value: QuestionTypeUI.ESSAY, label: "Tự luận", allowMultiple: false },
 ];
 
 const difficultyOptions = [
@@ -74,10 +69,10 @@ export default function UploadBasedGeneratorPage() {
     Difficulty.RECOGNITION
   );
   const [selectedQuestionTypes, setSelectedQuestionTypes] = useState<
-    Set<QuestionType>
-  >(new Set([QuestionType.MULTIPLE_CHOICE]));
+    Set<string>
+  >(new Set([QuestionTypeUI.SINGLE_CHOICE]));
   const [multipleCorrectAnswers, setMultipleCorrectAnswers] = useState<
-    Map<QuestionType, boolean>
+    Map<string, boolean>
   >(new Map());
   const [learningObjectives, setLearningObjectives] = useState<string>("");
   const [prompt, setPrompt] = useState<string>("");
@@ -134,7 +129,7 @@ export default function UploadBasedGeneratorPage() {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleQuestionTypeToggle = (type: QuestionType) => {
+  const handleQuestionTypeToggle = (type: string) => {
     const newTypes = new Set(selectedQuestionTypes);
     if (newTypes.has(type)) {
       newTypes.delete(type);
@@ -147,10 +142,7 @@ export default function UploadBasedGeneratorPage() {
     setSelectedQuestionTypes(newTypes);
   };
 
-  const handleMultipleCorrectToggle = (
-    type: QuestionType,
-    checked: boolean
-  ) => {
+  const handleMultipleCorrectToggle = (type: string, checked: boolean) => {
     const newMultiple = new Map(multipleCorrectAnswers);
     newMultiple.set(type, checked);
     setMultipleCorrectAnswers(newMultiple);
@@ -435,7 +427,7 @@ export default function UploadBasedGeneratorPage() {
                 </div>
 
                 {/* Multiple correct answers option for MULTIPLE_CHOICE */}
-                {option.value === QuestionType.MULTIPLE_CHOICE &&
+                {option.value === QuestionTypeUI.MULTIPLE_CHOICE &&
                   selectedQuestionTypes.has(option.value) && (
                     <div className="ml-6 flex items-center gap-2">
                       <Checkbox

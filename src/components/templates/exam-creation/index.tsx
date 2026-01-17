@@ -26,7 +26,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { QuizGeneratorForm } from "@/components/features/quiz-generator/QuizGeneratorForm";
-import type { Question as AIQuestion } from "@/types";
+import type { QuestionUI } from "@/types";
+import { QuestionTypeUI } from "@/types";
 import { AILoading } from "@/components/atoms/AILoading";
 import { PDFPreview } from "@/components/features/quiz-generator/PDFPreview";
 import { ExamStorageService } from "@/services/storage/examStorage";
@@ -98,7 +99,7 @@ export function ExamCreationTemplate() {
   );
   const [showQuestionEditor, setShowQuestionEditor] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedQuestions, setGeneratedQuestions] = useState<AIQuestion[]>(
+  const [generatedQuestions, setGeneratedQuestions] = useState<QuestionUI[]>(
     []
   );
   const [showPDFPreview, setShowPDFPreview] = useState(false);
@@ -241,24 +242,30 @@ export function ExamCreationTemplate() {
   };
 
   const convertAIQuestionToQuestionItem = (
-    aiQuestion: AIQuestion
+    aiQuestion: QuestionUI
   ): QuestionItemType => {
     return {
       id: aiQuestion.id,
       order: questions.length + 1,
       content: aiQuestion.content,
-      type: aiQuestion.type === "MULTIPLE_CHOICE" ? "multiple_choice" : "essay",
-      difficulty: aiQuestion.difficulty.toLowerCase() as
-        | "easy"
-        | "medium"
-        | "hard",
+      type:
+        aiQuestion.type === QuestionTypeUI.SINGLE_CHOICE ||
+        aiQuestion.type === QuestionTypeUI.MULTIPLE_CHOICE
+          ? "multiple_choice"
+          : "essay",
+      difficulty: (typeof aiQuestion.difficulty === "string"
+        ? aiQuestion.difficulty.toLowerCase()
+        : "medium") as "easy" | "medium" | "hard",
       points: aiQuestion.points,
       answers: aiQuestion.options,
-      correctAnswer: aiQuestion.correctAnswer,
+      correctAnswer:
+        typeof aiQuestion.correctAnswer === "number"
+          ? aiQuestion.correctAnswer
+          : undefined,
     };
   };
 
-  const handleAIGenerate = (aiQuestions: AIQuestion[]) => {
+  const handleAIGenerate = (aiQuestions: QuestionUI[]) => {
     setGeneratedQuestions(aiQuestions);
   };
 
@@ -270,7 +277,7 @@ export function ExamCreationTemplate() {
     setGeneratedQuestions([]);
   };
 
-  const handleAddSingleQuestion = (aiQuestion: AIQuestion) => {
+  const handleAddSingleQuestion = (aiQuestion: QuestionUI) => {
     const converted = convertAIQuestionToQuestionItem(aiQuestion);
     setQuestions([...questions, converted]);
   };

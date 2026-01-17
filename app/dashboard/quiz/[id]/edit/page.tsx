@@ -11,6 +11,7 @@ import { QuestionListTab } from "@/components/organisms/quiz/QuestionListTab";
 import { PDFPreview } from "@/components/features/quiz-generator/PDFPreview";
 import type { Quiz, UpdateQuizRequest } from "@/types/quiz";
 import type { Question } from "@/types/question";
+import type { QuestionUI } from "@/types";
 import { toast } from "sonner";
 import {
   useQuizById,
@@ -41,17 +42,44 @@ export default function QuizEditPage() {
   const bulkCreateQuestionsMutation = useBulkCreateQuestions();
   const deleteQuestionsMutation = useDeleteQuestionsByQuizId();
 
-  // Quiz state (Quiz + questions array)
-  const [quiz, setQuiz] = useState<Partial<Quiz & { questions: Question[] }>>({
-    title: "",
-    description: "",
-    subject: "",
-    grade: undefined,
-    duration: 60,
-    difficulty: "medium",
-    status: "draft",
-    questions: [],
-  });
+  // Quiz state (Quiz + questions array in UI format)
+  const [quiz, setQuiz] = useState<Partial<Quiz> & { questions: QuestionUI[] }>(
+    {
+      title: "",
+      description: "",
+      subject: "",
+      grade: undefined,
+      duration: 60,
+      difficulty: "medium",
+      status: "draft",
+      questions: [],
+    }
+  );
+
+  // Convert backend Question to UI format
+  const convertToUIQuestion = (q: Question): QuestionUI => {
+    // Convert options to string array (QuestionOption can be string or {id, text})
+    const convertedOptions = q.options?.map((opt) =>
+      typeof opt === "string" ? opt : opt.text
+    );
+
+    // Find the index of correct answer in options if it's MCQ
+    const correctAnswerIndex =
+      convertedOptions && typeof q.correct_answer === "string"
+        ? convertedOptions.findIndex((opt) => opt === q.correct_answer)
+        : -1;
+
+    return {
+      id: q.id,
+      type: q.type,
+      content: q.content,
+      options: convertedOptions,
+      correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : undefined,
+      points: q.point,
+      difficulty: q.difficulty,
+      explanation: q.explanation ?? undefined,
+    };
+  };
 
   // Load quiz data when fetched
   useEffect(() => {
@@ -61,7 +89,8 @@ export default function QuizEditPage() {
 
       setQuiz({
         ...backendQuiz,
-        questions: backendQuestions,
+        // Convert backend questions to UI format
+        questions: backendQuestions.map(convertToUIQuestion),
       });
 
       setIsLoaded(true);
@@ -111,11 +140,14 @@ export default function QuizEditPage() {
           questions: quiz.questions.map((q) => ({
             content: q.content,
             options: q.options ?? undefined,
-            correct_answer: q.correct_answer,
-            type: q.type,
-            point: q.point,
+            // Convert from UI format (correctAnswer index) to backend format (string)
+            correct_answer:
+              typeof q.correctAnswer === "number" && q.options
+                ? q.options[q.correctAnswer]
+                : String(q.correctAnswer ?? ""),
+            type: q.type as "MCQ" | "MULTIPLE_ANSWER" | "TRUE_FALSE" | "ESSAY",
+            point: q.points,
             explanation: q.explanation ?? undefined,
-            document_id: q.document_id ?? undefined,
           })),
         });
 
@@ -162,7 +194,7 @@ export default function QuizEditPage() {
     setQuiz((prev) => ({ ...prev, ...updates }));
   };
 
-  const updateQuestions = (questions: Question[]) => {
+  const updateQuestions = (questions: QuestionUI[]) => {
     setQuiz((prev) => ({ ...prev, questions }));
   };
 
@@ -173,7 +205,7 @@ export default function QuizEditPage() {
     grade: quiz.grade || 0,
     durationMinutes: quiz.duration || 60,
     totalScore:
-      quiz.questions?.reduce((sum, q) => sum + (q.point || 0), 0) || 0,
+      quiz.questions?.reduce((sum, q) => sum + (q.points || 0), 0) || 0,
     instructions: quiz.description ?? undefined,
   };
 
@@ -182,10 +214,8 @@ export default function QuizEditPage() {
     order: index + 1,
     content: q.content,
     type: q.type,
-    answers: q.options
-      ? q.options.map((opt) => (typeof opt === "string" ? opt : opt.text))
-      : undefined,
-    points: q.point,
+    answers: q.options,
+    points: q.points,
   }));
 
   if (isLoadingQuiz || isLoadingQuestions || !isLoaded) {

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
+import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import axiosInstance from "@/lib/axios";
@@ -33,11 +33,8 @@ export const QUESTION_KEYS = {
 /**
  * Get question by ID
  */
-export const useQuestionById = (
-  id?: string,
-  options?: any
-): UseQueryResult<QuestionApiResponse<Question>, AxiosError> => {
-  return useQuery({
+export const useQuestionById = (id?: string, options?: any) => {
+  return useQuery<QuestionApiResponse<Question>, AxiosError>({
     queryKey: QUESTION_KEYS.detail(id!),
     queryFn: async () => {
       const { data } = await axiosInstance.get<QuestionApiResponse<Question>>(
@@ -57,8 +54,8 @@ export const useQuestionsByQuizId = (
   quizId?: string,
   includeAnswers: boolean = false,
   options?: any
-): UseQueryResult<QuestionListResponse, AxiosError> => {
-  return useQuery({
+) => {
+  return useQuery<QuestionListResponse, AxiosError>({
     queryKey: [...QUESTION_KEYS.byQuizId(quizId!), includeAnswers],
     queryFn: async () => {
       const { data } = await axiosInstance.get<QuestionListResponse>(
@@ -78,8 +75,8 @@ export const useQuestionsByQuizId = (
 export const useQuestionsByDocumentId = (
   documentId?: string,
   options?: any
-): UseQueryResult<QuestionListResponse, AxiosError> => {
-  return useQuery({
+) => {
+  return useQuery<QuestionListResponse, AxiosError>({
     queryKey: QUESTION_KEYS.byDocumentId(documentId!),
     queryFn: async () => {
       const { data } = await axiosInstance.get<QuestionListResponse>(

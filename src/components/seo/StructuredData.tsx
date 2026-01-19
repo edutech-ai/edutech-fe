@@ -62,33 +62,33 @@ export function StructuredData() {
   const organizationSchema: OrganizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Edutech",
-    url: "https://edutechai.vn",
-    logo: "https://edutechai.vn/images/logo.png",
+    name: "AI EduTech",
+    url: "https://aiedutech.vn",
+    logo: "https://aiedutech.vn/images/logo.png",
     description:
       "Hệ thống quản lý đề thi thông minh, hỗ trợ giáo viên tạo, quản lý và làm việc hiệu quả.",
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer service",
-      email: "support@edutechai.vn",
+      email: "support@aiedutech.vn",
     },
     sameAs: [
-      "https://facebook.com/edutechai.vn",
-      "https://twitter.com/edutechai_vn",
+      "https://facebook.com/aiedutech.vn",
+      "https://twitter.com/aiedutech_vn",
     ],
   };
 
   const websiteSchema: WebSiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Edutech",
-    url: "https://edutechai.vn",
+    name: "AI EduTech",
+    url: "https://aiedutech.vn",
     description: "Hệ thống quản lý đề thi thông minh",
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: "https://edutechai.vn/search?q={search_term_string}",
+        urlTemplate: "https://aiedutech.vn/search?q={search_term_string}",
       },
       "query-input": "required name=search_term_string",
     },
@@ -97,10 +97,10 @@ export function StructuredData() {
   const softwareApplicationSchema: SoftwareApplicationSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "Edutech",
+    name: "AI EduTech",
     description:
       "Hệ thống quản lý đề thi thông minh với tính năng chấm điểm tự động và thi trực tuyến",
-    url: "https://edutechai.vn",
+    url: "https://aiedutech.vn",
     applicationCategory: "EducationalApplication",
     operatingSystem: "Web Browser",
     offers: {
@@ -178,10 +178,10 @@ export function ArticleStructuredData({
     },
     publisher: {
       "@type": "Organization",
-      name: "Edutech",
+      name: "AI EduTech",
       logo: {
         "@type": "ImageObject",
-        url: "https://edutechai.vn/images/logo.png",
+        url: "https://aiedutech.vn/images/logo.png",
       },
     },
     datePublished: publishedDate,

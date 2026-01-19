@@ -1,5 +1,16 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Đăng nhập / Đăng ký",
+  description:
+    "Đăng nhập hoặc đăng ký tài khoản AI EduTech để sử dụng các công cụ AI tạo đề thi, giáo án thông minh.",
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function AuthLayout({
   children,

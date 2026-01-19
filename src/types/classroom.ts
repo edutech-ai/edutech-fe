@@ -63,6 +63,8 @@ export interface ClassroomStudentBackend {
   student?: StudentBackend;
   full_name?: string;
   student_code?: string;
+  phone_number?: string;
+  parent_phone_number?: string;
 }
 
 export interface StudentPerformanceBackend {
@@ -194,6 +196,8 @@ export interface Student {
   name: string;
   email?: string;
   parentEmail?: string;
+  phone?: string;
+  parentPhone?: string;
   avatar?: string;
   classId: string;
   seatPosition?: SeatPosition;

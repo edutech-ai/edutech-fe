@@ -54,6 +54,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { ActionButton } from "@/components/molecules/action-button";
+import Image from "next/image";
 
 export type ClassroomTab = "random" | "classroom" | "data";
 
@@ -162,6 +163,8 @@ export default function ClassroomDetailPage() {
       name: s.full_name || "Học sinh",
       email: undefined,
       parentEmail: undefined,
+      phone: s.phone_number,
+      parentPhone: s.parent_phone_number,
       avatar: undefined,
       classId: classroomId,
       seatPosition: { row: Math.floor(index / 6), column: index % 6 },
@@ -302,8 +305,13 @@ export default function ClassroomDetailPage() {
       <div className="bg-white border-b border-gray-200 px-4 py-4 mt-2">
         <div className="max-w-7xl mx-auto flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-              <Users className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 flex items-center justify-center">
+              <Image
+                src="/images/util/classroom.svg"
+                alt="Classroom Icon"
+                width={40}
+                height={40}
+              />
             </div>
             <div>
               <h1 className="text-xl font-semibold text-gray-900">
@@ -329,7 +337,7 @@ export default function ClassroomDetailPage() {
           onValueChange={handleTabChange}
           className="space-y-6"
         >
-          <TabsList className="grid w-full grid-cols-3 h-12 bg-gray-100 p-1 rounded-lg">
+          <TabsList>
             <TabsTrigger
               value="random"
               className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-md transition-all"

@@ -50,10 +50,10 @@ import {
   FileText,
   BarChart3,
   Download,
-  ArrowLeft,
   Users,
   Loader2,
 } from "lucide-react";
+import { ActionButton } from "@/components/molecules/action-button";
 
 export type ClassroomTab = "random" | "classroom" | "data";
 
@@ -293,11 +293,14 @@ export default function ClassroomDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
+      <ActionButton
+        isBack
+        href="/dashboard/classroom"
+        label="Quay lại danh sách lớp học"
+      />
+
+      <div className="bg-white border-b border-gray-200 px-4 py-4 mt-2">
         <div className="max-w-7xl mx-auto flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
               <Users className="w-5 h-5 text-blue-600" />
@@ -320,7 +323,7 @@ export default function ClassroomDetailPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-8xl mx-auto py-6">
         <Tabs
           value={activeTab}
           onValueChange={handleTabChange}

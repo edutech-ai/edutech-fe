@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { AILoading } from "@/components/atoms/AILoading";
 import { Input } from "@/components/ui/input";
@@ -22,6 +21,7 @@ import { examMatrixMockService } from "@/services/mock";
 import type { ExamMatrix } from "@/types";
 import { toast } from "sonner";
 import { SUBJECTS, GRADES, QuestionTypeUI, Difficulty } from "@/types";
+import { ActionButton } from "@/components/molecules/action-button";
 
 interface QuestionTypeOption {
   value: string;
@@ -189,20 +189,7 @@ export default function MatrixBasedGeneratorPage() {
   return (
     <div className="flex flex-col space-y-2">
       {/* Back Button */}
-      <Link href="/dashboard/quiz">
-        <Button
-          variant="ghost"
-          className="gap-2 text-primary-text font-bold hover:text-primary-text/80"
-        >
-          <Image
-            src="/images/util/back2.svg"
-            alt="Back"
-            width={20}
-            height={20}
-          />
-          Back
-        </Button>
-      </Link>
+      <ActionButton isBack label="Quay lại" href="/dashboard/quiz" />
 
       {/* Form */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">

@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useClassrooms, useDeleteClassroom } from "@/services/classroomService";
 import { CreateClassroomModal } from "@/components/organisms/classroom/CreateClassroomModal";
+import { EditClassroomModal } from "@/components/organisms/classroom/EditClassroomModal";
 import { toast } from "sonner";
 import type { ClassroomBackend } from "@/types/classroom";
 
@@ -53,6 +54,9 @@ export default function ClassroomListPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingClassroom, setDeletingClassroom] =
     useState<ClassroomBackend | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingClassroom, setEditingClassroom] =
+    useState<ClassroomBackend | null>(null);
   const [sortField, setSortField] = useState<SortField>("created_at");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
@@ -64,10 +68,10 @@ export default function ClassroomListPage() {
   } = useClassrooms({ page: 1, limit: 100 });
   const deleteClassroomMutation = useDeleteClassroom();
 
-  const classrooms = classroomsResponse?.data?.classrooms ?? [];
-
   // Filter and sort classrooms
   const filteredClassrooms = useMemo(() => {
+    const classrooms = classroomsResponse?.data?.classrooms ?? [];
+
     const result = classrooms.filter(
       (classroom) =>
         classroom.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -96,7 +100,7 @@ export default function ClassroomListPage() {
     });
 
     return result;
-  }, [classrooms, searchQuery, sortField, sortOrder]);
+  }, [classroomsResponse?.data?.classrooms, searchQuery, sortField, sortOrder]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -113,7 +117,8 @@ export default function ClassroomListPage() {
 
   const handleEdit = (e: React.MouseEvent, classroom: ClassroomBackend) => {
     e.stopPropagation();
-    router.push(`/dashboard/classroom/${classroom.id}?tab=settings`);
+    setEditingClassroom(classroom);
+    setEditModalOpen(true);
   };
 
   const handleDeleteClick = (
@@ -152,7 +157,7 @@ export default function ClassroomListPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <p className="text-red-500">
           Không thể tải danh sách lớp học. Vui lòng thử lại!
         </p>
@@ -321,6 +326,13 @@ export default function ClassroomListPage() {
       <CreateClassroomModal
         open={createModalOpen}
         onOpenChange={setCreateModalOpen}
+      />
+
+      {/* Edit Classroom Modal */}
+      <EditClassroomModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        classroom={editingClassroom}
       />
 
       {/* Delete Confirmation Dialog */}

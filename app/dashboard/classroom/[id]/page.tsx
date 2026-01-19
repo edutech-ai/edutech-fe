@@ -13,6 +13,7 @@ import {
   StudentDataTable,
   StudentDetailPanel,
   EndSessionDialog,
+  AddStudentModal,
 } from "@/components/organisms/classroom";
 import {
   useClassroomById,
@@ -127,6 +128,7 @@ export default function ClassroomDetailPage() {
 
   // Dialog states
   const [showEndSessionDialog, setShowEndSessionDialog] = useState(false);
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
 
   // Create mock classroom for current classroom
   const currentClassroom: Classroom | undefined = useMemo(() => {
@@ -462,6 +464,7 @@ export default function ClassroomDetailPage() {
                   selectedClassId={selectedClassId || classroomId}
                   onClassChange={(id) => setSelectedClassId(id)}
                   onStudentClick={handleStudentRowClick}
+                  onAddStudent={() => setShowAddStudentModal(true)}
                 />
               </div>
               {studentDetail && (
@@ -484,6 +487,13 @@ export default function ClassroomDetailPage() {
         onOpenChange={setShowEndSessionDialog}
         onConfirm={handleConfirmEndSession}
         topStudent={classroomStats?.topActiveStudents[0]}
+      />
+
+      {/* Add Student Modal */}
+      <AddStudentModal
+        open={showAddStudentModal}
+        onOpenChange={setShowAddStudentModal}
+        classroomId={classroomId}
       />
     </div>
   );

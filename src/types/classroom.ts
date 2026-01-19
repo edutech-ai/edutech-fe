@@ -105,6 +105,50 @@ export interface AddStudentToClassroomRequest {
   status?: string;
 }
 
+export interface CreateStudentAndAddToClassroomRequest {
+  full_name: string;
+  student_code: string;
+  phone_number?: string;
+  parent_phone_number?: string;
+  is_active?: boolean;
+  status?: string;
+}
+
+export interface CreateStudentRequest {
+  full_name: string;
+  student_code: string;
+  phone_number?: string;
+  parent_phone_number?: string;
+  is_active?: boolean;
+}
+
+export interface UpdateStudentRequest {
+  full_name?: string;
+  student_code?: string;
+  phone_number?: string;
+  parent_phone_number?: string;
+  is_active?: boolean;
+}
+
+export interface StudentListResponse {
+  success: boolean;
+  data: {
+    students: StudentBackend[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+}
+
+export interface StudentQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
 export interface ClassroomApiResponse<T> {
   success: boolean;
   message?: string;

@@ -55,6 +55,8 @@ export const API_ENDPOINTS = {
     BASE: "/classrooms",
     BY_ID: (id: string) => `/classrooms/${id}`,
     STUDENTS: (classroomId: string) => `/classrooms/${classroomId}/students`,
+    STUDENTS_ADD_EXISTING: (classroomId: string) =>
+      `/classrooms/${classroomId}/students/add-existing`,
     STUDENT: (classroomId: string, studentId: string) =>
       `/classrooms/${classroomId}/students/${studentId}`,
     STUDENT_PERFORMANCE: (classroomId: string, studentId: string) =>

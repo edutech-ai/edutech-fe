@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/table";
 import { StudentInitials } from "@/components/atoms/StudentInitials";
 import type { Classroom, Student } from "@/types/classroom";
-import { Search, ChevronUp, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, ChevronUp, ChevronDown, Plus } from "lucide-react";
 
 export interface StudentDataTableProps {
   classrooms: Classroom[];
@@ -29,6 +30,7 @@ export interface StudentDataTableProps {
   selectedClassId?: string;
   onClassChange: (classId: string) => void;
   onStudentClick: (student: Student) => void;
+  onAddStudent?: () => void;
   className?: string;
 }
 
@@ -62,6 +64,7 @@ export function StudentDataTable({
   selectedClassId,
   onClassChange,
   onStudentClick,
+  onAddStudent,
   className,
 }: StudentDataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -153,10 +156,18 @@ export function StudentDataTable({
               </div>
             </div>
           </div>
-          <p className="text-sm text-gray-500">
-            Hiển thị {filteredAndSortedStudents.length} / {students.length} học
-            sinh
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-gray-500">
+              Hiển thị {filteredAndSortedStudents.length} / {students.length}{" "}
+              học sinh
+            </p>
+            {onAddStudent && (
+              <Button onClick={onAddStudent} size="sm" className="gap-2">
+                <Plus className="w-4 h-4" />
+                Thêm học sinh
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-0">

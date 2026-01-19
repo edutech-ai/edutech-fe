@@ -13,8 +13,14 @@ import type {
   ClassroomQueryParams,
   ClassroomStudentsResponse,
   AddStudentToClassroomRequest,
+  CreateStudentAndAddToClassroomRequest,
   StudentPerformanceBackend,
   LeaderboardResponse,
+  StudentBackend,
+  StudentListResponse,
+  StudentQueryParams,
+  CreateStudentRequest,
+  UpdateStudentRequest,
 } from "@/types/classroom";
 
 // ==================== QUERY KEYS ====================
@@ -31,6 +37,15 @@ export const CLASSROOM_KEYS = {
     [...CLASSROOM_KEYS.all, "performance", classroomId, studentId] as const,
   leaderboard: (classroomId: string) =>
     [...CLASSROOM_KEYS.all, "leaderboard", classroomId] as const,
+};
+
+export const STUDENT_KEYS = {
+  all: ["students"] as const,
+  lists: () => [...STUDENT_KEYS.all, "list"] as const,
+  list: (filters: StudentQueryParams) =>
+    [...STUDENT_KEYS.lists(), filters] as const,
+  details: () => [...STUDENT_KEYS.all, "detail"] as const,
+  detail: (id: string) => [...STUDENT_KEYS.details(), id] as const,
 };
 
 // ==================== CLASSROOM QUERY HOOKS ====================
@@ -366,6 +381,198 @@ export const useUpdateStudentPerformance = (): UseMutationResult<
       queryClient.invalidateQueries({
         queryKey: CLASSROOM_KEYS.leaderboard(variables.classroomId),
       });
+    },
+  });
+};
+
+/**
+ * Create new student and add to classroom
+ */
+export const useCreateStudentAndAddToClassroom = (): UseMutationResult<
+  ClassroomApiResponse<StudentBackend>,
+  AxiosError,
+  { classroomId: string; data: CreateStudentAndAddToClassroomRequest }
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      classroomId,
+      data,
+    }: {
+      classroomId: string;
+      data: CreateStudentAndAddToClassroomRequest;
+    }) => {
+      const response = await axiosInstance.post<
+        ClassroomApiResponse<StudentBackend>
+      >(API_ENDPOINTS.CLASSROOM.STUDENTS(classroomId), data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.students(variables.classroomId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.detail(variables.classroomId),
+      });
+      queryClient.invalidateQueries({ queryKey: STUDENT_KEYS.lists() });
+    },
+  });
+};
+
+/**
+ * Add existing student to classroom
+ */
+export const useAddExistingStudentToClassroom = (): UseMutationResult<
+  ClassroomApiResponse<void>,
+  AxiosError,
+  { classroomId: string; data: AddStudentToClassroomRequest }
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      classroomId,
+      data,
+    }: {
+      classroomId: string;
+      data: AddStudentToClassroomRequest;
+    }) => {
+      const response = await axiosInstance.post<ClassroomApiResponse<void>>(
+        API_ENDPOINTS.CLASSROOM.STUDENTS_ADD_EXISTING(classroomId),
+        data
+      );
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.students(variables.classroomId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.detail(variables.classroomId),
+      });
+    },
+  });
+};
+
+// ==================== STUDENT QUERY HOOKS ====================
+
+/**
+ * Get all students list
+ */
+export const useStudents = (
+  filters: StudentQueryParams = {},
+  options?: any
+) => {
+  return useQuery<StudentListResponse, AxiosError>({
+    queryKey: STUDENT_KEYS.list(filters),
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<StudentListResponse>(
+        API_ENDPOINTS.STUDENT.BASE,
+        { params: filters }
+      );
+      return data;
+    },
+    ...options,
+  });
+};
+
+/**
+ * Get student by ID
+ */
+export const useStudentById = (id?: string, options?: any) => {
+  return useQuery<ClassroomApiResponse<StudentBackend>, AxiosError>({
+    queryKey: STUDENT_KEYS.detail(id!),
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<
+        ClassroomApiResponse<StudentBackend>
+      >(API_ENDPOINTS.STUDENT.BY_ID(id!));
+      return data;
+    },
+    enabled: !!id,
+    ...options,
+  });
+};
+
+// ==================== STUDENT MUTATION HOOKS ====================
+
+/**
+ * Create new student
+ */
+export const useCreateStudent = (): UseMutationResult<
+  ClassroomApiResponse<StudentBackend>,
+  AxiosError,
+  CreateStudentRequest
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateStudentRequest) => {
+      const response = await axiosInstance.post<
+        ClassroomApiResponse<StudentBackend>
+      >(API_ENDPOINTS.STUDENT.BASE, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: STUDENT_KEYS.lists() });
+    },
+  });
+};
+
+/**
+ * Update student
+ */
+export const useUpdateStudent = (): UseMutationResult<
+  ClassroomApiResponse<StudentBackend>,
+  AxiosError,
+  { id: string; data: UpdateStudentRequest }
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateStudentRequest;
+    }) => {
+      const response = await axiosInstance.put<
+        ClassroomApiResponse<StudentBackend>
+      >(API_ENDPOINTS.STUDENT.BY_ID(id), data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: STUDENT_KEYS.detail(variables.id),
+      });
+      queryClient.invalidateQueries({ queryKey: STUDENT_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: CLASSROOM_KEYS.all });
+    },
+  });
+};
+
+/**
+ * Delete student
+ */
+export const useDeleteStudent = (): UseMutationResult<
+  ClassroomApiResponse<void>,
+  AxiosError,
+  string
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await axiosInstance.delete<ClassroomApiResponse<void>>(
+        API_ENDPOINTS.STUDENT.BY_ID(id)
+      );
+      return response.data;
+    },
+    onSuccess: (_, id) => {
+      queryClient.removeQueries({ queryKey: STUDENT_KEYS.detail(id) });
+      queryClient.invalidateQueries({ queryKey: STUDENT_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: CLASSROOM_KEYS.all });
     },
   });
 };

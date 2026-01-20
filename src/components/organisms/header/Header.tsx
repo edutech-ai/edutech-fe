@@ -3,11 +3,28 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+
+interface NavItem {
+  label: string;
+  href: string;
+  scrollTarget?: string; // For homepage scroll
+}
+
+const navItems: NavItem[] = [
+  { label: "Về chúng tôi", href: "/about", scrollTarget: "#about" },
+  { label: "Tính năng", href: "/features", scrollTarget: "#features" },
+  { label: "Bảng giá", href: "/pricing", scrollTarget: "#pricing" },
+  { label: "Bài viết", href: "/blog" },
+  { label: "Hướng dẫn", href: "/guide" },
+];
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,6 +33,33 @@ export function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleNavClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    item: NavItem
+  ) => {
+    // On homepage, scroll to section if scrollTarget exists
+    if (isHomePage && item.scrollTarget) {
+      e.preventDefault();
+      const element = document.querySelector(item.scrollTarget);
+      if (element) {
+        const headerOffset = 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition =
+          elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth",
+        });
+      }
+      setIsMobileMenuOpen(false);
+    }
+  };
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
 
   return (
     <header
@@ -29,7 +73,7 @@ export function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="group flex items-center justify-center">
-            <div className="relative w-10 h-10 transition-transform duration-300 group-hover:scale-110">
+            <div className="relative md:hidden w-10 h-10 transition-transform duration-300 group-hover:scale-110">
               <Image
                 src="/images/logo/logo.svg"
                 alt="EduTech Logo"
@@ -37,9 +81,14 @@ export function Header() {
                 className="object-contain"
               />
             </div>
-            <div className="relative h-8 w-32 hidden sm:block">
+            <div
+              className="relative lg:h-12 lg:w-40 h-8 w-32 hidden md:block cursor-pointer transition-transform duration-300 group-hover:scale-105"
+              onClick={() => {
+                window.location.href = "/";
+              }}
+            >
               <Image
-                src="/images/logo/logo-text.svg"
+                src="/images/logo/logo-text.png"
                 alt="EduTech"
                 fill
                 className="object-contain object-left"
@@ -49,18 +98,29 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {["Tính năng", "Quy trình", "Bảng giá", "Về chúng tôi"].map(
-              (item) => (
-                <a
-                  key={item}
-                  href={`#${item === "Tính năng" ? "features" : item === "Bảng giá" ? "pricing" : item === "Về chúng tôi" ? "about-us" : "process"}`}
-                  className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors relative group"
-                >
-                  {item}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full" />
-                </a>
-              )
-            )}
+            {navItems.map((item) => (
+              <Link
+                key={item.label}
+                href={
+                  isHomePage && item.scrollTarget
+                    ? item.scrollTarget
+                    : item.href
+                }
+                onClick={(e) => handleNavClick(e, item)}
+                className={`text-sm font-medium transition-colors relative group cursor-pointer ${
+                  isActive(item.href)
+                    ? "text-blue-600"
+                    : "text-gray-600 hover:text-blue-600"
+                }`}
+              >
+                {item.label}
+                <span
+                  className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
+                    isActive(item.href) ? "w-full" : "w-0 group-hover:w-full"
+                  }`}
+                />
+              </Link>
+            ))}
           </nav>
 
           {/* Auth Buttons */}
@@ -73,7 +133,7 @@ export function Header() {
             </Link>
             <Link
               href="/register"
-              className="px-5 py-2.5 text-sm font-semibold text-white bg-gray-900 hover:bg-blue-600 rounded-full transition-all duration-300 shadow-lg hover:shadow-blue-500/30 cursor-pointer"
+              className="px-5 py-2.5 text-sm md:hidden lg:block font-semibold text-primary bg-transparent border border-primary hover:bg-blue-600 hover:text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-blue-500/30 cursor-pointer"
             >
               Dùng thử miễn phí
             </Link>
@@ -91,30 +151,39 @@ export function Header() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-100 shadow-xl p-4 flex flex-col gap-4 animate-fade-in-up">
-          {["Tính năng", "Quy trình", "Bảng giá", "Về chúng tôi"].map(
-            (item) => (
-              <a
-                key={item}
-                href={`#${item === "Tính năng" ? "features" : item === "Bảng giá" ? "pricing" : item === "Quy trình" ? "process" : "about-us"}`}
-                className="text-base font-medium text-gray-600 hover:text-blue-600 py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {item}
-              </a>
-            )
-          )}
-          <hr className="border-gray-100" />
+        <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-100 shadow-xl p-4 flex flex-col gap-2 animate-fade-in-up">
+          {navItems.map((item) => (
+            <Link
+              key={item.label}
+              href={
+                isHomePage && item.scrollTarget ? item.scrollTarget : item.href
+              }
+              className={`text-base font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer ${
+                isActive(item.href)
+                  ? "text-blue-600 bg-blue-50"
+                  : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+              }`}
+              onClick={(e) => {
+                handleNavClick(e, item);
+                if (!item.scrollTarget || !isHomePage) {
+                  setIsMobileMenuOpen(false);
+                }
+              }}
+            >
+              {item.label}
+            </Link>
+          ))}
+          <hr className="border-gray-100 my-2" />
           <Link
             href="/login"
-            className="text-center py-3 font-semibold text-gray-700"
+            className="text-center py-3 font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Đăng nhập
           </Link>
           <Link
             href="/register"
-            className="text-center py-3 font-semibold text-white bg-blue-600 rounded-xl"
+            className="text-center py-3 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Dùng thử miễn phí

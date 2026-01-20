@@ -50,7 +50,7 @@ export function BenefitsSection() {
   return (
     <section
       ref={sectionRef}
-      id="about-us"
+      id="about"
       className="py-24 bg-gray-50 relative overflow-hidden perspective-2000"
     >
       {/* Magical Background */}

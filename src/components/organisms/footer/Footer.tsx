@@ -36,11 +36,11 @@ export function Footer() {
   return (
     <footer className="bg-white border-t border-gray-100 relative overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03]">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')]" />
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05]">
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/grid.svg')]" />
       </div>
 
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-blue-50/50 to-transparent rounded-full blur-3xl -z-10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-250 h-125 bg-linear-to-b from-blue-50/50 to-transparent rounded-full blur-3xl -z-10" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-16">

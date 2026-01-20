@@ -26,7 +26,7 @@ export function FeaturesSection() {
     <section id="features" className="py-32 bg-white relative overflow-hidden">
       {/* Minimal Background */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')] opacity-[0.03]" />
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/grid.svg')] opacity-[0.03]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-b from-gray-50 to-transparent rounded-full blur-3xl opacity-50" />
       </div>
 

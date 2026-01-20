@@ -20,7 +20,7 @@ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://aiedutech.vn";
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "AI EduTech - Hệ thống AI hỗ trợ giảng dạy",
+    default: "AI EduTech - Trợ lý AI đồng hành cùng Giáo viên Việt",
     template: "%s | AI EduTech",
   },
   description:
@@ -40,6 +40,16 @@ export const metadata: Metadata = {
   authors: [{ name: "AI EduTech Development Team" }],
   creator: "AI EduTech",
   publisher: "AI EduTech",
+  icons: {
+    icon: [
+      { url: "/favicon.png", sizes: "48x48", type: "image/png" },
+      { url: "/favicon-96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon-144.png", sizes: "144x144", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   alternates: {
     canonical: "/",
   },
@@ -48,7 +58,7 @@ export const metadata: Metadata = {
     locale: "vi_VN",
     url: baseUrl,
     siteName: "AI EduTech",
-    title: "AI EduTech - Hệ thống AI hỗ trợ giảng dạy",
+    title: "AI EduTech - Trợ lý AI đồng hành cùng Giáo viên Việt",
     description:
       "Tạo đề thi, giáo án và học liệu chỉ trong vài phút với AI. Nhanh hơn, chuẩn hơn và nhất quán hơn.",
     images: [
@@ -56,13 +66,13 @@ export const metadata: Metadata = {
         url: "/images/og-image.png",
         width: 1200,
         height: 630,
-        alt: "AI EduTech - Hệ thống AI hỗ trợ giảng dạy",
+        alt: "AI EduTech - Trợ lý AI đồng hành cùng Giáo viên Việt",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI EduTech - Hệ thống AI hỗ trợ giảng dạy",
+    title: "AI EduTech - Trợ lý AI đồng hành cùng Giáo viên Việt",
     description:
       "Tạo đề thi, giáo án và học liệu chỉ trong vài phút với AI. Nhanh hơn, chuẩn hơn và nhất quán hơn.",
     images: ["/images/og-image.png"],
@@ -94,11 +104,10 @@ export default function RootLayout({
     <html lang="vi">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/images/logo/logo.svg" />
         <meta name="theme-color" content="#2563eb" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="EduTech AI" />
+        <meta name="apple-mobile-web-app-title" content="AI EduTech" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

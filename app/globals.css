@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
+@import "react-quill-new/dist/quill.snow.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -211,4 +213,186 @@ button {
   background: linear-gradient(to right, #2563eb, #9333ea);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* ===== Quill Editor Styles ===== */
+.ql-container {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.ql-editor {
+  min-height: 80px;
+  padding: 12px 15px;
+}
+
+.ql-editor.ql-blank::before {
+  color: #9ca3af;
+  font-style: normal;
+}
+
+.ql-toolbar.ql-snow {
+  border-color: #e5e7eb;
+  border-radius: 8px 8px 0 0;
+  padding: 8px;
+  background-color: #f9fafb;
+}
+
+.ql-container.ql-snow {
+  border-color: #e5e7eb;
+  border-radius: 0 0 8px 8px;
+}
+
+.ql-snow .ql-picker {
+  color: #374151;
+}
+
+.ql-snow .ql-stroke {
+  stroke: #6b7280;
+}
+
+.ql-snow .ql-fill {
+  fill: #6b7280;
+}
+
+.ql-snow button:hover .ql-stroke,
+.ql-snow .ql-picker-label:hover .ql-stroke {
+  stroke: #2563eb;
+}
+
+.ql-snow button:hover .ql-fill,
+.ql-snow .ql-picker-label:hover .ql-fill {
+  fill: #2563eb;
+}
+
+.ql-snow button.ql-active .ql-stroke,
+.ql-snow .ql-picker-label.ql-active .ql-stroke {
+  stroke: #2563eb;
+}
+
+.ql-snow button.ql-active .ql-fill,
+.ql-snow .ql-picker-label.ql-active .ql-fill {
+  fill: #2563eb;
+}
+
+/* Minimal variant (for answer inputs) */
+.quill-minimal .ql-toolbar.ql-snow {
+  padding: 4px 8px;
+}
+
+.quill-minimal .ql-editor {
+  min-height: 40px;
+  padding: 8px 12px;
+}
+
+/* ===== Formula Styles ===== */
+.ql-formula {
+  background-color: #f0f9ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ql-formula:hover {
+  background-color: #e0f2fe;
+}
+
+.latex-formula {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.latex-formula .katex {
+  font-size: 1.1em;
+}
+
+.latex-error {
+  color: #dc2626;
+  background-color: #fef2f2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.875em;
+}
+
+/* LaTeX display in content */
+.latex-content .katex-display {
+  margin: 1em 0;
+  text-align: center;
+}
+
+.latex-content .katex {
+  font-size: 1.1em;
+}
+
+/* Formula button in toolbar */
+.ql-formula-button {
+  font-weight: bold;
+  font-style: italic;
+}
+
+/* ===== Rich Text Content Display ===== */
+.rich-text-content {
+  line-height: 1.6;
+}
+
+.rich-text-content p {
+  margin-bottom: 0.5em;
+}
+
+.rich-text-content p:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+.rich-text-content ul,
+.rich-text-content ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.rich-text-content li {
+  margin-bottom: 0.25em;
+}
+
+.rich-text-content blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1em;
+  margin: 0.5em 0;
+  color: #6b7280;
+}
+
+.rich-text-content a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.rich-text-content a:hover {
+  color: #1d4ed8;
+}
+
+/* ===== Formula Modal Preview ===== */
+.formula-preview {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formula-preview .katex {
+  font-size: 1.5em;
+}
+
+.formula-preview .katex-error {
+  color: #dc2626;
 }

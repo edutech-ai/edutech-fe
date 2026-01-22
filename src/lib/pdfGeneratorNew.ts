@@ -1,4 +1,86 @@
 import html2pdf from "html2pdf.js";
+import katex from "katex";
+
+// KaTeX CSS for PDF rendering
+const KATEX_CSS = `
+  .katex { font-size: 1.1em; }
+  .katex-display { margin: 0.5em 0; text-align: center; }
+  .latex-formula { display: inline-block; vertical-align: middle; }
+  .ql-formula { background-color: #f0f9ff; padding: 2px 4px; border-radius: 2px; }
+`;
+
+// LaTeX pattern detection
+const LATEX_PATTERNS = [
+  /\\[a-zA-Z]+/, // LaTeX commands like \pi, \frac, \sqrt
+  /\^{[^}]+}/, // Superscript with braces: ^{2}
+  /\^\d+/, // Simple superscript: ^2, ^3
+  /\^[a-zA-Z]/, // Variable superscript: ^n, ^x
+  /_{[^}]+}/, // Subscript with braces: _{i}
+  /_\d+/, // Simple subscript: _1, _2
+  /_[a-zA-Z]/, // Variable subscript: _i, _n
+];
+
+function containsLatex(text: string): boolean {
+  return LATEX_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+function decodeHTMLEntities(text: string): string {
+  return text
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&nbsp;/g, " ");
+}
+
+// Render LaTeX formulas in HTML content
+function renderLatexInContent(html: string): string {
+  if (!html) return "";
+
+  let result = html;
+
+  // Pattern 1: Match <span class="ql-formula" data-value="...">...</span>
+  const formulaRegex =
+    /<span[^>]*class="[^"]*ql-formula[^"]*"[^>]*data-value="([^"]*)"[^>]*>.*?<\/span>/gi;
+
+  result = result.replace(formulaRegex, (match, formula) => {
+    try {
+      const decoded = decodeHTMLEntities(formula);
+      const rendered = katex.renderToString(decoded, {
+        throwOnError: false,
+        displayMode: false,
+        output: "html",
+      });
+      return `<span class="latex-formula">${rendered}</span>`;
+    } catch {
+      return formula;
+    }
+  });
+
+  // Pattern 2: Match plain <span>LaTeX content</span>
+  const plainSpanRegex = /<span>([^<]+)<\/span>/gi;
+
+  result = result.replace(plainSpanRegex, (match, content) => {
+    const decoded = decodeHTMLEntities(content);
+
+    if (containsLatex(decoded)) {
+      try {
+        const rendered = katex.renderToString(decoded, {
+          throwOnError: false,
+          displayMode: false,
+          output: "html",
+        });
+        return `<span class="latex-formula">${rendered}</span>`;
+      } catch {
+        return decoded;
+      }
+    }
+
+    return match;
+  });
+
+  return result;
+}
 
 interface ExamInfo {
   name: string;
@@ -31,8 +113,10 @@ function generateExamHTML(
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+    ${KATEX_CSS}
 
     body {
       font-family: 'Roboto', 'Arial', sans-serif;
@@ -167,13 +251,14 @@ function generateExamHTML(
 
   ${questions
     .map((question, index) => {
+      const renderedContent = renderLatexInContent(question.content);
       const questionHtml = `
     <div class="question">
       <div class="question-header">
         Câu ${index + 1} (${question.points} điểm)
       </div>
       <div class="question-content">
-        ${question.content}
+        ${renderedContent}
       </div>
       ${
         question.answers && question.answers.length > 0
@@ -184,9 +269,10 @@ function generateExamHTML(
               const letter = String.fromCharCode(65 + ansIndex);
               const isCorrect =
                 includeAnswers && ansIndex === question.correctAnswer;
+              const renderedAnswer = renderLatexInContent(answer);
               return `
             <div class="answer ${isCorrect ? "correct" : ""}">
-              ${letter}. ${answer}${isCorrect ? " ✓" : ""}
+              ${letter}. ${renderedAnswer}${isCorrect ? " ✓" : ""}
             </div>
           `;
             })

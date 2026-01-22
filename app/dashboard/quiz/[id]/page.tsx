@@ -11,6 +11,9 @@ import {
 } from "@/services/quizService";
 import { toast } from "sonner";
 import { useState } from "react";
+import { ActionButton } from "@/components/molecules/action-button";
+import LaTeXRenderer from "@/components/atoms/latex-renderer";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function QuizDetailPage() {
   const params = useParams();
@@ -18,6 +21,7 @@ export default function QuizDetailPage() {
   const quizId = params.id as string;
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Fetch quiz and questions
   const {
@@ -43,12 +47,11 @@ export default function QuizDetailPage() {
     router.push(`/dashboard/quiz/new?duplicateFrom=${quizId}`);
   };
 
-  const handleDelete = async () => {
-    // eslint-disable-next-line no-alert
-    if (!confirm("Bạn có chắc chắn muốn xóa đề thi này?")) {
-      return;
-    }
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
 
+  const handleDeleteConfirm = async () => {
     setIsDeleting(true);
 
     try {
@@ -105,6 +108,16 @@ export default function QuizDetailPage() {
     );
   };
 
+  const renderDifficultyText = (difficulty?: string) => {
+    if (!difficulty) return null;
+    const texts: { [key: string]: string } = {
+      easy: "Dễ",
+      medium: "Trung bình",
+      hard: "Khó",
+    };
+    return texts[difficulty] || difficulty;
+  };
+
   const getStatusColor = (status?: string) => {
     const colors = {
       draft: "bg-gray-100 text-gray-700",
@@ -117,20 +130,24 @@ export default function QuizDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <ActionButton
+        isBack
+        label="Danh sách đề thi"
+        href="/dashboard/library?tab=quizzes"
+      />
+      <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{quiz.title}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {quiz.title}
+            </h1>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-sm text-gray-600">
-                {quiz.subject} • Lớp {quiz.grade || "N/A"}
+              <span className="text-sm text-gray-900 font-bold">
+                {quiz.subject} • Lớp {quiz.grade || "Không xác định"}
               </span>
               {quiz.difficulty && (
                 <Badge className={getDifficultyColor(quiz.difficulty)}>
-                  {quiz.difficulty}
+                  {renderDifficultyText(quiz.difficulty)}
                 </Badge>
               )}
               {quiz.status && (
@@ -158,7 +175,7 @@ export default function QuizDetailPage() {
           </Button>
           <Button
             variant="destructive"
-            onClick={handleDelete}
+            onClick={handleDeleteClick}
             disabled={isDeleting}
           >
             {isDeleting ? (
@@ -180,7 +197,7 @@ export default function QuizDetailPage() {
           <div>
             <p className="text-sm text-gray-600 mb-1">Tổng số câu hỏi</p>
             <p className="text-2xl font-bold text-gray-900">
-              {quiz.total_questions}
+              {quiz.question_count}
             </p>
           </div>
           <div>
@@ -240,9 +257,10 @@ export default function QuizDetailPage() {
                         {question.point} điểm
                       </span>
                     </div>
-                    <p className="text-gray-900 font-medium mb-3">
-                      {question.content}
-                    </p>
+                    <LaTeXRenderer
+                      content={question.content}
+                      className="mb-4 text-gray-900"
+                    />
 
                     {/* Options */}
                     {question.options && question.options.length > 0 && (
@@ -273,9 +291,11 @@ export default function QuizDetailPage() {
                               <span className="font-medium text-gray-700">
                                 {String.fromCharCode(65 + optIndex)}.
                               </span>
-                              <span className="text-gray-900">
-                                {optionText}
-                              </span>
+                              <LaTeXRenderer
+                                content={optionText}
+                                className="text-gray-800 flex-1"
+                                as="span"
+                              />
                               {isCorrect && (
                                 <Badge className="ml-auto bg-green-600">
                                   Đáp án đúng
@@ -293,9 +313,10 @@ export default function QuizDetailPage() {
                         <p className="text-sm font-semibold text-blue-900 mb-1">
                           Giải thích:
                         </p>
-                        <p className="text-sm text-blue-800">
-                          {question.explanation}
-                        </p>
+                        <LaTeXRenderer
+                          content={question.explanation}
+                          className="text-sm text-blue-800"
+                        />
                       </div>
                     )}
                   </div>
@@ -305,6 +326,17 @@ export default function QuizDetailPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={handleDeleteConfirm}
+        title="Xóa đề thi"
+        description="Bạn có chắc chắn muốn xóa đề thi này? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="destructive"
+      />
     </div>
   );
 }

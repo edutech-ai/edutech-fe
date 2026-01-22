@@ -16,6 +16,7 @@ import {
 import { AddQuestionModal } from "./AddQuestionModal";
 import type { QuestionUI } from "@/types";
 import { QuestionTypeUI } from "@/types";
+import { LaTeXRenderer } from "@/components/atoms/latex-renderer";
 
 interface QuestionListTabProps {
   questions: QuestionUI[];
@@ -144,9 +145,10 @@ export function QuestionListTab({ questions, onUpdate }: QuestionListTabProps) {
                   {/* Question Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4 mb-2">
-                      <p className="text-gray-900 font-medium">
-                        {question.content}
-                      </p>
+                      <LaTeXRenderer
+                        content={question.content}
+                        className="text-gray-900 font-medium"
+                      />
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <Button
                           variant="ghost"
@@ -177,14 +179,15 @@ export function QuestionListTab({ questions, onUpdate }: QuestionListTabProps) {
                           return (
                             <div
                               key={optIndex}
-                              className={`text-sm px-2 py-1 rounded ${
+                              className={`text-sm px-2 py-1 rounded flex items-center gap-1 ${
                                 isCorrect
                                   ? "bg-green-50 text-green-700 font-medium"
                                   : "text-gray-600"
                               }`}
                             >
-                              {String.fromCharCode(65 + optIndex)}. {option}
-                              {isCorrect && " ✓"}
+                              <span>{String.fromCharCode(65 + optIndex)}.</span>
+                              <LaTeXRenderer content={option} as="span" />
+                              {isCorrect && <span>✓</span>}
                             </div>
                           );
                         })}

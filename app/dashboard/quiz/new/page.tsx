@@ -372,18 +372,47 @@ export default function QuizNewPage() {
       if (quiz.questions && quiz.questions.length > 0) {
         await bulkCreateQuestionsMutation.mutateAsync({
           quiz_id: newQuizId,
-          questions: quiz.questions.map((q) => ({
-            content: q.content,
-            options: q.options ?? undefined,
-            // Convert from UI format (correctAnswer index) to backend format (string)
-            correct_answer:
-              typeof q.correctAnswer === "number" && q.options
-                ? q.options[q.correctAnswer]
-                : String(q.correctAnswer ?? ""),
-            type: q.type as "MCQ" | "MULTIPLE_ANSWER" | "TRUE_FALSE" | "ESSAY",
-            point: q.points,
-            explanation: q.explanation ?? undefined,
-          })),
+          questions: quiz.questions.map((q) => {
+            // Determine correct_answer based on question type
+            let correct_answer: string | string[];
+
+            if (q.type === "TRUE_FALSE") {
+              // TRUE_FALSE: send as string "0" or "1"
+              correct_answer = String(
+                typeof q.correctAnswer === "number" ? q.correctAnswer : 0
+              );
+            } else if (q.type === "ESSAY") {
+              // ESSAY: send as string
+              correct_answer = String(q.correctAnswer ?? "");
+            } else if (
+              q.type === "MULTIPLE_ANSWER" &&
+              q.correctAnswers &&
+              q.options
+            ) {
+              // MULTIPLE_ANSWER: convert array of indices to array of option texts
+              correct_answer = q.correctAnswers
+                .map((idx) => q.options![idx])
+                .filter(Boolean);
+            } else if (typeof q.correctAnswer === "number" && q.options) {
+              // MCQ: convert index to option text
+              correct_answer = q.options[q.correctAnswer] ?? "";
+            } else {
+              correct_answer = String(q.correctAnswer ?? "");
+            }
+
+            return {
+              content: q.content,
+              options: q.options ?? undefined,
+              correct_answer,
+              type: q.type as
+                | "MCQ"
+                | "MULTIPLE_ANSWER"
+                | "TRUE_FALSE"
+                | "ESSAY",
+              point: q.points,
+              explanation: q.explanation ?? undefined,
+            };
+          }),
         });
 
         toast.success(

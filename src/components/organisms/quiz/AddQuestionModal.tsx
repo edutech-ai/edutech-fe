@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/molecules/rich-text-editor";
 import {
   Select,
   SelectContent,
@@ -47,6 +47,14 @@ const difficultyOptions = [
   { value: Difficulty.APPLICATION, label: "Vận dụng" },
   { value: Difficulty.HIGH_APPLICATION, label: "Vận dụng cao" },
 ];
+
+// Helper function to check if rich text content is empty
+const isRichTextEmpty = (html: string): boolean => {
+  if (!html) return true;
+  // Remove HTML tags and check if there's actual content
+  const text = html.replace(/<[^>]*>/g, "").trim();
+  return text.length === 0;
+};
 
 export function AddQuestionModal({
   open,
@@ -106,7 +114,7 @@ export function AddQuestionModal({
 
   const handleSubmit = () => {
     // Validation
-    if (!content.trim()) {
+    if (isRichTextEmpty(content)) {
       toast.error("Vui lòng nhập nội dung câu hỏi");
       return;
     }
@@ -114,7 +122,7 @@ export function AddQuestionModal({
     if (
       (type === QuestionTypeUI.SINGLE_CHOICE ||
         type === QuestionTypeUI.MULTIPLE_CHOICE) &&
-      options.some((opt) => !opt.trim())
+      options.some((opt) => isRichTextEmpty(opt))
     ) {
       toast.error("Vui lòng nhập đầy đủ các đáp án");
       return;
@@ -244,13 +252,11 @@ export function AddQuestionModal({
             <Label htmlFor="content">
               Nội dung câu hỏi <span className="text-red-500">*</span>
             </Label>
-            <Textarea
+            <RichTextEditor
               id="content"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={setContent}
               placeholder="Nhập nội dung câu hỏi..."
-              rows={3}
-              className="resize-none"
             />
           </div>
 
@@ -276,24 +282,26 @@ export function AddQuestionModal({
                 onValueChange={(value) => setCorrectAnswer(parseInt(value))}
               >
                 {options.map((option, index) => (
-                  <div key={index} className="flex items-center gap-2">
+                  <div key={index} className="flex items-start gap-2">
                     <RadioGroupItem
                       value={index.toString()}
                       id={`option-${index}`}
+                      className="mt-3"
                     />
-                    <Input
-                      value={option}
-                      onChange={(e) =>
-                        handleOptionChange(index, e.target.value)
-                      }
-                      placeholder={`Đáp án ${String.fromCharCode(65 + index)}`}
-                      className="flex-1"
-                    />
+                    <div className="flex-1">
+                      <RichTextEditor
+                        value={option}
+                        onChange={(value) => handleOptionChange(index, value)}
+                        placeholder={`Đáp án ${String.fromCharCode(65 + index)}`}
+                        variant="minimal"
+                      />
+                    </div>
                     {options.length > 2 && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
+                        className="mt-1"
                         onClick={() => handleRemoveOption(index)}
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
@@ -327,27 +335,29 @@ export function AddQuestionModal({
               </div>
               <div className="space-y-2">
                 {options.map((option, index) => (
-                  <div key={index} className="flex items-center gap-2">
+                  <div key={index} className="flex items-start gap-2">
                     <Checkbox
                       checked={correctAnswers.includes(index)}
                       onCheckedChange={(checked) =>
                         handleMultipleChoiceToggle(index, checked as boolean)
                       }
                       id={`option-multi-${index}`}
+                      className="mt-3"
                     />
-                    <Input
-                      value={option}
-                      onChange={(e) =>
-                        handleOptionChange(index, e.target.value)
-                      }
-                      placeholder={`Đáp án ${String.fromCharCode(65 + index)}`}
-                      className="flex-1"
-                    />
+                    <div className="flex-1">
+                      <RichTextEditor
+                        value={option}
+                        onChange={(value) => handleOptionChange(index, value)}
+                        placeholder={`Đáp án ${String.fromCharCode(65 + index)}`}
+                        variant="minimal"
+                      />
+                    </div>
                     {options.length > 2 && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
+                        className="mt-1"
                         onClick={() => handleRemoveOption(index)}
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
@@ -445,13 +455,12 @@ export function AddQuestionModal({
           {/* Explanation */}
           <div className="space-y-2">
             <Label htmlFor="explanation">Giải thích (Tùy chọn)</Label>
-            <Textarea
+            <RichTextEditor
               id="explanation"
               value={explanation}
-              onChange={(e) => setExplanation(e.target.value)}
+              onChange={setExplanation}
               placeholder="Giải thích đáp án đúng..."
-              rows={2}
-              className="resize-none"
+              variant="minimal"
             />
           </div>
         </div>

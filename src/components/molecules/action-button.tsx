@@ -18,7 +18,7 @@ export function ActionButton({
       <Link href={href || "/dashboard/quiz"}>
         <Button
           variant="ghost"
-          className="gap-2 text-primary-text font-bold hover:text-primary-text/80"
+          className="gap-2 text-primary-text font-bold hover:text-primary-text/80 px-0"
         >
           <Image
             src={isBack ? "/images/util/back2.svg" : "/images/util/home.svg"}

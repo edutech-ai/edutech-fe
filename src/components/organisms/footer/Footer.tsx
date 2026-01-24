@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Linkedin, Twitter, Facebook } from "lucide-react";
 
 const footerLinks = {
   product: [
@@ -23,10 +22,21 @@ const footerLinks = {
     { name: "Cookie Policy", href: "/cookies" },
   ],
   social: [
-    { name: "Facebook", icon: Facebook, href: "#" },
-    { name: "Twitter", icon: Twitter, href: "#" },
-    { name: "LinkedIn", icon: Linkedin, href: "#" },
-    { name: "Email", icon: Mail, href: "mailto:contact@edutech.ai" },
+    {
+      name: "Facebook",
+      icon: "/images/brand/facebook.svg",
+      href: "https://www.facebook.com/aiedutechvn",
+    },
+    {
+      name: "TikTok",
+      icon: "/images/brand/tiktok.svg",
+      href: "https://www.tiktok.com/@aiedutechvn",
+    },
+    {
+      name: "Email",
+      icon: "/images/brand/mail.svg",
+      href: "mailto:edutechteam.work@gmail.com",
+    },
   ],
 };
 
@@ -71,15 +81,21 @@ export function Footer() {
             </p>
             <div className="flex gap-3">
               {footerLinks.social.map((social) => {
-                const Icon = social.icon;
                 return (
                   <a
                     key={social.name}
+                    target="_blank"
                     href={social.href}
-                    className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md"
+                    className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 hover:bg-primary hover:text-white hover:border-blue-600 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md"
                     aria-label={social.name}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Image
+                      src={social.icon}
+                      alt={social.name}
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
                   </a>
                 );
               })}

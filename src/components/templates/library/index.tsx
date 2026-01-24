@@ -2,50 +2,45 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Library,
-  FolderPlus,
-  Upload,
-  Grid3x3,
-  List,
-  Search,
-  FileMinusCorner,
-  Loader2,
-} from "lucide-react";
+import { Library, Loader2, Trash2, FileMinusCorner } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { QuizCard } from "@/components/molecules/quiz-card";
-import type { Quiz, QuizQueryParams } from "@/types/quiz";
+import type { Quiz, QuizQueryParams, Folder } from "@/types";
 import { CreateQuizCard } from "@/components/molecules/quiz-card/CreateQuizCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { FolderCard } from "@/components/features/library/FolderCard";
-import { FileCard } from "@/components/features/library/FileCard";
-import { CreateFolderDialog } from "@/components/features/library/CreateFolderDialog";
-import { DeleteConfirmDialog } from "@/components/features/library/DeleteConfirmDialog";
-import { Trash2 } from "lucide-react";
-import {
-  mockFolders,
-  mockFiles,
-  type Folder,
-  type File,
-  type FolderColor,
-} from "@/data/library";
+import { mockFiles, type File } from "@/data/library";
 import { toast } from "sonner";
-import { useMyQuizzes, useDeleteQuiz } from "@/services/quizService";
+import { useMyQuizzes } from "@/services/quizService";
+import {
+  useFolders,
+  useFolderPath,
+  useFolderTree,
+} from "@/services/folderService";
+import { MAX_FOLDER_DEPTH } from "@/constants/folders";
+import { useLibraryActions } from "@/hooks/useLibraryActions";
+import { LibraryBreadcrumb } from "@/components/features/library/LibraryBreadcrumb";
+import { LibraryToolbar } from "@/components/features/library/LibraryToolbar";
+import { FolderGridView } from "@/components/features/library/FolderGridView";
+import { FolderListView } from "@/components/features/library/FolderListView";
+import { LibraryDialogs } from "@/components/features/library/LibraryDialogs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function LibraryTemplate() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [folders] = useState<Folder[]>(mockFolders);
   const [files] = useState<File[]>(mockFiles);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const [createFolderOpen, setCreateFolderOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingQuizId, setDeletingQuizId] = useState<string | null>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
-  // Derive values from URL params (avoid cascading setState in useEffect)
+  // Custom hook for all library actions
+  const actions = useLibraryActions();
+
+  // Derive values from URL params
   const currentFolderId = useMemo(() => {
     const folderId = searchParams.get("folder");
     return folderId && folderId !== "null" ? folderId : null;
@@ -54,41 +49,75 @@ export function LibraryTemplate() {
   const activeTab = searchParams.get("tab") || "all";
   const searchQuery = searchParams.get("search") || "";
 
-  // Fetch quizzes from backend API
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [quizFilters, setQuizFilters] = useState<QuizQueryParams>({
-    page: 1,
-    limit: 100, // Get all quizzes for now
-  });
+  // Fetch data
+  const {
+    data: foldersResponse,
+    isLoading: isLoadingFolders,
+    error: foldersError,
+  } = useFolders(currentFolderId);
 
+  const { data: folderPathResponse } = useFolderPath(
+    currentFolderId ?? undefined
+  );
+  const { data: folderTreeResponse } = useFolderTree();
+
+  const [quizFilters] = useState<QuizQueryParams>({ page: 1, limit: 100 });
   const {
     data: quizzesResponse,
     isLoading: isLoadingQuizzes,
     error: quizzesError,
   } = useMyQuizzes(quizFilters);
 
-  const deleteQuizMutation = useDeleteQuiz();
-
-  // Get quizzes directly from API (no adapter needed)
+  // Derived data
+  const folders: Folder[] = foldersResponse?.data ?? [];
+  const folderPath = useMemo(
+    () => folderPathResponse?.data ?? [],
+    [folderPathResponse?.data]
+  );
+  const allFolders: Folder[] = folderTreeResponse?.data ?? [];
   const quizzes: Quiz[] = quizzesResponse?.data ?? [];
 
-  // Get current folder content
-  const getCurrentFolders = () => {
-    return folders.filter((f) => f.parentId === currentFolderId);
-  };
+  const currentFolderDepth = useMemo(() => {
+    if (!currentFolderId) return 0;
+    return folderPath.length;
+  }, [currentFolderId, folderPath]);
 
-  const getCurrentFiles = () => {
-    return files.filter((f) => f.folderId === currentFolderId);
-  };
+  const canCreateSubfolder = currentFolderDepth < MAX_FOLDER_DEPTH;
 
+  const getCurrentFiles = () =>
+    files.filter((f) => f.folderId === currentFolderId);
+  const currentFiles = getCurrentFiles();
+
+  const filteredQuizzes = quizzes.filter(
+    (quiz) =>
+      quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      quiz.subject.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Navigation handlers
   const handleFolderClick = (folderId: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("folder", folderId);
-    // Always set tab to "all" when navigating folders
     params.set("tab", "all");
-
     router.push(`/dashboard/library?${params.toString()}`);
     setSelectedItems(new Set());
+  };
+
+  const handleNavigateToRoot = () => {
+    setSelectedItems(new Set());
+    const params = new URLSearchParams();
+    params.set("tab", "all");
+    if (searchQuery) params.set("search", searchQuery);
+    router.push(`/dashboard/library?${params.toString()}`);
+  };
+
+  const handleNavigateToFolder = (folderId: string) => {
+    setSelectedItems(new Set());
+    const params = new URLSearchParams();
+    params.set("tab", "all");
+    params.set("folder", folderId);
+    if (searchQuery) params.set("search", searchQuery);
+    router.push(`/dashboard/library?${params.toString()}`);
   };
 
   const handleSelectItem = (itemId: string) => {
@@ -103,225 +132,110 @@ export function LibraryTemplate() {
     });
   };
 
-  // Folder actions
-  const handleRenameFolder = (folderId: string) => {
-    // eslint-disable-next-line no-console
-    console.log("Rename folder:", folderId);
-    // TODO: Implement rename dialog
-  };
-
-  const handleDeleteFolder = (folderId: string) => {
-    // eslint-disable-next-line no-console
-    console.log("Delete folder:", folderId);
-    // TODO: Implement delete confirmation
-  };
-
-  const handleShareFolder = (folderId: string) => {
-    // eslint-disable-next-line no-console
-    console.log("Share folder:", folderId);
-    // TODO: Implement share dialog
-  };
-
-  const handleCreateFolder = (name: string, color: FolderColor) => {
-    // eslint-disable-next-line no-console
-    console.log("Create folder:", name, color);
-    // TODO: Call API to create folder
-
-    // Close dialog and navigate back to root library
-    setCreateFolderOpen(false);
-    setSelectedItems(new Set());
-
-    const params = new URLSearchParams();
-    params.set("tab", "all");
-    if (searchQuery) {
-      params.set("search", searchQuery);
+  const handleSearchChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set("search", value);
+    } else {
+      params.delete("search");
     }
+    router.push(`/dashboard/library?${params.toString()}`);
+  };
 
+  const handleSearchSubmit = () => {
+    setSelectedItems(new Set());
+    const params = new URLSearchParams();
+    params.set("tab", "quizzes");
+    params.set("search", searchQuery);
+    router.push(`/dashboard/library?${params.toString()}`);
+  };
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams();
+    params.set("tab", value);
+    setSelectedItems(new Set());
+    if (searchQuery) params.set("search", searchQuery);
     router.push(`/dashboard/library?${params.toString()}`);
   };
 
   const handleBulkDelete = () => {
-    // eslint-disable-next-line no-console
-    console.log("Delete items:", Array.from(selectedItems));
-    // TODO: Call API to delete items
-    // Clear selection after delete
+    // TODO: Implement bulk delete with API
+    toast.info("Tính năng xóa hàng loạt đang được phát triển");
     setSelectedItems(new Set());
+    setBulkDeleteDialogOpen(false);
   };
 
-  // Quiz handlers
-  const handleViewQuiz = (quizId: string) => {
-    router.push(`/dashboard/quiz/${quizId}`);
-  };
-
-  const handleEditQuiz = (quizId: string) => {
-    router.push(`/dashboard/quiz/${quizId}/edit`);
-  };
-
-  const handleDuplicateQuiz = async (quizId: string) => {
-    // Navigate to new quiz page with duplicateFrom param
-    // The new page will load and copy the quiz data
-    router.push(`/dashboard/quiz/new?duplicateFrom=${quizId}`);
-    toast.info("Đang tải đề thi để sao chép...");
-  };
-
-  const handleDeleteQuiz = (quizId: string) => {
-    setDeletingQuizId(quizId);
-    setDeleteConfirmOpen(true);
-  };
-
-  const handleCreateQuiz = () => {
-    // eslint-disable-next-line no-console
-    console.log("Create new quiz");
-    // TODO: Navigate to quiz creation page
-    router.push("/dashboard/quiz");
-  };
-
-  // Client-side filtering (since we load all quizzes)
-  const filteredQuizzes = quizzes.filter(
-    (quiz) =>
-      quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      quiz.subject.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Show error toast if fetch fails
+  // Error handling
   useEffect(() => {
     if (quizzesError) {
       toast.error("Không thể tải danh sách đề thi. Vui lòng thử lại!");
     }
   }, [quizzesError]);
 
-  const currentFolders = getCurrentFolders();
-  const currentFiles = getCurrentFiles();
+  useEffect(() => {
+    if (foldersError) {
+      toast.error("Không thể tải danh sách thư mục. Vui lòng thử lại!");
+    }
+  }, [foldersError]);
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
+      {currentFolderId && (
+        <LibraryBreadcrumb
+          folderPath={folderPath}
+          onNavigateToRoot={handleNavigateToRoot}
+          onNavigateToFolder={handleNavigateToFolder}
+        />
+      )}
+
       {/* Toolbar */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Tìm kiếm trong thư viện..."
-              value={searchQuery}
-              onChange={(e) => {
-                const value = e.target.value;
-
-                // Update URL with search parameter
-                const params = new URLSearchParams(searchParams.toString());
-                if (value) {
-                  params.set("search", value);
-                } else {
-                  params.delete("search");
-                }
-
-                router.push(`/dashboard/library?${params.toString()}`);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && searchQuery) {
-                  // Navigate to quizzes tab when pressing Enter
-                  setSelectedItems(new Set());
-
-                  const params = new URLSearchParams();
-                  params.set("tab", "quizzes");
-                  params.set("search", searchQuery);
-
-                  router.push(`/dashboard/library?${params.toString()}`);
-                }
-              }}
-              className="pl-10"
-            />
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCreateFolderOpen(true)}
-            >
-              <FolderPlus className="w-4 h-4 mr-2" />
-              Thư mục mới
-            </Button>
-            <Button variant="outline" size="sm">
-              <Upload className="w-4 h-4 mr-2" />
-              Tải lên
-            </Button>
-
-            {/* View Toggle */}
-            <div className="flex items-center gap-1 ml-4 border-l pl-4">
-              <Button
-                variant={viewMode === "grid" ? "secondary" : "ghost"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid3x3 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "secondary" : "ghost"}
-                size="icon"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <LibraryToolbar
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        onSearchSubmit={handleSearchSubmit}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        onCreateFolder={() => actions.setCreateFolderOpen(true)}
+        canCreateSubfolder={canCreateSubfolder}
+      />
 
       {/* Content */}
       <Tabs
         value={activeTab}
-        onValueChange={(value) => {
-          // Update URL with tab
-          const params = new URLSearchParams();
-          params.set("tab", value);
-
-          // Clear selection when changing tabs
-          setSelectedItems(new Set());
-
-          // Add search parameter if exists
-          if (searchQuery) {
-            params.set("search", searchQuery);
-          }
-
-          router.push(`/dashboard/library?${params.toString()}`);
-        }}
+        onValueChange={handleTabChange}
         className="w-full"
       >
         <div className="flex items-center justify-between">
           <TabsList>
             <TabsTrigger
               value="all"
-              onClick={() => {
-                // Always navigate to root when clicking "Tất cả"
-                if (currentFolderId) {
-                  setSelectedItems(new Set());
-
-                  const params = new URLSearchParams();
-                  params.set("tab", "all");
-                  if (searchQuery) {
-                    params.set("search", searchQuery);
-                  }
-
-                  router.push(`/dashboard/library?${params.toString()}`);
-                }
-              }}
+              onClick={() => currentFolderId && handleNavigateToRoot()}
             >
-              Thư viện chung
+              <Tooltip>
+                <TooltipTrigger>
+                  <span>Thư viện chung</span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Thư viện chung gồm bài giảng, tài liệu,..
+                </TooltipContent>
+              </Tooltip>
             </TabsTrigger>
-            <TabsTrigger value="quizzes">Đề thi của tôi</TabsTrigger>
-            {/* <TabsTrigger value="lessons">Giáo án</TabsTrigger> */}
-            {/* <TabsTrigger value="documents">Tài liệu</TabsTrigger> */}
+            <TabsTrigger value="quizzes">
+              <Tooltip>
+                <TooltipTrigger>
+                  <span>Đề thi của tôi</span>
+                </TooltipTrigger>
+                <TooltipContent>Quản lý các đề thi của bạn</TooltipContent>
+              </Tooltip>
+            </TabsTrigger>
           </TabsList>
 
-          {/* Delete Button - Show when items selected */}
           {selectedItems.size > 0 && (
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => setDeleteDialogOpen(true)}
+              onClick={() => setBulkDeleteDialogOpen(true)}
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Xóa ({selectedItems.size})
@@ -331,138 +245,31 @@ export function LibraryTemplate() {
 
         {/* All Files Tab */}
         <TabsContent value="all" className="mt-6">
-          {viewMode === "grid" ? (
-            <div className="space-y-6">
-              {/* Folders */}
-              {currentFolders.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">
-                    Thư mục
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                    {currentFolders.map((folder) => (
-                      <FolderCard
-                        key={folder.id}
-                        folder={folder}
-                        isSelected={selectedItems.has(folder.id)}
-                        onClick={() => handleFolderClick(folder.id)}
-                        onSelect={() => handleSelectItem(folder.id)}
-                        onRename={handleRenameFolder}
-                        onDelete={handleDeleteFolder}
-                        onShare={handleShareFolder}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Files */}
-              {currentFiles.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">
-                    Tệp tin
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                    {currentFiles.map((file) => (
-                      <FileCard
-                        key={file.id}
-                        file={file}
-                        isSelected={selectedItems.has(file.id)}
-                        onClick={() => {
-                          // eslint-disable-next-line no-console
-                          console.log("Open file:", file.id);
-                        }}
-                        onSelect={() => handleSelectItem(file.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {currentFolders.length === 0 && currentFiles.length === 0 && (
-                <div className="text-center py-16 text-gray-500">
-                  <Library className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                  <p className="text-lg font-medium mb-1">Thư mục trống</p>
-                  <p className="text-sm">
-                    Tạo thư mục mới hoặc tải lên tài liệu
-                  </p>
-                </div>
-              )}
+          {isLoadingFolders ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <span className="ml-3 text-gray-600">Đang tải thư mục...</span>
             </div>
+          ) : viewMode === "grid" ? (
+            <FolderGridView
+              folders={folders}
+              files={currentFiles}
+              selectedItems={selectedItems}
+              onFolderClick={handleFolderClick}
+              onSelectItem={handleSelectItem}
+              onRenameFolder={actions.handleRenameFolder}
+              onDeleteFolder={actions.handleDeleteFolder}
+              onShareFolder={actions.handleShareFolder}
+              onMoveFolder={actions.handleMoveFolder}
+            />
           ) : (
-            <div className="bg-white rounded-lg border border-gray-200">
-              {/* List view - similar structure but different layout */}
-              <div className="divide-y">
-                {currentFolders.map((folder) => (
-                  <div
-                    key={folder.id}
-                    className="flex items-center gap-4 p-4 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleFolderClick(folder.id)}
-                  >
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectItem(folder.id);
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.has(folder.id)}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                        }}
-                        className="w-4 h-4 cursor-pointer"
-                      />
-                    </div>
-                    <div className="shrink-0">
-                      {/* Add small folder icon here */}
-                      <span className="text-2xl">📁</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">
-                        {folder.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {folder.itemCount} mục
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {currentFiles.map((file) => (
-                  <div
-                    key={file.id}
-                    className="flex items-center gap-4 p-4 hover:bg-gray-50 cursor-pointer"
-                  >
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectItem(file.id);
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.has(file.id)}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                        }}
-                        className="w-4 h-4 cursor-pointer"
-                      />
-                    </div>
-                    <div className="shrink-0">
-                      <span className="text-2xl">📄</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">
-                        {file.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {file.size} • {file.type.toUpperCase()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <FolderListView
+              folders={folders}
+              files={currentFiles}
+              selectedItems={selectedItems}
+              onFolderClick={handleFolderClick}
+              onSelectItem={handleSelectItem}
+            />
           )}
         </TabsContent>
 
@@ -475,16 +282,16 @@ export function LibraryTemplate() {
             </div>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              <CreateQuizCard onCreate={handleCreateQuiz} />
+              <CreateQuizCard onCreate={actions.handleCreateQuiz} />
               {filteredQuizzes.map((quiz) => (
                 <QuizCard
                   key={quiz.id}
                   quiz={quiz}
-                  onView={handleViewQuiz}
-                  onEdit={handleEditQuiz}
-                  onDuplicate={handleDuplicateQuiz}
-                  onDelete={handleDeleteQuiz}
-                  isDeleting={deletingQuizId === quiz.id}
+                  onView={actions.handleViewQuiz}
+                  onEdit={actions.handleEditQuiz}
+                  onDuplicate={actions.handleDuplicateQuiz}
+                  onDelete={actions.handleDeleteQuiz}
+                  isDeleting={actions.deletingQuizId === quiz.id}
                 />
               ))}
             </div>
@@ -495,7 +302,7 @@ export function LibraryTemplate() {
                   <div
                     key={quiz.id}
                     className="flex items-center gap-4 p-4 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleViewQuiz(quiz.id)}
+                    onClick={() => actions.handleViewQuiz(quiz.id)}
                   >
                     <div className="shrink-0">
                       <FileMinusCorner className="text-file-blue" />
@@ -528,37 +335,34 @@ export function LibraryTemplate() {
         </TabsContent>
       </Tabs>
 
-      {/* Create Folder Dialog */}
-      <CreateFolderDialog
-        open={createFolderOpen}
-        onOpenChange={setCreateFolderOpen}
-        onCreateFolder={handleCreateFolder}
-      />
-
-      {/* Delete Confirmation Dialog */}
-      <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleBulkDelete}
-        itemCount={selectedItems.size}
-        itemType="folder"
-      />
-
-      {/* Delete Quiz Confirmation Dialog */}
-      <DeleteConfirmDialog
-        open={deleteConfirmOpen}
-        onOpenChange={setDeleteConfirmOpen}
-        onConfirm={() => {
-          if (deletingQuizId) {
-            deleteQuizMutation.mutate(deletingQuizId);
-            toast.success("Đã xóa đề thi thành công!");
-          } else {
-            toast.error("Không thể xóa đề thi. Vui lòng thử lại!");
-          }
-          setDeleteConfirmOpen(false);
-        }}
-        itemCount={1}
-        itemType="quiz"
+      {/* All Dialogs */}
+      <LibraryDialogs
+        currentFolderId={currentFolderId}
+        allFolders={allFolders}
+        createFolderOpen={actions.createFolderOpen}
+        setCreateFolderOpen={actions.setCreateFolderOpen}
+        onCreateFolder={actions.handleCreateFolder}
+        isCreatingFolder={actions.isCreatingFolder}
+        renameFolderOpen={actions.renameFolderOpen}
+        setRenameFolderOpen={actions.setRenameFolderOpen}
+        selectedFolderForRename={actions.selectedFolderForRename}
+        onUpdateFolder={actions.handleUpdateFolder}
+        isUpdatingFolder={actions.isUpdatingFolder}
+        moveFolderDialogOpen={actions.moveFolderDialogOpen}
+        setMoveFolderDialogOpen={actions.setMoveFolderDialogOpen}
+        folderToMove={actions.folderToMove}
+        onMoveFolder={actions.handleConfirmMoveFolder}
+        isMovingFolder={actions.isMovingFolder}
+        deleteFolderDialogOpen={actions.deleteFolderDialogOpen}
+        setDeleteFolderDialogOpen={actions.setDeleteFolderDialogOpen}
+        onConfirmDeleteFolder={actions.handleConfirmDeleteFolder}
+        bulkDeleteDialogOpen={bulkDeleteDialogOpen}
+        setBulkDeleteDialogOpen={setBulkDeleteDialogOpen}
+        selectedItemsCount={selectedItems.size}
+        onBulkDelete={handleBulkDelete}
+        deleteQuizConfirmOpen={actions.deleteQuizConfirmOpen}
+        setDeleteQuizConfirmOpen={actions.setDeleteQuizConfirmOpen}
+        onConfirmDeleteQuiz={actions.handleConfirmDeleteQuiz}
       />
     </div>
   );

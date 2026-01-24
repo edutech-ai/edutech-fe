@@ -70,6 +70,17 @@ export const API_ENDPOINTS = {
     BASE: "/students",
     BY_ID: (id: string) => `/students/${id}`,
   },
+
+  // Folder endpoints
+  FOLDER: {
+    BASE: "/folders",
+    TREE: "/folders/tree",
+    BY_ID: (id: string) => `/folders/${id}`,
+    PATH: (id: string) => `/folders/${id}/path`,
+    CHILDREN: (id: string) => `/folders/${id}/children`,
+    ITEMS: (id: string) => `/folders/${id}/items`,
+    MOVE: (id: string) => `/folders/${id}/move`,
+  },
 } as const;
 
 export type ApiEndpoint = (typeof API_ENDPOINTS)[keyof typeof API_ENDPOINTS];

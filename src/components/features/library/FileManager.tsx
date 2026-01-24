@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FolderCard } from "./FolderCard";
 import { FileCard } from "./FileCard";
-import type { FolderColor } from "@/components/atoms/FolderIcon";
+import type { Folder } from "@/types";
 
 interface FileManagerProps {
   viewMode: "grid" | "list";
@@ -11,41 +11,51 @@ interface FileManagerProps {
   onNavigate: (path: string[]) => void;
 }
 
-// Mock data
-const mockFolders: Array<{
-  id: string;
-  name: string;
-  itemCount: number;
-  createdAt: string;
-  color: FolderColor;
-}> = [
+// Mock data with API-compatible Folder type
+const mockFolders: Folder[] = [
   {
     id: "1",
+    teacher_id: "teacher-1",
     name: "Đề thi Toán",
-    itemCount: 12,
-    createdAt: "2025-01-15",
+    item_count: 12,
+    created_at: "2025-01-15T00:00:00Z",
+    updated_at: "2025-01-15T00:00:00Z",
     color: "blue",
+    parent_id: null,
+    depth: 0,
   },
   {
     id: "2",
+    teacher_id: "teacher-1",
     name: "Đề thi Văn",
-    itemCount: 8,
-    createdAt: "2025-01-10",
+    item_count: 8,
+    created_at: "2025-01-10T00:00:00Z",
+    updated_at: "2025-01-10T00:00:00Z",
     color: "green",
+    parent_id: null,
+    depth: 0,
   },
   {
     id: "3",
+    teacher_id: "teacher-1",
     name: "Giáo án Lớp 9",
-    itemCount: 24,
-    createdAt: "2025-01-05",
+    item_count: 24,
+    created_at: "2025-01-05T00:00:00Z",
+    updated_at: "2025-01-05T00:00:00Z",
     color: "purple",
+    parent_id: null,
+    depth: 0,
   },
   {
     id: "4",
+    teacher_id: "teacher-1",
     name: "Tài liệu tham khảo",
-    itemCount: 15,
-    createdAt: "2024-12-20",
+    item_count: 15,
+    created_at: "2024-12-20T00:00:00Z",
+    updated_at: "2024-12-20T00:00:00Z",
     color: "yellow",
+    parent_id: null,
+    depth: 0,
   },
 ];
 
@@ -210,10 +220,10 @@ export function FileManager({
                 <span className="font-medium text-gray-900">{folder.name}</span>
               </td>
               <td className="py-3 px-4 text-sm text-gray-600">
-                {folder.itemCount} mục
+                {folder.item_count} mục
               </td>
               <td className="py-3 px-4 text-sm text-gray-600">
-                {folder.createdAt}
+                {folder.created_at}
               </td>
               <td className="py-3 px-4 text-sm text-gray-600">Thư mục</td>
             </tr>

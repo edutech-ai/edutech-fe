@@ -292,3 +292,6 @@ export * from "./classroom";
 // ==================== QUIZ & QUESTION (Backend API) ====================
 export * from "./quiz";
 export * from "./question";
+
+// ==================== FOLDER ====================
+export * from "./folder";

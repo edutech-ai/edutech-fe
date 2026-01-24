@@ -1,12 +1,16 @@
 "use client";
 
-export type FolderColor =
+export type FolderColorBackend =
   | "blue"
   | "green"
-  | "purple"
   | "yellow"
-  | "red"
   | "orange"
+  | "purple"
+  | "red";
+
+// Extended colors for UI (includes backend + extra for later use)
+export type FolderColor =
+  | FolderColorBackend
   | "pink"
   | "indigo"
   | "teal"
@@ -135,34 +139,31 @@ export function FolderIcon({
   );
 }
 
-// Color picker helper component
+export const BACKEND_FOLDER_COLORS: FolderColorBackend[] = [
+  "blue",
+  "green",
+  "yellow",
+  "orange",
+  "purple",
+  "red",
+];
+
+// Color picker
 interface FolderColorPickerProps {
-  selectedColor: FolderColor;
-  onColorChange: (color: FolderColor) => void;
+  selectedColor: FolderColorBackend;
+  onColorChange: (color: FolderColorBackend) => void;
 }
 
 export function FolderColorPicker({
   selectedColor,
   onColorChange,
 }: FolderColorPickerProps) {
-  const colors: FolderColor[] = [
-    "blue",
-    "green",
-    "purple",
-    "yellow",
-    "red",
-    "orange",
-    "pink",
-    "indigo",
-    "teal",
-    "gray",
-  ];
-
   return (
     <div className="flex gap-2 flex-wrap">
-      {colors.map((color) => (
+      {BACKEND_FOLDER_COLORS.map((color) => (
         <button
           key={color}
+          type="button"
           onClick={() => onColorChange(color)}
           className={`p-1 rounded-lg border-2 transition-all hover:scale-110 ${
             selectedColor === color

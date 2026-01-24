@@ -1,7 +1,7 @@
 "use client";
 
 import { MoreVertical, Share2, Trash2, Edit3 } from "lucide-react";
-import { FolderIcon, type FolderColor } from "@/components/atoms/FolderIcon";
+import { FolderIcon } from "@/components/atoms/FolderIcon";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,21 +9,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { Folder } from "@/types";
 
 interface FolderCardProps {
-  folder: {
-    id: string;
-    name: string;
-    itemCount: number;
-    createdAt: string;
-    color: FolderColor;
-  };
+  folder: Folder;
   isSelected: boolean;
   onClick: () => void;
   onSelect: () => void;
-  onRename?: (id: string) => void;
-  onDelete?: (id: string) => void;
-  onShare?: (id: string) => void;
+  onRename?: (folder: Folder) => void;
+  onDelete?: (folder: Folder) => void;
+  onShare?: (folder: Folder) => void;
 }
 
 export function FolderCard({
@@ -82,7 +77,7 @@ export function FolderCard({
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  onRename(folder.id);
+                  onRename(folder);
                 }}
               >
                 <Edit3 className="w-4 h-4 mr-2" />
@@ -93,7 +88,7 @@ export function FolderCard({
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  onShare(folder.id);
+                  onShare(folder);
                 }}
               >
                 <Share2 className="w-4 h-4 mr-2" />
@@ -106,7 +101,7 @@ export function FolderCard({
                 className="text-red-600 focus:text-red-600"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete(folder.id);
+                  onDelete(folder);
                 }}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -132,7 +127,7 @@ export function FolderCard({
 
       {/* Item Count */}
       <p className="text-xs text-gray-500 text-center">
-        {folder.itemCount} {folder.itemCount === 1 ? "mục" : "mục"}
+        {folder.item_count} {folder.item_count === 1 ? "mục" : "mục"}
       </p>
     </div>
   );

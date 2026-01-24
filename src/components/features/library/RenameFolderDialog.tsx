@@ -18,32 +18,44 @@ import {
   FolderColorPicker,
   type FolderColorBackend,
 } from "@/components/atoms/FolderIcon";
+import type { Folder } from "@/types";
 
-interface CreateFolderDialogProps {
+interface RenameFolderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateFolder: (
+  onUpdateFolder: (
+    folderId: string,
     name: string,
-    color: FolderColorBackend,
-    parentId: string | null
+    color: FolderColorBackend
   ) => void;
-  parentId?: string | null;
+  folder: Folder | null;
   isLoading?: boolean;
 }
 
-export function CreateFolderDialog({
+export function RenameFolderDialog({
   open,
   onOpenChange,
-  onCreateFolder,
-  parentId = null,
+  onUpdateFolder,
+  folder,
   isLoading = false,
-}: CreateFolderDialogProps) {
+}: RenameFolderDialogProps) {
   const [folderName, setFolderName] = useState("");
   const [selectedColor, setSelectedColor] =
     useState<FolderColorBackend>("blue");
   const [error, setError] = useState("");
+  const [prevOpen, setPrevOpen] = useState(false);
 
-  const handleCreate = () => {
+  // Initialize form with folder data when dialog transitions from closed to open
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open && folder) {
+      setFolderName(folder.name);
+      setSelectedColor(folder.color);
+      setError("");
+    }
+  }
+
+  const handleUpdate = () => {
     if (!folderName.trim()) {
       setError("Vui lòng nhập tên thư mục");
       return;
@@ -54,7 +66,9 @@ export function CreateFolderDialog({
       return;
     }
 
-    onCreateFolder(folderName.trim(), selectedColor, parentId);
+    if (!folder) return;
+
+    onUpdateFolder(folder.id, folderName.trim(), selectedColor);
   };
 
   const handleClose = () => {
@@ -66,13 +80,17 @@ export function CreateFolderDialog({
     }
   };
 
+  const hasChanges =
+    folder &&
+    (folderName.trim() !== folder.name || selectedColor !== folder.color);
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-125">
         <DialogHeader>
-          <DialogTitle>Tạo thư mục mới</DialogTitle>
+          <DialogTitle>Đổi tên thư mục</DialogTitle>
           <DialogDescription>
-            Tạo thư mục mới để tổ chức tài liệu của bạn
+            Thay đổi tên và màu sắc cho thư mục
           </DialogDescription>
         </DialogHeader>
 
@@ -82,18 +100,18 @@ export function CreateFolderDialog({
             <div className="text-center">
               <FolderIcon color={selectedColor} size={80} />
               <p className="mt-2 text-sm font-medium text-gray-700">
-                {folderName || "Thư mục mới"}
+                {folderName || "Thư mục"}
               </p>
             </div>
           </div>
 
           {/* Folder Name Input */}
           <div className="space-y-2">
-            <Label htmlFor="folder-name">
+            <Label htmlFor="folder-name-rename">
               Tên thư mục <span className="text-red-500">*</span>
             </Label>
             <Input
-              id="folder-name"
+              id="folder-name-rename"
               placeholder="Nhập tên thư mục..."
               value={folderName}
               onChange={(e) => {
@@ -101,8 +119,8 @@ export function CreateFolderDialog({
                 setError("");
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !isLoading) {
-                  handleCreate();
+                if (e.key === "Enter" && !isLoading && hasChanges) {
+                  handleUpdate();
                 }
               }}
               className={error ? "border-red-500" : ""}
@@ -126,14 +144,14 @@ export function CreateFolderDialog({
           <Button variant="outline" onClick={handleClose} disabled={isLoading}>
             Hủy
           </Button>
-          <Button onClick={handleCreate} disabled={isLoading}>
+          <Button onClick={handleUpdate} disabled={isLoading || !hasChanges}>
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Đang tạo...
+                Đang lưu...
               </>
             ) : (
-              "Tạo thư mục"
+              "Lưu thay đổi"
             )}
           </Button>
         </DialogFooter>

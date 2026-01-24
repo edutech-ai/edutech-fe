@@ -3,6 +3,11 @@
 import { FolderPlus, Upload, Grid3x3, List, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface LibraryToolbarProps {
   searchQuery: string;
@@ -57,29 +62,57 @@ export function LibraryToolbar({
             }
           >
             <FolderPlus className="w-4 h-4 mr-2" />
-            Thư mục mới
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  {!canCreateSubfolder
+                    ? "Tạo thư mục con (không khả dụng - tối đa 3 cấp)"
+                    : "Tạo thư mục mới"}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="mb-2">
+                Tạo thư mục mới trong thư mục hiện tại
+              </TooltipContent>
+            </Tooltip>
           </Button>
           <Button variant="outline" size="sm">
             <Upload className="w-4 h-4 mr-2" />
-            Tải lên
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>Tải lên</span>
+              </TooltipTrigger>
+              <TooltipContent className="mb-2">
+                Tải lên tệp vào thư mục (pdf, docs)
+              </TooltipContent>
+            </Tooltip>
           </Button>
 
           {/* View Toggle */}
           <div className="flex items-center gap-1 ml-4 border-l pl-4">
-            <Button
-              variant={viewMode === "grid" ? "secondary" : "ghost"}
-              size="icon"
-              onClick={() => onViewModeChange("grid")}
-            >
-              <Grid3x3 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "secondary" : "ghost"}
-              size="icon"
-              onClick={() => onViewModeChange("list")}
-            >
-              <List className="w-4 h-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={viewMode === "grid" ? "secondary" : "ghost"}
+                  size="icon"
+                  onClick={() => onViewModeChange("grid")}
+                >
+                  <Grid3x3 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Xem dạng lưới</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={viewMode === "list" ? "secondary" : "ghost"}
+                  size="icon"
+                  onClick={() => onViewModeChange("list")}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Xem dạng danh sách</TooltipContent>
+            </Tooltip>
           </div>
         </div>
       </div>

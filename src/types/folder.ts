@@ -40,7 +40,7 @@ export interface UpdateFolderRequest {
 }
 
 export interface MoveFolderRequest {
-  parent_id: string | null;
+  new_parent_id: string | null;
 }
 
 // ==================== RESPONSE TYPES ====================

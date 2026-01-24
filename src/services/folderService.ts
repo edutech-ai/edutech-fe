@@ -292,7 +292,7 @@ export const useMoveFolder = (): UseMutationResult<
       });
       // Invalidate new parent folder list
       queryClient.invalidateQueries({
-        queryKey: FOLDER_KEYS.list(variables.data.parent_id),
+        queryKey: FOLDER_KEYS.list(variables.data.new_parent_id ?? null),
       });
       // Invalidate folder detail
       queryClient.invalidateQueries({

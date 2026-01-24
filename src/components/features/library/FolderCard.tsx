@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreVertical, Share2, Trash2, Edit3 } from "lucide-react";
+import { MoreVertical, Share2, Trash2, Edit3, FolderInput } from "lucide-react";
 import { FolderIcon } from "@/components/atoms/FolderIcon";
 import {
   DropdownMenu,
@@ -19,6 +19,7 @@ interface FolderCardProps {
   onRename?: (folder: Folder) => void;
   onDelete?: (folder: Folder) => void;
   onShare?: (folder: Folder) => void;
+  onMove?: (folder: Folder) => void;
 }
 
 export function FolderCard({
@@ -29,6 +30,7 @@ export function FolderCard({
   onRename,
   onDelete,
   onShare,
+  onMove,
 }: FolderCardProps) {
   return (
     <div
@@ -84,6 +86,17 @@ export function FolderCard({
                 Đổi tên
               </DropdownMenuItem>
             )}
+            {onMove && (
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMove(folder);
+                }}
+              >
+                <FolderInput className="w-4 h-4 mr-2" />
+                Di chuyển
+              </DropdownMenuItem>
+            )}
             {onShare && (
               <DropdownMenuItem
                 onClick={(e) => {
@@ -95,7 +108,9 @@ export function FolderCard({
                 Chia sẻ
               </DropdownMenuItem>
             )}
-            {(onRename || onShare) && onDelete && <DropdownMenuSeparator />}
+            {(onRename || onMove || onShare) && onDelete && (
+              <DropdownMenuSeparator />
+            )}
             {onDelete && (
               <DropdownMenuItem
                 className="text-red-600 focus:text-red-600"

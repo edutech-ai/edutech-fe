@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, XCircle, Loader2, Home, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { useCheckPayment } from "@/services/paymentService";
 
 type PaymentStatus = "loading" | "success" | "failed" | "pending";
 
-export default function CheckoutResultPage() {
+function CheckoutResultContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderCode = searchParams.get("orderCode") || "";
@@ -201,5 +201,24 @@ export default function CheckoutResultPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutResultPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-linear-to-b from-gray-50 to-white">
+          <div className="text-center">
+            <Loader2 className="h-16 w-16 animate-spin text-blue-600 mx-auto mb-6" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Đang tải...
+            </h2>
+          </div>
+        </div>
+      }
+    >
+      <CheckoutResultContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
@@ -22,7 +22,7 @@ import {
   type PaymentCreateResponse,
 } from "@/services/paymentService";
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const planCode = searchParams.get("planCode") || "";
@@ -403,5 +403,24 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Đang tải...
+            </h2>
+          </div>
+        </div>
+      }
+    >
+      <CheckoutContent />
+    </Suspense>
   );
 }

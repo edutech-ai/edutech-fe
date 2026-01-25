@@ -23,11 +23,6 @@ import { LibraryToolbar } from "@/components/features/library/LibraryToolbar";
 import { FolderGridView } from "@/components/features/library/FolderGridView";
 import { FolderListView } from "@/components/features/library/FolderListView";
 import { LibraryDialogs } from "@/components/features/library/LibraryDialogs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 export function LibraryTemplate() {
   const router = useRouter();
@@ -212,23 +207,9 @@ export function LibraryTemplate() {
               value="all"
               onClick={() => currentFolderId && handleNavigateToRoot()}
             >
-              <Tooltip>
-                <TooltipTrigger>
-                  <span>Thư viện chung</span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Thư viện chung gồm bài giảng, tài liệu,..
-                </TooltipContent>
-              </Tooltip>
+              Thư viện chung
             </TabsTrigger>
-            <TabsTrigger value="quizzes">
-              <Tooltip>
-                <TooltipTrigger>
-                  <span>Đề thi của tôi</span>
-                </TooltipTrigger>
-                <TooltipContent>Quản lý các đề thi của bạn</TooltipContent>
-              </Tooltip>
-            </TabsTrigger>
+            <TabsTrigger value="quizzes">Đề thi của tôi</TabsTrigger>
           </TabsList>
 
           {selectedItems.size > 0 && (

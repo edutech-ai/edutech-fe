@@ -1,33 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Minus } from "lucide-react";
+import { ChevronUp } from "lucide-react";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const faqs = [
   {
     question: "EduTech AI có miễn phí không?",
     answer:
-      "Có, chúng tôi cung cấp gói Free vĩnh viễn với các tính năng cơ bản giúp giáo viên quản lý lớp học, tạo sơ đồ chỗ ngồi và random học sinh công bằng.",
+      "Có, chúng tôi cung cấp gói Free vĩnh viễn với các tính năng cơ bản giúp giáo viên quản lý lớp học, tạo sơ đồ chỗ ngồi và random học sinh công bằng. Bạn có thể bắt đầu ngay mà không cần thẻ tín dụng.",
   },
   {
     question: "Tôi có thể nâng cấp hoặc hạ cấp gói không?",
     answer:
-      "Hoàn toàn được. Bạn có thể chuyển đổi giữa các gói Basic và Pro bất cứ lúc nào ngay trong phần cài đặt tài khoản. Việc nâng cấp sẽ có hiệu lực ngay lập tức.",
+      "Hoàn toàn được. Bạn có thể chuyển đổi giữa các gói Basic và Pro bất cứ lúc nào ngay trong phần cài đặt tài khoản. Việc nâng cấp sẽ có hiệu lực ngay lập tức, và nếu hạ cấp, gói mới sẽ áp dụng từ chu kỳ thanh toán tiếp theo.",
+  },
+  {
+    question: "Phương thức thanh toán nào được chấp nhận?",
+    answer:
+      "Chúng tôi hỗ trợ thanh toán qua chuyển khoản ngân hàng nội địa với mã QR tiện lợi. Hệ thống sẽ tự động xác nhận thanh toán trong vòng 1-5 phút sau khi chuyển khoản thành công.",
   },
   {
     question: "Gói Business cho trường học hỗ trợ những gì?",
     answer:
-      "Gói Business được thiết kế riêng cho quy mô trường học với các tính năng quản lý tập trung, dashboard tổng hợp dữ liệu toàn trường, phân quyền chi tiết và được hỗ trợ triển khai (onboarding) trực tiếp 1-1.",
+      "Gói Business được thiết kế riêng cho quy mô trường học với các tính năng quản lý tập trung, dashboard tổng hợp dữ liệu toàn trường, phân quyền chi tiết cho từng giáo viên và được hỗ trợ triển khai (onboarding) trực tiếp 1-1.",
   },
   {
     question: "Dữ liệu học sinh có được bảo mật không?",
     answer:
-      "Chúng tôi coi trọng quyền riêng tư và bảo mật dữ liệu. Mọi thông tin đều được mã hóa và lưu trữ an toàn, tuân thủ các quy định về bảo vệ dữ liệu giáo dục.",
+      "Chúng tôi coi trọng quyền riêng tư và bảo mật dữ liệu. Mọi thông tin đều được mã hóa SSL và lưu trữ an toàn trên máy chủ tại Việt Nam, tuân thủ các quy định về bảo vệ dữ liệu giáo dục.",
   },
   {
-    question: "Tôi có thể xuất dữ liệu báo cáo không?",
+    question: "Tôi có thể hủy gói đăng ký không?",
     answer:
-      "Có, từ gói Pro trở lên, bạn có thể xuất các báo cáo phân tích chi tiết, bảng điểm và tiến độ học tập ra định dạng PDF hoặc Excel để phục vụ công tác lưu trữ và báo cáo.",
+      "Có, bạn có thể hủy gói đăng ký bất cứ lúc nào. Sau khi hủy, bạn vẫn tiếp tục sử dụng các tính năng trả phí cho đến hết chu kỳ thanh toán hiện tại, sau đó tài khoản sẽ tự động chuyển về gói Free.",
   },
 ];
 
@@ -35,71 +42,74 @@ export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="about-us" className="py-24 bg-white relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/grid.svg')] opacity-[0.08]" />
-        <div className="absolute top-1/4 -left-64 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-30 animate-blob" />
-        <div className="absolute bottom-1/4 -right-64 w-96 h-96 bg-purple-100 rounded-full blur-3xl opacity-30 animate-blob animation-delay-2000" />
-      </div>
+    <section className="py-20 bg-white">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
+          {/* Left - Title */}
+          <div className="lg:col-span-2">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+              Câu hỏi
+              <br />
+              thường gặp
+            </h2>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-sm font-medium mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
-            </span>
-            Hỗ trợ
-          </div>
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Câu hỏi thường gặp
-          </h2>
-          <p className="text-xl text-gray-600">
-            Giải đáp những thắc mắc phổ biến về EduTech AI
-          </p>
-        </div>
-
-        <div className="max-w-3xl mx-auto space-y-4">
-          {faqs.map((faq, index) => (
-            <div
-              key={index}
-              className="group bg-white rounded-2xl border border-gray-100 hover:border-blue-100 transition-all duration-300 hover:shadow-lg overflow-hidden"
-            >
-              <button
-                onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full flex items-center justify-between p-6 text-left"
-              >
-                <span className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                  {faq.question}
-                </span>
-                <span
-                  className={`flex-shrink-0 ml-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                    openIndex === index
-                      ? "bg-blue-600 text-white rotate-180"
-                      : "bg-gray-100 text-gray-500 group-hover:bg-blue-50 group-hover:text-blue-600"
-                  }`}
-                >
-                  {openIndex === index ? (
-                    <Minus className="w-4 h-4" />
-                  ) : (
-                    <Plus className="w-4 h-4" />
-                  )}
-                </span>
-              </button>
-              <div
-                className={`transition-all duration-300 ease-in-out ${
-                  openIndex === index
-                    ? "max-h-48 opacity-100"
-                    : "max-h-0 opacity-0"
-                }`}
-              >
-                <div className="p-6 pt-0 text-gray-600 leading-relaxed border-t border-gray-50">
-                  {faq.answer}
-                </div>
-              </div>
+            {/* image */}
+            <div className="mt-8">
+              <Image
+                width={200}
+                height={200}
+                src="/images/sticker/sticker_faq.svg"
+                alt="FAQ Illustration"
+                className="w-48 h-48 md:w-64 md:h-64 hidden md:block"
+              />
             </div>
-          ))}
+          </div>
+
+          {/* Right - FAQ Items */}
+          <div className="lg:col-span-3">
+            <div className="divide-y divide-gray-200">
+              {faqs.map((faq, index) => {
+                const isOpen = openIndex === index;
+                return (
+                  <div key={index} className="py-5 first:pt-0">
+                    <button
+                      onClick={() => setOpenIndex(isOpen ? null : index)}
+                      className="w-full flex items-start justify-between text-left cursor-pointer group"
+                    >
+                      <span
+                        className={cn(
+                          "md:text-lg text-base font-medium pr-4 transition-colors duration-200",
+                          isOpen
+                            ? "text-primary"
+                            : "text-gray-700 group-hover:text-gray-900"
+                        )}
+                      >
+                        {faq.question}
+                      </span>
+                      <ChevronUp
+                        className={cn(
+                          "w-5 h-5 shrink-0 text-gray-400 transition-transform duration-200",
+                          !isOpen && "rotate-180"
+                        )}
+                      />
+                    </button>
+                    <div
+                      className={cn(
+                        "overflow-hidden transition-all duration-200",
+                        isOpen
+                          ? "max-h-96 opacity-100 mt-3"
+                          : "max-h-0 opacity-0"
+                      )}
+                    >
+                      <p className="text-gray-600 leading-relaxed pr-8">
+                        {faq.answer}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </section>

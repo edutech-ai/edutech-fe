@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardBreadcrumb } from "@/components/features/dashboard/DashboardBreadcrumb";
 import type { User } from "@/types";
 import { useUserStore } from "@/store/useUserStore";
+import { useCurrentSubscription } from "@/services/paymentService";
 
 export default function DashboardLayout({
   children,
@@ -25,8 +26,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user: storeUser, isAuthenticated } = useUserStore();
+  const { user: storeUser, isAuthenticated, setSubscription } = useUserStore();
   const [user, setUser] = useState<User | null>(null);
+
+  const { data: subscriptionData } = useCurrentSubscription(isAuthenticated());
+
+  useEffect(() => {
+    if (subscriptionData?.data) {
+      setSubscription(subscriptionData.data);
+    }
+  }, [subscriptionData, setSubscription]);
 
   useEffect(() => {
     // Check authentication from Zustand store

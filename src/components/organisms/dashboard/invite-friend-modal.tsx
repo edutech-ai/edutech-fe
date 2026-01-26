@@ -16,8 +16,7 @@ interface PricingModalProps {
 }
 
 export function InviteFriendModal({ isOpen, onClose }: PricingModalProps) {
-  const appUrl =
-    process.env.NEXT_PUBLIC_HOST_URL || "http://go-edutech.vercel.app";
+  const appUrl = process.env.NEXT_PUBLIC_HOST_URL || "http://aiedutech.vn";
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -43,7 +42,7 @@ export function InviteFriendModal({ isOpen, onClose }: PricingModalProps) {
                 />
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(`${appUrl}/invite`);
+                    navigator.clipboard.writeText(`${appUrl}/register`);
                     toast.success("Đã sao chép liên kết!");
                   }}
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"

@@ -19,7 +19,7 @@ const features = [
     buttonColor: "bg-white text-blue-600 hover:bg-blue-50",
     // Assets
     iconPath: "/images/home/create-exam-icon.svg",
-    previewPath: "/images/home/create-exam-preview.png",
+    previewPath: "/images/home/create-exam-preview.svg",
   },
   {
     id: "ai-grading",
@@ -76,7 +76,7 @@ export function FeaturesSection() {
     >
       {/* Background Grid */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
-        <div className="absolute inset-0 bg-[url('/images/grid.svg')] opacity-[0.2] bg-center" />
+        <div className="absolute inset-0 bg-[url('/images/grid.svg')] opacity-[0.4] bg-center" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -112,16 +112,16 @@ export function FeaturesSection() {
         </div>
 
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-12 gap-6 lg:gap-12 items-stretch h-auto min-h-[550px]">
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-12 items-stretch h-auto min-h-120">
             <div
-              className="lg:col-span-8 relative rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden group cursor-pointer flex items-center justify-center p-8 lg:p-12 order-2 lg:order-1"
+              className="lg:col-span-8 relative rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden group cursor-pointer flex items-center justify-center p-2 lg:p-4 order-2 lg:order-1"
               onClick={() => setModalOpen(true)}
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
             >
               <div className="absolute inset-0 opacity-[0.4] bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]" />
 
-              <div className="relative w-full h-full min-h-[300px] lg:min-h-full">
+              <div className="relative w-full h-full min-h-75 lg:min-h-full">
                 {features.map((feature, index) => (
                   <div
                     key={feature.id}

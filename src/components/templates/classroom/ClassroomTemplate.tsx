@@ -20,9 +20,9 @@ import {
   getMockSeatingChart,
   getMockClassroomStats,
   getMockStudentDetail,
-  randomSelectStudents,
-  getPresentStudents,
 } from "@/mock/classroom";
+import type { Student as MockStudent } from "@/types/classroom";
+import { AttendanceStatus, ParticipationStatus } from "@/types/classroom";
 import type {
   Student,
   StudentDetail,
@@ -142,21 +142,26 @@ export function ClassroomTemplate({
     setSelectedStudent(student);
   }, []);
 
-  // Handlers for Random Picker
-  const handleRandomSelect = useCallback(
-    (classId: string, count: number, onlyPresent: boolean) => {
-      return randomSelectStudents(classId, count, onlyPresent);
-    },
-    []
-  );
+  // Random picker state - using first classroom as default
+  const defaultRandomClassId = mockClassrooms[0]?.id || "";
 
+  // Handlers for Random Picker
   const handleAddHistory = useCallback((history: RandomHistory) => {
     setRandomHistory((prev) => [history, ...prev].slice(0, 10));
   }, []);
 
-  const handleGetPresentCount = useCallback((classId: string) => {
-    return getPresentStudents(classId).length;
-  }, []);
+  // Get students for random picker (convert mock students to UI format)
+  const randomStudents: MockStudent[] = defaultRandomClassId
+    ? (mockStudents[defaultRandomClassId] || []).map((s) => ({
+        ...s,
+        attendanceStatus: AttendanceStatus.PRESENT,
+        participationStatus: ParticipationStatus.NOT_PARTICIPATED,
+      }))
+    : [];
+
+  const randomClassroom = mockClassrooms.find(
+    (c) => c.id === defaultRandomClassId
+  );
 
   // Handlers for Student Data
   const handleDataClassChange = useCallback((classId: string) => {
@@ -222,10 +227,10 @@ export function ClassroomTemplate({
           <TabsContent value="random" className="mt-6">
             <RandomPicker
               classrooms={mockClassrooms}
+              students={randomStudents}
+              currentClassroom={randomClassroom}
               randomHistory={randomHistory}
-              onRandomSelect={handleRandomSelect}
               onAddHistory={handleAddHistory}
-              getPresentCount={handleGetPresentCount}
             />
           </TabsContent>
 

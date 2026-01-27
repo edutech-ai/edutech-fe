@@ -276,6 +276,27 @@ export interface RowParticipation {
 }
 
 // ==================== RANDOM PICKER ====================
+export type RandomTheme = "wheel" | "race" | "claw" | "boxes";
+
+export interface ThemeConfig {
+  id: RandomTheme;
+  label: string;
+}
+
+export const RANDOM_THEMES: ThemeConfig[] = [
+  { id: "wheel", label: "Vòng Quay" },
+  { id: "race", label: "Đua Vịt" },
+  { id: "claw", label: "Gắp Thú" },
+  { id: "boxes", label: "Hộp Bí Ẩn" },
+];
+
+export interface GameThemeProps {
+  students: Student[];
+  pickCount: number;
+  isPlaying: boolean;
+  onComplete: (winners: Student[]) => void;
+}
+
 export interface RandomHistory {
   id: string;
   classId: string;

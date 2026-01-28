@@ -1,7 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, UserPlus, Search, User } from "lucide-react";
+import { useState, useRef } from "react";
+import {
+  Loader2,
+  UserPlus,
+  Upload,
+  FileSpreadsheet,
+  Info,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,11 +25,10 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useCreateStudentAndAddToClassroom,
-  useAddExistingStudentToClassroom,
-  useStudents,
+  useUploadStudentsToClassroom,
+  type UploadStudentsResponse,
 } from "@/services/classroomService";
 import { toast } from "sonner";
-import type { StudentBackend } from "@/types/classroom";
 
 interface AddStudentModalProps {
   open: boolean;
@@ -35,7 +43,7 @@ export function AddStudentModal({
   classroomId,
   onSuccess,
 }: AddStudentModalProps) {
-  const [activeTab, setActiveTab] = useState<"new" | "existing">("new");
+  const [activeTab, setActiveTab] = useState<"new" | "import">("new");
 
   // New student form state
   const [fullName, setFullName] = useState("");
@@ -43,32 +51,28 @@ export function AddStudentModal({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [parentPhoneNumber, setParentPhoneNumber] = useState("");
 
-  // Existing student search state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStudent, setSelectedStudent] = useState<StudentBackend | null>(
-    null
-  );
+  // Import file state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadResult, setUploadResult] = useState<
+    UploadStudentsResponse["data"] | null
+  >(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Mutations
   const createStudentMutation = useCreateStudentAndAddToClassroom();
-  const addExistingMutation = useAddExistingStudentToClassroom();
-
-  // Query for searching existing students
-  const { data: studentsData, isLoading: isLoadingStudents } = useStudents(
-    { search: searchQuery, limit: 10 },
-    { enabled: activeTab === "existing" && searchQuery.length >= 2 }
-  );
-
-  const students = studentsData?.data?.students ?? [];
+  const uploadMutation = useUploadStudentsToClassroom();
 
   const resetForm = () => {
     setFullName("");
     setStudentCode("");
     setPhoneNumber("");
     setParentPhoneNumber("");
-    setSearchQuery("");
-    setSelectedStudent(null);
+    setSelectedFile(null);
+    setUploadResult(null);
     setActiveTab("new");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleCreateStudent = async () => {
@@ -107,30 +111,68 @@ export function AddStudentModal({
     }
   };
 
-  const handleAddExistingStudent = async () => {
-    if (!selectedStudent) {
-      toast.error("Vui lòng chọn học sinh");
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const validTypes = [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel",
+      ];
+      if (
+        !validTypes.includes(file.type) &&
+        !file.name.endsWith(".xlsx") &&
+        !file.name.endsWith(".xls")
+      ) {
+        toast.error("Vui lòng chọn file Excel (.xlsx hoặc .xls)");
+        return;
+      }
+      setSelectedFile(file);
+      setUploadResult(null);
+    }
+  };
+
+  const handleUploadFile = async () => {
+    if (!selectedFile) {
+      toast.error("Vui lòng chọn file để upload");
       return;
     }
 
     try {
-      await addExistingMutation.mutateAsync({
+      const result = await uploadMutation.mutateAsync({
         classroomId,
-        data: {
-          student_id: selectedStudent.id,
-          status: "active",
-        },
+        file: selectedFile,
       });
 
-      toast.success(`Đã thêm học sinh "${selectedStudent.full_name}" vào lớp!`);
-      resetForm();
-      onOpenChange(false);
-      onSuccess?.();
+      const { successCount, errorCount, existingCount, total } = result.data;
+
+      if (successCount > 0 && errorCount === 0) {
+        // All success - close modal
+        toast.success(`Đã thêm ${successCount} học sinh vào lớp!`);
+        resetForm();
+        onOpenChange(false);
+        onSuccess?.();
+      } else if (successCount > 0 && errorCount > 0) {
+        // Partial success - show results but keep modal open
+        setUploadResult(result.data);
+        toast.warning(
+          `Đã thêm ${successCount}/${total} học sinh. Có ${errorCount} lỗi.`
+        );
+        onSuccess?.();
+      } else if (successCount === 0 && existingCount > 0 && errorCount === 0) {
+        // All students already in class
+        setUploadResult(result.data);
+        toast.info(`Tất cả ${existingCount} học sinh đã có trong lớp.`);
+      } else {
+        // All errors
+        setUploadResult(result.data);
+        toast.error("Không thể thêm học sinh nào. Vui lòng kiểm tra file!");
+      }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       const message =
         err?.response?.data?.message ||
-        "Không thể thêm học sinh. Vui lòng thử lại!";
+        "Không thể upload file. Vui lòng thử lại!";
       toast.error(message);
     }
   };
@@ -140,8 +182,7 @@ export function AddStudentModal({
     onOpenChange(false);
   };
 
-  const isPending =
-    createStudentMutation.isPending || addExistingMutation.isPending;
+  const isPending = createStudentMutation.isPending || uploadMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -149,13 +190,13 @@ export function AddStudentModal({
         <DialogHeader>
           <DialogTitle>Thêm học sinh vào lớp</DialogTitle>
           <DialogDescription>
-            Tạo học sinh mới hoặc thêm học sinh đã có trong hệ thống
+            Tạo học sinh mới hoặc import danh sách từ file Excel
           </DialogDescription>
         </DialogHeader>
 
         <Tabs
           value={activeTab}
-          onValueChange={(v) => setActiveTab(v as "new" | "existing")}
+          onValueChange={(v) => setActiveTab(v as "new" | "import")}
           className="w-full"
         >
           <TabsList className="grid w-full grid-cols-2">
@@ -163,9 +204,9 @@ export function AddStudentModal({
               <UserPlus className="w-4 h-4" />
               Tạo mới
             </TabsTrigger>
-            <TabsTrigger value="existing" className="gap-2">
-              <Search className="w-4 h-4" />
-              Tìm kiếm
+            <TabsTrigger value="import" className="gap-2">
+              <Upload className="w-4 h-4" />
+              Import file
             </TabsTrigger>
           </TabsList>
 
@@ -216,75 +257,106 @@ export function AddStudentModal({
             </div>
           </TabsContent>
 
-          {/* Tab: Search Existing Student */}
-          <TabsContent value="existing" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="search">Tìm kiếm học sinh</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <Input
-                  id="search"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setSelectedStudent(null);
-                  }}
-                  placeholder="Nhập tên hoặc mã học sinh..."
-                  className="pl-10"
-                />
+          {/* Tab: Import from File */}
+          <TabsContent value="import" className="space-y-4 mt-4">
+            {/* Template download info */}
+            <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-blue-800">
+                <p>
+                  Upload file Excel (.xlsx) chứa danh sách học sinh, hoặc{" "}
+                  <a
+                    href="/files/import_student_to_class.xlsx"
+                    download
+                    className="font-medium text-blue-600 hover:text-blue-800 underline"
+                  >
+                    tải file mẫu
+                  </a>{" "}
+                  để sử dụng.
+                </p>
+                <p className="mt-1 text-blue-600">
+                  Các cột: student_code (bắt buộc), full_name (bắt buộc), phone,
+                  parent_phone
+                </p>
               </div>
             </div>
 
-            {/* Search Results */}
-            <div className="border rounded-lg max-h-[200px] overflow-y-auto">
-              {isLoadingStudents ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-                </div>
-              ) : searchQuery.length < 2 ? (
-                <div className="text-center py-8 text-gray-400 text-sm">
-                  Nhập ít nhất 2 ký tự để tìm kiếm
-                </div>
-              ) : students.length === 0 ? (
-                <div className="text-center py-8 text-gray-400 text-sm">
-                  Không tìm thấy học sinh nào
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {students.map((student) => (
-                    <button
-                      key={student.id}
-                      type="button"
-                      onClick={() => setSelectedStudent(student)}
-                      className={`w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors text-left ${
-                        selectedStudent?.id === student.id
-                          ? "bg-blue-50 border-l-2 border-blue-500"
-                          : ""
-                      }`}
-                    >
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                        <User className="w-4 h-4 text-gray-500" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">
-                          {student.full_name}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {student.student_code}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+            {/* File input */}
+            <div className="space-y-2">
+              <Label htmlFor="file">Chọn file Excel</Label>
+              <div className="flex gap-2">
+                <Input
+                  ref={fileInputRef}
+                  id="file"
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileChange}
+                  className="flex-1"
+                />
+              </div>
+              {selectedFile && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                  <span>{selectedFile.name}</span>
+                  <span className="text-gray-400">
+                    ({(selectedFile.size / 1024).toFixed(1)} KB)
+                  </span>
                 </div>
               )}
             </div>
 
-            {selectedStudent && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-800">
-                  Đã chọn: <strong>{selectedStudent.full_name}</strong> (
-                  {selectedStudent.student_code})
-                </p>
+            {/* Upload result */}
+            {uploadResult && (
+              <div className="space-y-3 border rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Kết quả import</span>
+                  <span className="text-sm text-gray-500">
+                    Tổng: {uploadResult.total}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {uploadResult.createdCount > 0 && (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Tạo mới: {uploadResult.createdCount}</span>
+                    </div>
+                  )}
+                  {uploadResult.addedCount > 0 && (
+                    <div className="flex items-center gap-2 text-blue-600">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Thêm vào lớp: {uploadResult.addedCount}</span>
+                    </div>
+                  )}
+                  {uploadResult.existingCount > 0 && (
+                    <div className="flex items-center gap-2 text-yellow-600">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>Đã có trong lớp: {uploadResult.existingCount}</span>
+                    </div>
+                  )}
+                  {uploadResult.errorCount > 0 && (
+                    <div className="flex items-center gap-2 text-red-600">
+                      <XCircle className="w-4 h-4" />
+                      <span>Lỗi: {uploadResult.errorCount}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Show errors if any */}
+                {uploadResult.errors.length > 0 && (
+                  <div className="mt-2 max-h-[100px] overflow-y-auto">
+                    <p className="text-sm font-medium text-red-600 mb-1">
+                      Chi tiết lỗi:
+                    </p>
+                    <div className="space-y-1">
+                      {uploadResult.errors.map((error, index) => (
+                        <p key={index} className="text-xs text-red-500">
+                          Dòng {error.row}: {error.message}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>
@@ -292,27 +364,37 @@ export function AddStudentModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
-            Hủy
+            {uploadResult ? "Đóng" : "Hủy"}
           </Button>
-          <Button
-            onClick={
-              activeTab === "new"
-                ? handleCreateStudent
-                : handleAddExistingStudent
-            }
-            disabled={
-              isPending || (activeTab === "existing" && !selectedStudent)
-            }
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Đang thêm...
-              </>
-            ) : (
-              "Thêm học sinh"
-            )}
-          </Button>
+          {activeTab === "new" ? (
+            <Button onClick={handleCreateStudent} disabled={isPending}>
+              {createStudentMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang thêm...
+                </>
+              ) : (
+                "Thêm học sinh"
+              )}
+            </Button>
+          ) : (
+            <Button
+              onClick={handleUploadFile}
+              disabled={isPending || !selectedFile}
+            >
+              {uploadMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang upload...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload
+                </>
+              )}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

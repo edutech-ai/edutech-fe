@@ -57,6 +57,8 @@ export const API_ENDPOINTS = {
     STUDENTS: (classroomId: string) => `/classrooms/${classroomId}/students`,
     STUDENTS_ADD_EXISTING: (classroomId: string) =>
       `/classrooms/${classroomId}/students/add-existing`,
+    STUDENTS_UPLOAD: (classroomId: string) =>
+      `/classrooms/${classroomId}/students/upload`,
     STUDENT: (classroomId: string, studentId: string) =>
       `/classrooms/${classroomId}/students/${studentId}`,
     STUDENT_PERFORMANCE: (classroomId: string, studentId: string) =>

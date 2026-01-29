@@ -455,6 +455,93 @@ export const useAddExistingStudentToClassroom = (): UseMutationResult<
   });
 };
 
+/**
+ * Upload students from XLSX file to classroom
+ */
+export interface UploadStudentsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    total: number;
+    successCount: number;
+    createdCount: number;
+    addedCount: number;
+    existingCount: number;
+    errorCount: number;
+    success: Array<{
+      row: number;
+      student_code: string;
+      full_name: string;
+      id: string;
+      isNew: boolean;
+    }>;
+    created: Array<{
+      row: number;
+      student_code: string;
+      full_name: string;
+      id: string;
+    }>;
+    added: Array<{
+      row: number;
+      student_code: string;
+      full_name: string;
+      id: string;
+    }>;
+    existing: Array<{
+      row: number;
+      student_code: string;
+      full_name: string;
+      message: string;
+    }>;
+    errors: Array<{
+      row: number;
+      data: Record<string, unknown>;
+      message: string;
+    }>;
+  };
+}
+
+export const useUploadStudentsToClassroom = (): UseMutationResult<
+  UploadStudentsResponse,
+  AxiosError,
+  { classroomId: string; file: File }
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      classroomId,
+      file,
+    }: {
+      classroomId: string;
+      file: File;
+    }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axiosInstance.post<UploadStudentsResponse>(
+        API_ENDPOINTS.CLASSROOM.STUDENTS_UPLOAD(classroomId),
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.students(variables.classroomId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.detail(variables.classroomId),
+      });
+      queryClient.invalidateQueries({ queryKey: STUDENT_KEYS.lists() });
+    },
+  });
+};
+
 // ==================== STUDENT QUERY HOOKS ====================
 
 /**

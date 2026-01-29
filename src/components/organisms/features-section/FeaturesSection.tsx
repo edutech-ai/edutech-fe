@@ -13,9 +13,9 @@ const features = [
     title: "Tạo đề tự động",
     desc: "AI tạo đề thi, ma trận và slide bài giảng chuẩn Bộ GD chỉ trong vài giây. Tùy chỉnh độ khó dễ dàng.",
     // Colors
-    color: "bg-blue-600",
-    lightColor: "bg-blue-500",
-    textColor: "text-blue-200",
+    color: "border-blue-600",
+    lightColor: "bg-blue-100",
+    textColor: "text-blue-600",
     buttonColor: "bg-white text-blue-600 hover:bg-blue-50",
     // Assets
     iconPath: "/images/home/create-exam-icon.svg",
@@ -27,10 +27,10 @@ const features = [
     title: "Chấm bài Camera",
     desc: "Quét bài làm qua điện thoại. Chấm trắc nghiệm & tự luận siêu tốc, phân tích lỗi sai chi tiết.",
     // Colors
-    color: "bg-emerald-600",
-    lightColor: "bg-emerald-500",
-    textColor: "text-emerald-100",
-    buttonColor: "bg-white text-emerald-600 hover:bg-emerald-50",
+    color: "border-orange-600",
+    lightColor: "bg-orange-100",
+    textColor: "text-orange-600",
+    buttonColor: "bg-white text-orange-600 hover:bg-orange-50",
     // Assets
     iconPath: "/images/home/ai-grading-icon.svg",
     previewPath: "/images/home/ai-grading-preview.png",
@@ -41,10 +41,10 @@ const features = [
     title: "Lớp học số",
     desc: "Điểm danh, theo dõi chuyên cần và báo cáo học tập trực quan giúp giáo viên nắm bắt tình hình.",
     // Colors
-    color: "bg-orange-500",
-    lightColor: "bg-orange-400",
-    textColor: "text-orange-100",
-    buttonColor: "bg-white text-orange-600 hover:bg-orange-50",
+    color: "border-lime-500",
+    lightColor: "bg-lime-100",
+    textColor: "text-lime-600",
+    buttonColor: "bg-white text-lime-600 hover:bg-lime-50",
     // Assets
     iconPath: "/images/home/class-management-icon.svg",
     previewPath: "/images/home/class-management-preview.png",
@@ -70,13 +70,9 @@ export function FeaturesSection() {
   const activeFeature = features[activeIndex];
 
   return (
-    <section
-      id="features"
-      className="py-12 md:py-24 bg-gray-50/50 relative overflow-hidden"
-    >
-      {/* Background Grid */}
+    <section id="features" className="py-12 md:py-24 relative overflow-hidden">
       <div className="absolute inset-0 -z-10 pointer-events-none">
-        <div className="absolute inset-0 bg-[url('/images/grid.svg')] opacity-[0.4] bg-center" />
+        <div className="absolute inset-0 bg-[url('/images/home/bg-ss-2.svg')] bg-size-[120%] bg-center w-full" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -163,21 +159,23 @@ export function FeaturesSection() {
                   key={feature.id}
                   className={`h-full w-full rounded-2xl p-6 lg:p-8 flex flex-col justify-center transition-all duration-500 ease-in-out ${
                     index === activeIndex
-                      ? `opacity-100 translate-y-0 ${feature.color} shadow-xl shadow-${feature.color.split("-")[1]}-200`
+                      ? `opacity-100 translate-y-0 ${feature.color} ${feature.lightColor} border-2 shadow-2xl shadow-${feature.color}/20`
                       : "hidden opacity-0 translate-y-4"
                   }`}
                 >
-                  <div className="w-14 h-14 mb-8 rounded-xl flex items-center justify-center">
+                  <div className="w-20 h-20 mb-8 rounded-xl flex items-center justify-center">
                     <Image
                       src={feature.iconPath}
                       alt=""
-                      width={48}
-                      height={48}
-                      className="w-12 h-12"
+                      width={60}
+                      height={60}
+                      className="w-15 h-15 object-contain"
                     />
                   </div>
 
-                  <h3 className="text-3xl font-bold text-white mb-4">
+                  <h3
+                    className={`text-3xl font-bold ${feature.textColor} mb-4`}
+                  >
                     {feature.title}
                   </h3>
 

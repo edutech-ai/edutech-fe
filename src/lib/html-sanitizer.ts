@@ -95,7 +95,7 @@ export function sanitizeAndRenderLatex(html: string): string {
   const formulaRegex =
     /<span[^>]*class="[^"]*ql-formula[^"]*"[^>]*data-value="([^"]*)"[^>]*>.*?<\/span>/gi;
 
-  rendered = rendered.replace(formulaRegex, (match, formula) => {
+  rendered = rendered.replace(formulaRegex, (_match, formula) => {
     try {
       const decoded = decodeHTMLEntities(formula);
       const prepared = prepareForKatex(decoded);
@@ -116,7 +116,7 @@ export function sanitizeAndRenderLatex(html: string): string {
   const inlineLatexRegex = /\\\((.+?)\\\)/g;
   const displayLatexRegex = /\\\[(.+?)\\\]/g;
 
-  rendered = rendered.replace(inlineLatexRegex, (match, formula) => {
+  rendered = rendered.replace(inlineLatexRegex, (_match, formula) => {
     try {
       const decoded = decodeHTMLEntities(formula.trim());
       const prepared = prepareForKatex(decoded);
@@ -132,7 +132,7 @@ export function sanitizeAndRenderLatex(html: string): string {
     }
   });
 
-  rendered = rendered.replace(displayLatexRegex, (match, formula) => {
+  rendered = rendered.replace(displayLatexRegex, (_match, formula) => {
     try {
       const decoded = decodeHTMLEntities(formula.trim());
       const prepared = prepareForKatex(decoded);
@@ -152,14 +152,14 @@ export function sanitizeAndRenderLatex(html: string): string {
   // Only render as full LaTeX if NO delimiters and content looks like pure LaTeX
   const plainSpanRegex = /<span>([^<]*)<\/span>/gi;
 
-  rendered = rendered.replace(plainSpanRegex, (match, content) => {
-    if (!content || content.trim() === "") return match;
+  rendered = rendered.replace(plainSpanRegex, (_match, content) => {
+    if (!content || content.trim() === "") return _match;
 
     const decoded = decodeHTMLEntities(content);
 
     // Skip if already processed (contains rendered latex spans) or has delimiters
     if (decoded.includes("\\(") || decoded.includes("\\[")) {
-      return match;
+      return _match;
     }
 
     // Check if content looks like pure LaTeX (no Vietnamese/regular text mixed in)
@@ -179,7 +179,7 @@ export function sanitizeAndRenderLatex(html: string): string {
     }
 
     // Not LaTeX, return original
-    return match;
+    return _match;
   });
 
   return rendered;

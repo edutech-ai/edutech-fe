@@ -26,6 +26,23 @@ function containsLatex(text: string): boolean {
 }
 
 /**
+ * Check if content is pure LaTeX (no mixed regular text)
+ * Pure LaTeX typically only contains math symbols, numbers, and LaTeX commands
+ */
+function isPureLatex(text: string): boolean {
+  // If text contains Vietnamese characters or common sentence patterns, it's mixed content
+  const vietnamesePattern =
+    /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+  if (vietnamesePattern.test(text)) return false;
+
+  // If text has common words or long sequences of regular letters, it's likely mixed
+  const hasCommonWords = /[a-zA-Z]{4,}/.test(text.replace(/\\[a-zA-Z]+/g, "")); // Ignore LaTeX commands
+  if (hasCommonWords) return false;
+
+  return true;
+}
+
+/**
  * Sanitize HTML content and render LaTeX formulas
  */
 export function sanitizeAndRenderLatex(html: string): string {
@@ -78,7 +95,7 @@ export function sanitizeAndRenderLatex(html: string): string {
   const formulaRegex =
     /<span[^>]*class="[^"]*ql-formula[^"]*"[^>]*data-value="([^"]*)"[^>]*>.*?<\/span>/gi;
 
-  rendered = rendered.replace(formulaRegex, (match, formula) => {
+  rendered = rendered.replace(formulaRegex, (_match, formula) => {
     try {
       const decoded = decodeHTMLEntities(formula);
       const prepared = prepareForKatex(decoded);
@@ -94,17 +111,59 @@ export function sanitizeAndRenderLatex(html: string): string {
     }
   });
 
-  // Pattern 2: Match plain <span>content</span> (from backend data)
-  // Matches spans without class attribute
+  // Pattern 2: Handle inline LaTeX delimiters \( ... \) and \[ ... \]
+  // This handles mixed content like "Text \( formula \) more text"
+  const inlineLatexRegex = /\\\((.+?)\\\)/g;
+  const displayLatexRegex = /\\\[(.+?)\\\]/g;
+
+  rendered = rendered.replace(inlineLatexRegex, (_match, formula) => {
+    try {
+      const decoded = decodeHTMLEntities(formula.trim());
+      const prepared = prepareForKatex(decoded);
+      const renderedFormula = katex.renderToString(prepared, {
+        throwOnError: false,
+        displayMode: false,
+        output: "html",
+      });
+      return `<span class="latex-formula">${renderedFormula}</span>`;
+    } catch (error) {
+      console.error("LaTeX render error:", error);
+      return `<span class="latex-error" title="Invalid formula">${formula}</span>`;
+    }
+  });
+
+  rendered = rendered.replace(displayLatexRegex, (_match, formula) => {
+    try {
+      const decoded = decodeHTMLEntities(formula.trim());
+      const prepared = prepareForKatex(decoded);
+      const renderedFormula = katex.renderToString(prepared, {
+        throwOnError: false,
+        displayMode: true,
+        output: "html",
+      });
+      return `<div class="latex-formula latex-display">${renderedFormula}</div>`;
+    } catch (error) {
+      console.error("LaTeX render error:", error);
+      return `<span class="latex-error" title="Invalid formula">${formula}</span>`;
+    }
+  });
+
+  // Pattern 3: Match plain <span>content</span> (from backend data)
+  // Only render as full LaTeX if NO delimiters and content looks like pure LaTeX
   const plainSpanRegex = /<span>([^<]*)<\/span>/gi;
 
-  rendered = rendered.replace(plainSpanRegex, (match, content) => {
-    if (!content || content.trim() === "") return match;
+  rendered = rendered.replace(plainSpanRegex, (_match, content) => {
+    if (!content || content.trim() === "") return _match;
 
     const decoded = decodeHTMLEntities(content);
 
-    // Check if content looks like LaTeX
-    if (containsLatex(decoded)) {
+    // Skip if already processed (contains rendered latex spans) or has delimiters
+    if (decoded.includes("\\(") || decoded.includes("\\[")) {
+      return _match;
+    }
+
+    // Check if content looks like pure LaTeX (no Vietnamese/regular text mixed in)
+    if (containsLatex(decoded) && isPureLatex(decoded)) {
       try {
         const prepared = prepareForKatex(decoded);
         const renderedFormula = katex.renderToString(prepared, {
@@ -120,7 +179,7 @@ export function sanitizeAndRenderLatex(html: string): string {
     }
 
     // Not LaTeX, return original
-    return match;
+    return _match;
   });
 
   return rendered;

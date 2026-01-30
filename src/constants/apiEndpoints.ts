@@ -83,6 +83,11 @@ export const API_ENDPOINTS = {
     ITEMS: (id: string) => `/folders/${id}/items`,
     MOVE: (id: string) => `/folders/${id}/move`,
   },
+
+  // AI endpoints
+  AI: {
+    CREATE_QUIZ_WITH_QUESTIONS: "/ai/create-quiz-with-questions",
+  },
 } as const;
 
 export type ApiEndpoint = (typeof API_ENDPOINTS)[keyof typeof API_ENDPOINTS];

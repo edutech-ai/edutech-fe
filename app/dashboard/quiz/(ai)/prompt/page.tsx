@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SUBJECTS, GRADES, QuestionTypeUI, Difficulty } from "@/types";
 import { toast } from "sonner";
 import { ActionButton } from "@/components/molecules/action-button";
+import { useCreateQuizWithAI } from "@/services/aiService";
 
 interface QuestionTypeOption {
   value: string;
@@ -43,20 +44,20 @@ const questionTypeOptions: QuestionTypeOption[] = [
 ];
 
 const difficultyOptions = [
-  { value: Difficulty.RECOGNITION, label: "Nhận biết" },
-  { value: Difficulty.COMPREHENSION, label: "Thông hiểu" },
-  { value: Difficulty.APPLICATION, label: "Vận dụng" },
-  { value: Difficulty.HIGH_APPLICATION, label: "Vận dụng cao" },
+  { value: Difficulty.RECOGNITION, label: "Dễ" },
+  { value: Difficulty.COMPREHENSION, label: "Trung bình" },
+  { value: Difficulty.HIGH_APPLICATION, label: "Khó" },
 ];
 
 export default function PromptBasedGeneratorPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const createQuizWithAI = useCreateQuizWithAI();
+  const isLoading = createQuizWithAI.isPending;
 
   // Form state
   const [subject, setSubject] = useState<string>("");
   const [grade, setGrade] = useState<string>("");
-  const [questionCount, setQuestionCount] = useState<string>("20");
+  const [questionCount, setQuestionCount] = useState<string>("5");
   const [difficulty, setDifficulty] = useState<Difficulty>(
     Difficulty.RECOGNITION
   );
@@ -107,41 +108,47 @@ export default function PromptBasedGeneratorPage() {
       return;
     }
 
-    setIsLoading(true);
+    const count = parseInt(questionCount);
+    if (count < 1 || count > 25) {
+      toast.error("Chọn tối đa 25 câu hỏi để có trải nghiệm tốt nhất.");
+      return;
+    }
 
-    try {
-      // TODO: Call AI service to generate quiz based on prompt
-      const questionTypesArray = Array.from(selectedQuestionTypes);
-      const multipleCorrectConfig = Object.fromEntries(multipleCorrectAnswers);
+    const questionTypesArray = Array.from(selectedQuestionTypes);
 
-      // eslint-disable-next-line no-console
-      console.log("Generating quiz with:", {
+    // Map difficulty from Vietnamese enum to API enum
+    const difficultyMap: Record<string, "easy" | "medium" | "hard"> = {
+      [Difficulty.RECOGNITION]: "easy",
+      [Difficulty.COMPREHENSION]: "medium",
+      [Difficulty.HIGH_APPLICATION]: "hard",
+    };
+
+    createQuizWithAI.mutate(
+      {
         subject,
         grade: parseInt(grade),
-        questionCount: parseInt(questionCount),
-        difficulty,
+        numberOfQuestions: count,
+        difficulty: difficultyMap[difficulty] || "medium",
         questionTypes: questionTypesArray,
-        multipleCorrectAnswers: multipleCorrectConfig,
-        learningObjectives,
-        prompt,
-      });
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Generate a mock request ID
-      const requestId = `ai-${Date.now()}`;
-
-      // Navigate to quiz editor with AI-generated content
-      router.push(
-        `/dashboard/quiz/new?type=MANUAL&aiGenRequestId=${requestId}`
-      );
-    } catch (error) {
-      console.error("Error generating quiz:", error);
-      toast.error("Có lỗi xảy ra khi tạo đề thi");
-    } finally {
-      setIsLoading(false);
-    }
+        customPrompt: prompt,
+        topic: learningObjectives || undefined,
+        status: "draft",
+      },
+      {
+        onSuccess: (response) => {
+          toast.success("Tạo đề thi thành công!");
+          // Navigate to the created quiz detail page
+          router.push(`/dashboard/quiz/${response.data.quiz.id}`);
+        },
+        onError: (error) => {
+          console.error("Error generating quiz:", error);
+          const errorMessage =
+            (error.response?.data as { message?: string })?.message ||
+            "Có lỗi xảy ra khi tạo đề thi";
+          toast.error(errorMessage);
+        },
+      }
+    );
   };
 
   if (isLoading) {
@@ -231,10 +238,10 @@ export default function PromptBasedGeneratorPage() {
               id="questionCount"
               type="number"
               min="1"
-              max="100"
+              max="25"
               value={questionCount}
               onChange={(e) => setQuestionCount(e.target.value)}
-              placeholder="Nhập số câu hỏi"
+              placeholder="Nhập số câu hỏi (tối đa 25)"
             />
           </div>
 

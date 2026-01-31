@@ -212,19 +212,6 @@ export function StudentDataTable({
               <TableRow className="bg-gray-50">
                 <TableHead
                   className="cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort("name")}
-                >
-                  <div className="flex items-center gap-1">
-                    Họ tên
-                    <SortIcon
-                      field="name"
-                      sortField={sortField}
-                      sortDirection={sortDirection}
-                    />
-                  </div>
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort("studentCode")}
                 >
                   <div className="flex items-center gap-1">
@@ -236,8 +223,20 @@ export function StudentDataTable({
                     />
                   </div>
                 </TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort("name")}
+                >
+                  <div className="flex items-center gap-1">
+                    Họ tên
+                    <SortIcon
+                      field="name"
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                    />
+                  </div>
+                </TableHead>
                 <TableHead>Lớp</TableHead>
-                <TableHead>SĐT phụ huynh</TableHead>
                 <TableHead
                   className="cursor-pointer text-right hover:bg-gray-100"
                   onClick={() => handleSort("averageScore")}
@@ -274,6 +273,9 @@ export function StudentDataTable({
                     className="cursor-pointer hover:bg-blue-50"
                     onClick={() => onStudentClick(student)}
                   >
+                    <TableCell className="text-gray-600">
+                      {student.studentCode}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <StudentInitials name={student.name} size="sm" />
@@ -283,13 +285,7 @@ export function StudentDataTable({
                       </div>
                     </TableCell>
                     <TableCell className="text-gray-600">
-                      {student.studentCode}
-                    </TableCell>
-                    <TableCell className="text-gray-600">
                       {selectedClass?.name || "-"}
-                    </TableCell>
-                    <TableCell className="text-gray-600">
-                      {student.parentPhone || "-"}
                     </TableCell>
                     <TableCell
                       className={cn(

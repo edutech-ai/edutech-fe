@@ -65,6 +65,8 @@ export interface ClassroomStudentBackend {
   student_code?: string;
   phone_number?: string;
   parent_phone_number?: string;
+  average_score?: number;
+  total_hand_raises?: number;
 }
 
 export interface StudentPerformanceBackend {
@@ -73,10 +75,13 @@ export interface StudentPerformanceBackend {
   student_id: string;
   total_exams: number;
   average_score: number;
+  total_hand_raises?: number;
   subject_performance?: Record<string, number>;
   strong_topic?: Record<string, unknown>;
   weak_topic?: Record<string, unknown>;
+  teacher_notes?: string;
   updated_at: string;
+  student?: StudentBackend;
 }
 
 // ==================== API REQUEST/RESPONSE TYPES ====================
@@ -187,6 +192,149 @@ export interface LeaderboardEntry {
 export interface LeaderboardResponse {
   success: boolean;
   data: LeaderboardEntry[];
+}
+
+// ==================== SCORES ====================
+export type ExamType =
+  | "quiz"
+  | "test"
+  | "midterm"
+  | "final"
+  | "assignment"
+  | "other";
+
+export interface ScoreBackend {
+  id: string;
+  classroom_id: string;
+  student_id: string;
+  score: number;
+  max_score: number;
+  subject?: string;
+  exam_name?: string;
+  exam_type: ExamType;
+  exam_date: string;
+  quiz_id?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  // Joined student info
+  student?: StudentBackend;
+}
+
+export interface CreateScoreRequest {
+  student_id: string;
+  score: number;
+  max_score?: number;
+  subject?: string;
+  exam_name?: string;
+  exam_type: ExamType;
+  exam_date: string;
+  quiz_id?: string;
+  notes?: string;
+}
+
+export interface UpdateScoreRequest {
+  score?: number;
+  max_score?: number;
+  subject?: string;
+  exam_name?: string;
+  exam_type?: ExamType;
+  exam_date?: string;
+  notes?: string;
+}
+
+export interface ScoreQueryParams {
+  page?: number;
+  limit?: number;
+  subject?: string;
+  exam_type?: ExamType;
+}
+
+export interface ScoreListResponse {
+  success: boolean;
+  data: {
+    scores: ScoreBackend[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+}
+
+export interface StudentScoresResponse {
+  success: boolean;
+  data: {
+    scores: ScoreBackend[];
+    statistics: {
+      total_exams: number;
+      average_score: number;
+      highest_score: number;
+      lowest_score: number;
+    };
+  };
+}
+
+export interface UploadScoresRequest {
+  file: File;
+  subject: string;
+  exam_name: string;
+  exam_type: ExamType;
+  max_score?: number;
+  exam_date?: string;
+  quiz_id?: string;
+}
+
+export interface UploadScoresResponse {
+  success: boolean;
+  message: string;
+  data: {
+    total: number;
+    successCount: number;
+    errorCount: number;
+    success: Array<{
+      row: number;
+      student_code: string;
+      student_name: string;
+      score: number;
+    }>;
+    errors: Array<{
+      row: number;
+      data: Record<string, unknown>;
+      message: string;
+    }>;
+  };
+}
+
+// ==================== PERFORMANCE (Extended) ====================
+export interface ClassroomPerformanceResponse {
+  success: boolean;
+  data: StudentPerformanceBackend[];
+}
+
+export interface UpdateTeacherNotesRequest {
+  teacher_notes: string;
+}
+
+export interface RecalculatePerformanceResponse {
+  success: boolean;
+  message: string;
+  data: StudentPerformanceBackend;
+}
+
+export interface RecalculateAllPerformanceResponse {
+  success: boolean;
+  message: string;
+  data: {
+    total: number;
+    updated: number;
+  };
+}
+
+export interface LeaderboardQueryParams {
+  order_by?: "score" | "participation" | "overall";
+  limit?: number;
 }
 
 // ==================== STUDENT ====================

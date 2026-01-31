@@ -1,18 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { StudentDataTable, StudentDetailPanel } from "../index";
-import type { Classroom, Student, StudentDetail } from "@/types/classroom";
+import type { Classroom, Student } from "@/types/classroom";
 
 interface DataTabProps {
   classrooms: Classroom[];
   students: Student[];
   selectedClassId: string;
-  studentDetail: StudentDetail | null;
   onClassChange: (id: string) => void;
-  onStudentClick: (student: Student) => void;
-  onCloseStudentDetail: () => void;
-  onSaveNote: (note: string) => void;
   onAddStudent: () => void;
 }
 
@@ -20,31 +17,37 @@ export function DataTab({
   classrooms,
   students,
   selectedClassId,
-  studentDetail,
   onClassChange,
-  onStudentClick,
-  onCloseStudentDetail,
-  onSaveNote,
   onAddStudent,
 }: DataTabProps) {
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+  const handleStudentClick = (student: Student) => {
+    setSelectedStudent(student);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedStudent(null);
+  };
+
   return (
     <div className="grid gap-4 lg:grid-cols-3">
-      <div className={cn("lg:col-span-2", !studentDetail && "lg:col-span-3")}>
+      <div className={cn("lg:col-span-2", !selectedStudent && "lg:col-span-3")}>
         <StudentDataTable
           classrooms={classrooms}
           students={students}
           selectedClassId={selectedClassId}
           onClassChange={onClassChange}
-          onStudentClick={onStudentClick}
+          onStudentClick={handleStudentClick}
           onAddStudent={onAddStudent}
         />
       </div>
-      {studentDetail && (
+      {selectedStudent && (
         <div className="lg:col-span-1">
           <StudentDetailPanel
-            student={studentDetail}
-            onClose={onCloseStudentDetail}
-            onSaveNote={onSaveNote}
+            student={selectedStudent}
+            classroomId={selectedClassId}
+            onClose={handleCloseDetail}
           />
         </div>
       )}

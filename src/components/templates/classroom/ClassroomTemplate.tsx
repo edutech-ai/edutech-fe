@@ -19,13 +19,11 @@ import {
   mockStudents,
   getMockSeatingChart,
   getMockClassroomStats,
-  getMockStudentDetail,
 } from "@/mock/classroom";
 import type { Student as MockStudent } from "@/types/classroom";
 import { AttendanceStatus, ParticipationStatus } from "@/types/classroom";
 import type {
   Student,
-  StudentDetail,
   RandomHistory,
   SeatingChart as SeatingChartType,
   ClassroomStats as ClassroomStatsType,
@@ -100,9 +98,8 @@ export function ClassroomTemplate({
 
   // Student data states
   const [dataSelectedClassId, setDataSelectedClassId] = useState<string>("");
-  const [studentDetail, setStudentDetail] = useState<StudentDetail | null>(
-    null
-  );
+  const [selectedDataStudent, setSelectedDataStudent] =
+    useState<Student | null>(null);
 
   // Dialog states
   const [showEndSessionDialog, setShowEndSessionDialog] = useState(false);
@@ -166,22 +163,15 @@ export function ClassroomTemplate({
   // Handlers for Student Data
   const handleDataClassChange = useCallback((classId: string) => {
     setDataSelectedClassId(classId);
-    setStudentDetail(null);
+    setSelectedDataStudent(null);
   }, []);
 
   const handleStudentRowClick = useCallback((student: Student) => {
-    const detail = getMockStudentDetail(student.id);
-    setStudentDetail(detail);
+    setSelectedDataStudent(student);
   }, []);
 
   const handleCloseStudentDetail = useCallback(() => {
-    setStudentDetail(null);
-  }, []);
-
-  const handleSaveNote = useCallback((note: string) => {
-    // eslint-disable-next-line no-console
-    console.log("Saving note:", note);
-    // In real app, save to API
+    setSelectedDataStudent(null);
   }, []);
 
   // Get current class and students
@@ -324,7 +314,7 @@ export function ClassroomTemplate({
               <div
                 className={cn(
                   "lg:col-span-2",
-                  !studentDetail && "lg:col-span-3"
+                  !selectedDataStudent && "lg:col-span-3"
                 )}
               >
                 <StudentDataTable
@@ -335,12 +325,12 @@ export function ClassroomTemplate({
                   onStudentClick={handleStudentRowClick}
                 />
               </div>
-              {studentDetail && (
+              {selectedDataStudent && (
                 <div className="lg:col-span-1">
                   <StudentDetailPanel
-                    student={studentDetail}
+                    student={selectedDataStudent}
+                    classroomId={dataSelectedClassId}
                     onClose={handleCloseStudentDetail}
-                    onSaveNote={handleSaveNote}
                   />
                 </div>
               )}

@@ -12,13 +12,21 @@ import {
   RandomTab,
   ClassroomTab,
   DataTab,
+  PerformanceTab,
 } from "@/components/organisms/classroom/tabs";
 import { useClassroomPage } from "@/hooks/useClassroomPage";
-import { Shuffle, School, FileSpreadsheet, Users, Loader2 } from "lucide-react";
+import {
+  Shuffle,
+  School,
+  FileSpreadsheet,
+  Users,
+  Loader2,
+  BarChart2,
+} from "lucide-react";
 import { ActionButton } from "@/components/molecules/action-button";
 import Image from "next/image";
 
-export type ClassroomTab = "random" | "classroom" | "data";
+export type ClassroomTab = "random" | "classroom" | "data" | "performance";
 
 export default function ClassroomDetailPage() {
   const params = useParams();
@@ -34,7 +42,6 @@ export default function ClassroomDetailPage() {
     currentClassroom,
     allClassrooms,
     uiStudents,
-    dataStudents,
     selectedClass,
     selectedClassId,
     selectedSubject,
@@ -43,7 +50,6 @@ export default function ClassroomDetailPage() {
     classroomStats,
     selectedStudent,
     randomHistory,
-    studentDetail,
     showEndSessionDialog,
     showAddStudentModal,
     setSelectedClassId,
@@ -54,9 +60,6 @@ export default function ClassroomDetailPage() {
     handleConfirmEndSession,
     handleStudentClick,
     handleAddHistory,
-    handleStudentRowClick,
-    handleCloseStudentDetail,
-    handleSaveNote,
     setShowEndSessionDialog,
     setShowAddStudentModal,
   } = useClassroomPage(classroomId);
@@ -64,7 +67,8 @@ export default function ClassroomDetailPage() {
   // Tab state from URL
   const tabFromUrl = searchParams.get("tab") as ClassroomTab | null;
   const initialTab =
-    tabFromUrl && ["random", "classroom", "data"].includes(tabFromUrl)
+    tabFromUrl &&
+    ["random", "classroom", "data", "performance"].includes(tabFromUrl)
       ? tabFromUrl
       : "data";
 
@@ -82,7 +86,10 @@ export default function ClassroomDetailPage() {
   );
 
   useEffect(() => {
-    if (tabFromUrl && ["random", "classroom", "data"].includes(tabFromUrl)) {
+    if (
+      tabFromUrl &&
+      ["random", "classroom", "data", "performance"].includes(tabFromUrl)
+    ) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(tabFromUrl);
     }
@@ -179,6 +186,13 @@ export default function ClassroomDetailPage() {
               <FileSpreadsheet className="h-4 w-4" />
               Dữ Liệu Học Sinh
             </TabsTrigger>
+            <TabsTrigger
+              value="performance"
+              className="flex items-center gap-2 rounded-md transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+            >
+              <BarChart2 className="h-4 w-4" />
+              Hiệu Suất & Điểm
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="random" className="mt-6">
@@ -212,18 +226,24 @@ export default function ClassroomDetailPage() {
           <TabsContent value="data" className="mt-6">
             <DataTab
               classrooms={allClassrooms}
-              students={
-                selectedClassId === classroomId || !selectedClassId
-                  ? uiStudents
-                  : dataStudents
-              }
-              selectedClassId={selectedClassId || classroomId}
-              studentDetail={studentDetail}
+              students={uiStudents}
+              selectedClassId={classroomId}
               onClassChange={(id) => setSelectedClassId(id)}
-              onStudentClick={handleStudentRowClick}
-              onCloseStudentDetail={handleCloseStudentDetail}
-              onSaveNote={handleSaveNote}
               onAddStudent={() => setShowAddStudentModal(true)}
+            />
+          </TabsContent>
+
+          <TabsContent value="performance" className="mt-6">
+            <PerformanceTab
+              classroomId={classroomId}
+              students={uiStudents.map((s) => ({
+                id: s.id,
+                full_name: s.name,
+                student_code: s.studentCode,
+                phone_number: s.phone,
+                parent_phone_number: s.parentPhone,
+                is_active: true,
+              }))}
             />
           </TabsContent>
         </Tabs>

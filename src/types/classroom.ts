@@ -217,6 +217,8 @@ export interface ScoreBackend {
   notes?: string;
   created_at: string;
   updated_at: string;
+  full_name?: string;
+  student_code?: string;
   // Joined student info
   student?: StudentBackend;
 }

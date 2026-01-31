@@ -4,21 +4,15 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   useClassroomById,
   useClassroomStudents,
+  useClassrooms,
 } from "@/services/classroomService";
-import {
-  getMockSeatingChart,
-  getMockClassroomStats,
-  getMockStudentDetail,
-  mockClassrooms,
-  mockStudents,
-} from "@/mock/classroom";
 import type {
   Student,
-  StudentDetail,
   RandomHistory,
   SeatingChart as SeatingChartType,
   ClassroomStats as ClassroomStatsType,
   Classroom,
+  SeatData,
 } from "@/types/classroom";
 import {
   SessionStatus,
@@ -58,6 +52,9 @@ export function useClassroomPage(classroomId: string) {
 
   const { data: studentsResponse } = useClassroomStudents(classroomId);
 
+  // Fetch all classrooms for selector
+  const { data: allClassroomsResponse } = useClassrooms({ limit: 100 });
+
   const classroom = classroomResponse?.data;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const students = studentsResponse?.data ?? [];
@@ -85,67 +82,155 @@ export function useClassroomPage(classroomId: string) {
     saveHistoryToStorage(randomHistory);
   }, [randomHistory]);
 
-  // Student data states
-  const [studentDetail, setStudentDetail] = useState<StudentDetail | null>(
-    null
-  );
-
   // Dialog states
   const [showEndSessionDialog, setShowEndSessionDialog] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
 
-  // Create mock classroom for current classroom
+  // Create classroom object for current classroom
   const currentClassroom: Classroom | undefined = useMemo(() => {
     if (!classroom) return undefined;
     return {
       id: classroom.id,
       name: classroom.name,
-      grade: 8,
+      grade: 0,
       totalStudents: classroom.student_count || students.length,
-      subjects: ["Toán", "Ngữ Văn", "Tiếng Anh"],
-      rows: 5,
+      subjects: [],
+      rows: Math.ceil(students.length / 6) || 5,
       columns: 6,
       createdAt: classroom.created_at,
     };
   }, [classroom, students.length]);
 
   // Combined classrooms for selector
-  const allClassrooms = useMemo(() => {
-    if (!currentClassroom) return mockClassrooms;
-    return [
-      currentClassroom,
-      ...mockClassrooms.filter((c) => c.id !== currentClassroom.id),
-    ];
-  }, [currentClassroom]);
-
-  // Convert backend students to UI format
-  const uiStudents: Student[] = useMemo(() => {
-    return students.map((s, index) => ({
-      id: s.student_id,
-      studentCode: s.student_code || `STU${index + 1}`,
-      name: s.full_name || "Học sinh",
-      email: undefined,
-      parentEmail: undefined,
-      phone: s.phone_number,
-      parentPhone: s.parent_phone_number,
-      avatar: undefined,
-      classId: classroomId,
-      seatPosition: { row: Math.floor(index / 6), column: index % 6 },
-      averageScore: 0,
-      totalParticipations: 0,
-      attendanceStatus: AttendanceStatus.PRESENT,
-      participationStatus: ParticipationStatus.NOT_PARTICIPATED,
-      createdAt: s.joined_at,
+  const allClassrooms: Classroom[] = useMemo(() => {
+    const apiClassrooms = allClassroomsResponse?.data?.classrooms || [];
+    return apiClassrooms.map((c) => ({
+      id: c.id,
+      name: c.name,
+      grade: 0,
+      totalStudents: c.student_count || 0,
+      subjects: [],
+      rows: 5,
+      columns: 6,
+      createdAt: c.created_at,
     }));
+  }, [allClassroomsResponse]);
+
+  // Convert backend students to UI format with performance data from response
+  const uiStudents: Student[] = useMemo(() => {
+    return students.map((s, index) => {
+      return {
+        id: s.student_id,
+        studentCode: s.student_code || `STU${index + 1}`,
+        name: s.full_name || "Học sinh",
+        email: undefined,
+        parentEmail: undefined,
+        phone: s.phone_number,
+        parentPhone: s.parent_phone_number,
+        avatar: undefined,
+        classId: classroomId,
+        seatPosition: { row: Math.floor(index / 6), column: index % 6 },
+        averageScore: s.average_score || 0,
+        totalParticipations: s.total_hand_raises || 0,
+        attendanceStatus: AttendanceStatus.PRESENT,
+        participationStatus: ParticipationStatus.NOT_PARTICIPATED,
+        createdAt: s.joined_at,
+      };
+    });
   }, [students, classroomId]);
 
+  // Generate seating chart from real students
+  const generateSeatingChart = useCallback(
+    (studentsToChart: Student[]): SeatingChartType => {
+      const rows = Math.ceil(studentsToChart.length / 6) || 5;
+      const columns = 6;
+      const seats: SeatData[][] = [];
+
+      for (let r = 0; r < rows; r++) {
+        const row: SeatData[] = [];
+        for (let c = 0; c < columns; c++) {
+          const studentIndex = r * columns + c;
+          const student = studentsToChart[studentIndex] || null;
+          row.push({
+            row: r,
+            column: c,
+            student,
+            isEmpty: !student,
+          });
+        }
+        seats.push(row);
+      }
+
+      return {
+        classId: classroomId,
+        rows,
+        columns,
+        seats,
+      };
+    },
+    [classroomId]
+  );
+
+  // Generate classroom stats from real data
+  const generateClassroomStats = useCallback(
+    (studentsToStat: Student[]): ClassroomStatsType => {
+      const sortedByParticipation = [...studentsToStat].sort(
+        (a, b) => b.totalParticipations - a.totalParticipations
+      );
+
+      const topActiveStudents = sortedByParticipation.slice(0, 5).map((s) => ({
+        id: s.id,
+        name: s.name,
+        participationCount: s.totalParticipations,
+      }));
+
+      const totalRaisedHands = studentsToStat.reduce(
+        (sum, s) => sum + s.totalParticipations,
+        0
+      );
+
+      // Calculate participation by row
+      const rows = Math.ceil(studentsToStat.length / 6) || 5;
+      const participationByRow = Array.from({ length: rows }, (_, rowIndex) => {
+        const rowStudents = studentsToStat.filter(
+          (s) => s.seatPosition?.row === rowIndex
+        );
+        const count = rowStudents.reduce(
+          (sum, s) => sum + s.totalParticipations,
+          0
+        );
+        return {
+          row: rowIndex + 1,
+          count,
+          percentage:
+            totalRaisedHands > 0
+              ? Math.round((count / totalRaisedHands) * 100)
+              : 0,
+        };
+      });
+
+      return {
+        topActiveStudents,
+        totalRaisedHands,
+        participationByRow,
+      };
+    },
+    []
+  );
+
   // Handlers for Classroom Interface
-  const handleClassChange = useCallback((classId: string) => {
-    setSelectedClassId(classId);
-    setSelectedSubject("");
-    setSeatingChart(getMockSeatingChart(classId));
-    setClassroomStats(getMockClassroomStats(classId));
-  }, []);
+  const handleClassChange = useCallback(
+    (classId: string) => {
+      setSelectedClassId(classId);
+      setSelectedSubject("");
+      // Use real students data for the selected class
+      if (classId === classroomId) {
+        setSeatingChart(generateSeatingChart(uiStudents));
+        setClassroomStats(generateClassroomStats(uiStudents));
+      }
+    },
+    [classroomId, uiStudents, generateSeatingChart, generateClassroomStats]
+  );
 
   const handleSubjectChange = useCallback((subject: string) => {
     setSelectedSubject(subject);
@@ -177,27 +262,6 @@ export function useClassroomPage(classroomId: string) {
     setRandomHistory((prev) => [history, ...prev].slice(0, MAX_HISTORY_ITEMS));
   }, []);
 
-  // Handlers for Student Data
-  const handleStudentRowClick = useCallback((student: Student) => {
-    const detail = getMockStudentDetail(student.id);
-    setStudentDetail(detail);
-  }, []);
-
-  const handleCloseStudentDetail = useCallback(() => {
-    setStudentDetail(null);
-  }, []);
-
-  const handleSaveNote = useCallback((note: string) => {
-    // eslint-disable-next-line no-console
-    console.log("Saving note:", note);
-  }, []);
-
-  // Get current class and students for data table
-  const dataStudents =
-    selectedClassId === classroomId
-      ? uiStudents
-      : mockStudents[selectedClassId] || [];
-
   const selectedClass = allClassrooms.find((c) => c.id === selectedClassId);
 
   return {
@@ -208,7 +272,6 @@ export function useClassroomPage(classroomId: string) {
     currentClassroom,
     allClassrooms,
     uiStudents,
-    dataStudents,
     selectedClass,
 
     // Classroom interface state
@@ -221,9 +284,6 @@ export function useClassroomPage(classroomId: string) {
 
     // Random picker state
     randomHistory,
-
-    // Student data state
-    studentDetail,
 
     // Dialog states
     showEndSessionDialog,
@@ -238,9 +298,6 @@ export function useClassroomPage(classroomId: string) {
     handleConfirmEndSession,
     handleStudentClick,
     handleAddHistory,
-    handleStudentRowClick,
-    handleCloseStudentDetail,
-    handleSaveNote,
     setShowEndSessionDialog,
     setShowAddStudentModal,
   };

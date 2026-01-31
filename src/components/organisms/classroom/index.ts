@@ -7,3 +7,9 @@ export * from "./EndSessionDialog";
 export * from "./CreateClassroomModal";
 export * from "./EditClassroomModal";
 export * from "./AddStudentModal";
+// Performance
+export * from "./ScoreDataTable";
+export * from "./LeaderboardCard";
+export * from "./AddScoreModal";
+export * from "./EditScoreModal";
+export * from "./StudentScorePanel";

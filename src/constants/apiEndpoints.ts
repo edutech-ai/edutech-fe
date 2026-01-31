@@ -65,6 +65,23 @@ export const API_ENDPOINTS = {
       `/classrooms/${classroomId}/students/${studentId}/performance`,
     LEADERBOARD: (classroomId: string) =>
       `/classrooms/${classroomId}/leaderboard`,
+    // Scores
+    SCORES: (classroomId: string) => `/classrooms/${classroomId}/scores`,
+    SCORE_BY_ID: (classroomId: string, scoreId: string) =>
+      `/classrooms/${classroomId}/scores/${scoreId}`,
+    STUDENT_SCORES: (classroomId: string, studentId: string) =>
+      `/classrooms/${classroomId}/students/${studentId}/scores`,
+    SCORES_UPLOAD: (classroomId: string) =>
+      `/classrooms/${classroomId}/scores/upload`,
+    // Performance
+    PERFORMANCE: (classroomId: string) =>
+      `/classrooms/${classroomId}/performance`,
+    STUDENT_PERFORMANCE_NOTES: (classroomId: string, studentId: string) =>
+      `/classrooms/${classroomId}/students/${studentId}/performance/notes`,
+    STUDENT_PERFORMANCE_RECALCULATE: (classroomId: string, studentId: string) =>
+      `/classrooms/${classroomId}/students/${studentId}/performance/recalculate`,
+    PERFORMANCE_RECALCULATE: (classroomId: string) =>
+      `/classrooms/${classroomId}/performance/recalculate`,
   },
 
   // Student endpoints

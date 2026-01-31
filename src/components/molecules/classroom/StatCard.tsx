@@ -29,7 +29,7 @@ export function StatCard({
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">{title}</p>
+            <p className="text-sm font-medium text-gray-800">{title}</p>
             <p
               className={cn(
                 "mt-1 text-2xl font-bold text-blue-600",

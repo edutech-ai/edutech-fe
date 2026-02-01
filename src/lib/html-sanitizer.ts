@@ -111,7 +111,27 @@ export function sanitizeAndRenderLatex(html: string): string {
     }
   });
 
-  // Pattern 2: Handle inline LaTeX delimiters \( ... \) and \[ ... \]
+  // Pattern 2: Handle LaTeX environments like \begin{cases}...\end{cases}
+  // These should be rendered as display math
+  const envRegex = /\\begin\{(\w+)\}([\s\S]*?)\\end\{\1\}/g;
+
+  rendered = rendered.replace(envRegex, (_match, envName, content) => {
+    try {
+      const fullLatex = `\\begin{${envName}}${content}\\end{${envName}}`;
+      const prepared = prepareForKatex(fullLatex);
+      const renderedFormula = katex.renderToString(prepared, {
+        throwOnError: false,
+        displayMode: true,
+        output: "html",
+      });
+      return `<div class="latex-formula latex-display">${renderedFormula}</div>`;
+    } catch (error) {
+      console.error("LaTeX render error:", error);
+      return `<span class="latex-error" title="Invalid formula">${_match}</span>`;
+    }
+  });
+
+  // Pattern 3: Handle inline LaTeX delimiters \( ... \) and \[ ... \]
   // This handles mixed content like "Text \( formula \) more text"
   const inlineLatexRegex = /\\\((.+?)\\\)/g;
   const displayLatexRegex = /\\\[(.+?)\\\]/g;
@@ -148,7 +168,7 @@ export function sanitizeAndRenderLatex(html: string): string {
     }
   });
 
-  // Pattern 3: Match plain <span>content</span> (from backend data)
+  // Pattern 4: Match plain <span>content</span> (from backend data)
   // Only render as full LaTeX if NO delimiters and content looks like pure LaTeX
   const plainSpanRegex = /<span>([^<]*)<\/span>/gi;
 

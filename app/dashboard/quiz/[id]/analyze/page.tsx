@@ -196,17 +196,11 @@ export default function QuizAnalyzePage() {
           <BarChart3 className="w-5 h-5 text-blue-600" />
           Tổng quan phân tích
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-3 gap-6 mb-6">
           <div>
             <p className="text-sm text-gray-600 mb-1">Tổng số câu hỏi</p>
             <p className="text-2xl font-bold text-gray-900">
               {analysis.analysis_summary.total_questions}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Tổng điểm</p>
-            <p className="text-2xl font-bold text-gray-900">
-              {analysis.analysis_summary.total_points || "N/A"}
             </p>
           </div>
           <div>

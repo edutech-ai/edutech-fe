@@ -9,12 +9,18 @@ export interface AnalyzeQuizRequest {
  */
 export interface AnalysisSummary {
   total_questions: number;
-  total_points: number;
+  total_points?: number;
+  // Score/fit averages
+  knowledge_fit_average?: number;
+  clarity_average?: number;
+  score_average?: number;
+  // Subject/grade info
+  subject?: string;
+  grade?: number;
   // Difficulty field - API may use either name
   overall_difficulty?: string;
   average_difficulty?: string;
-  // Subject/Focus fields
-  subject?: string;
+  // Focus/coverage fields
   focus?: string;
   coverage?: string;
   // Description alignment field - API may use either name

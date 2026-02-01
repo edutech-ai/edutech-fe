@@ -18,6 +18,7 @@ export interface ClassSelectorProps {
   onClassChange: (classId: string) => void;
   onSubjectChange: (subject: string) => void;
   className?: string;
+  disabled?: boolean;
 }
 
 export function ClassSelector({
@@ -27,6 +28,7 @@ export function ClassSelector({
   onClassChange,
   onSubjectChange,
   className,
+  disabled = false,
 }: ClassSelectorProps) {
   const selectedClass = classrooms.find((c) => c.id === selectedClassId);
   const availableSubjects = selectedClass?.subjects || [];
@@ -35,8 +37,12 @@ export function ClassSelector({
     <div className={cn("flex items-center gap-4", className)}>
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">Chọn lớp</label>
-        <Select value={selectedClassId} onValueChange={onClassChange}>
-          <SelectTrigger className="w-[160px] bg-white">
+        <Select
+          value={selectedClassId}
+          onValueChange={onClassChange}
+          disabled={disabled}
+        >
+          <SelectTrigger className="w-40 bg-white">
             <SelectValue placeholder="Chọn lớp" />
           </SelectTrigger>
           <SelectContent>
@@ -56,9 +62,9 @@ export function ClassSelector({
         <Select
           value={selectedSubject}
           onValueChange={onSubjectChange}
-          disabled={!selectedClassId}
+          disabled={disabled || !selectedClassId}
         >
-          <SelectTrigger className="w-[160px] bg-white">
+          <SelectTrigger className="w-40 bg-white">
             <SelectValue placeholder="Chọn môn" />
           </SelectTrigger>
           <SelectContent>

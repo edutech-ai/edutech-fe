@@ -111,6 +111,7 @@ export const API_ENDPOINTS = {
   // AI endpoints
   AI: {
     CREATE_QUIZ_WITH_QUESTIONS: "/ai/create-quiz-with-questions",
+    ANALYZE_QUIZ: "/ai/analyze-quiz",
   },
 } as const;
 

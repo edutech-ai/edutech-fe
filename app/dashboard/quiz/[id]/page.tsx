@@ -1,7 +1,15 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Edit, Copy, Trash2, FileText, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Edit,
+  Copy,
+  Trash2,
+  FileText,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,6 +22,7 @@ import { useState } from "react";
 import { ActionButton } from "@/components/molecules/action-button";
 import LaTeXRenderer from "@/components/atoms/latex-renderer";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { AnalyzeQuizDialog } from "@/components/organisms/quiz/AnalyzeQuizDialog";
 
 export default function QuizDetailPage() {
   const params = useParams();
@@ -22,6 +31,7 @@ export default function QuizDetailPage() {
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAnalyzeDialog, setShowAnalyzeDialog] = useState(false);
 
   // Fetch quiz and questions
   const {
@@ -138,7 +148,7 @@ export default function QuizDetailPage() {
       <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-lg md:text-2xl font-bold text-gray-900 mb-2">
               {quiz.title}
             </h1>
             <div className="flex items-center gap-2 mt-1">
@@ -187,6 +197,12 @@ export default function QuizDetailPage() {
           </Button>
         </div>
       </div>
+
+      {/* button Analyze quiz */}
+      <Button onClick={() => setShowAnalyzeDialog(true)}>
+        <Sparkles className="w-4 h-4 mr-2" />
+        Phân tích đề thi với AI
+      </Button>
 
       {/* Quiz Info Card */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -336,6 +352,13 @@ export default function QuizDetailPage() {
         confirmText="Xóa"
         cancelText="Hủy"
         variant="destructive"
+      />
+
+      <AnalyzeQuizDialog
+        open={showAnalyzeDialog}
+        onOpenChange={setShowAnalyzeDialog}
+        quizId={quizId}
+        quizTitle={quiz.title}
       />
     </div>
   );

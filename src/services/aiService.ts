@@ -5,6 +5,10 @@ import type { AxiosError } from "axios";
 import axiosInstance from "@/lib/axios";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 import { QUIZ_KEYS } from "./quizService";
+import type {
+  AnalyzeQuizRequest,
+  AnalyzeQuizResponse,
+} from "@/types/quizAnalysis";
 
 // ==================== TYPES ====================
 
@@ -84,6 +88,25 @@ export const useCreateQuizWithAI = (): UseMutationResult<
       // Invalidate quiz lists to refetch
       queryClient.invalidateQueries({ queryKey: QUIZ_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUIZ_KEYS.all });
+    },
+  });
+};
+
+/**
+ * Analyze quiz quality with AI
+ */
+export const useAnalyzeQuiz = (): UseMutationResult<
+  AnalyzeQuizResponse,
+  AxiosError,
+  AnalyzeQuizRequest
+> => {
+  return useMutation({
+    mutationFn: async (data: AnalyzeQuizRequest) => {
+      const response = await axiosInstance.post<AnalyzeQuizResponse>(
+        API_ENDPOINTS.AI.ANALYZE_QUIZ,
+        data
+      );
+      return response.data;
     },
   });
 };

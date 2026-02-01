@@ -488,3 +488,61 @@ export interface SeatData {
   student: Student | null;
   isEmpty: boolean;
 }
+
+// ==================== HAND RAISES ====================
+export interface HandRaiseStudent {
+  student_id: string;
+  add_count: number;
+}
+
+export interface BatchHandRaiseRequest {
+  students: HandRaiseStudent[];
+}
+
+export interface HandRaiseData {
+  id?: string;
+  classroom_id: string;
+  student_id: string;
+  total_hand_raises: number;
+  updated_at?: string;
+  student?: StudentBackend;
+  full_name?: string;
+  student_code?: string;
+}
+
+export interface ClassroomHandRaisesResponse {
+  success: boolean;
+  data: {
+    total_students: number;
+    students: HandRaiseData[];
+  };
+}
+
+export interface StudentHandRaiseResponse {
+  success: boolean;
+  data: HandRaiseData;
+}
+
+export interface BatchHandRaiseResponse {
+  success: boolean;
+  message: string;
+  data: {
+    total: number;
+    successCount: number;
+    errorCount: number;
+    success: Array<{ student_id: string; added: number }>;
+    errors: Array<{ student_id: string; error: string }>;
+  };
+}
+
+// ==================== SESSION STORAGE ====================
+export interface LocalClassSession {
+  id: string;
+  classroomId: string;
+  classroomName: string;
+  subject: string;
+  startTime: string;
+  endTime?: string;
+  status: SessionStatus;
+  handRaises: Record<string, number>; // studentId -> count
+}

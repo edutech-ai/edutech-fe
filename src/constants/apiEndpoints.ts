@@ -82,6 +82,13 @@ export const API_ENDPOINTS = {
       `/classrooms/${classroomId}/students/${studentId}/performance/recalculate`,
     PERFORMANCE_RECALCULATE: (classroomId: string) =>
       `/classrooms/${classroomId}/performance/recalculate`,
+    // Hand Raises
+    HAND_RAISES: (classroomId: string) =>
+      `/classrooms/${classroomId}/hand-raises`,
+    HAND_RAISES_BATCH: (classroomId: string) =>
+      `/classrooms/${classroomId}/hand-raises/batch`,
+    STUDENT_HAND_RAISES: (classroomId: string, studentId: string) =>
+      `/classrooms/${classroomId}/students/${studentId}/hand-raises`,
   },
 
   // Student endpoints

@@ -21,6 +21,10 @@ import type {
   StudentQueryParams,
   CreateStudentRequest,
   UpdateStudentRequest,
+  ClassroomHandRaisesResponse,
+  StudentHandRaiseResponse,
+  BatchHandRaiseRequest,
+  BatchHandRaiseResponse,
 } from "@/types/classroom";
 
 // ==================== QUERY KEYS ====================
@@ -37,6 +41,10 @@ export const CLASSROOM_KEYS = {
     [...CLASSROOM_KEYS.all, "performance", classroomId, studentId] as const,
   leaderboard: (classroomId: string) =>
     [...CLASSROOM_KEYS.all, "leaderboard", classroomId] as const,
+  handRaises: (classroomId: string) =>
+    [...CLASSROOM_KEYS.all, "handRaises", classroomId] as const,
+  studentHandRaise: (classroomId: string, studentId: string) =>
+    [...CLASSROOM_KEYS.all, "handRaise", classroomId, studentId] as const,
 };
 
 export const STUDENT_KEYS = {
@@ -660,6 +668,169 @@ export const useDeleteStudent = (): UseMutationResult<
       queryClient.removeQueries({ queryKey: STUDENT_KEYS.detail(id) });
       queryClient.invalidateQueries({ queryKey: STUDENT_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: CLASSROOM_KEYS.all });
+    },
+  });
+};
+
+// ==================== HAND RAISE QUERY HOOKS ====================
+
+/**
+ * Get all hand raises for a classroom
+ */
+export const useClassroomHandRaises = (classroomId?: string, options?: any) => {
+  return useQuery<ClassroomHandRaisesResponse, AxiosError>({
+    queryKey: CLASSROOM_KEYS.handRaises(classroomId!),
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<ClassroomHandRaisesResponse>(
+        API_ENDPOINTS.CLASSROOM.HAND_RAISES(classroomId!)
+      );
+      return data;
+    },
+    enabled: !!classroomId,
+    ...options,
+  });
+};
+
+/**
+ * Get hand raise for a specific student
+ */
+export const useStudentHandRaise = (
+  classroomId?: string,
+  studentId?: string,
+  options?: any
+) => {
+  return useQuery<StudentHandRaiseResponse, AxiosError>({
+    queryKey: CLASSROOM_KEYS.studentHandRaise(classroomId!, studentId!),
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<StudentHandRaiseResponse>(
+        API_ENDPOINTS.CLASSROOM.STUDENT_HAND_RAISES(classroomId!, studentId!)
+      );
+      return data;
+    },
+    enabled: !!classroomId && !!studentId,
+    ...options,
+  });
+};
+
+// ==================== HAND RAISE MUTATION HOOKS ====================
+
+/**
+ * Batch update hand raises (end of session)
+ */
+export const useBatchUpdateHandRaises = (): UseMutationResult<
+  BatchHandRaiseResponse,
+  AxiosError,
+  { classroomId: string; data: BatchHandRaiseRequest }
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      classroomId,
+      data,
+    }: {
+      classroomId: string;
+      data: BatchHandRaiseRequest;
+    }) => {
+      const response = await axiosInstance.post<BatchHandRaiseResponse>(
+        API_ENDPOINTS.CLASSROOM.HAND_RAISES_BATCH(classroomId),
+        data
+      );
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.handRaises(variables.classroomId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.students(variables.classroomId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.leaderboard(variables.classroomId),
+      });
+    },
+  });
+};
+
+/**
+ * Update hand raise total for a student (manual)
+ */
+export const useUpdateStudentHandRaise = (): UseMutationResult<
+  StudentHandRaiseResponse,
+  AxiosError,
+  { classroomId: string; studentId: string; total_hand_raises: number }
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      classroomId,
+      studentId,
+      total_hand_raises,
+    }: {
+      classroomId: string;
+      studentId: string;
+      total_hand_raises: number;
+    }) => {
+      const response = await axiosInstance.put<StudentHandRaiseResponse>(
+        API_ENDPOINTS.CLASSROOM.STUDENT_HAND_RAISES(classroomId, studentId),
+        { total_hand_raises }
+      );
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.studentHandRaise(
+          variables.classroomId,
+          variables.studentId
+        ),
+      });
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.handRaises(variables.classroomId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.students(variables.classroomId),
+      });
+    },
+  });
+};
+
+/**
+ * Delete/reset hand raises for a student
+ */
+export const useDeleteStudentHandRaise = (): UseMutationResult<
+  ClassroomApiResponse<void>,
+  AxiosError,
+  { classroomId: string; studentId: string }
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      classroomId,
+      studentId,
+    }: {
+      classroomId: string;
+      studentId: string;
+    }) => {
+      const response = await axiosInstance.delete<ClassroomApiResponse<void>>(
+        API_ENDPOINTS.CLASSROOM.STUDENT_HAND_RAISES(classroomId, studentId)
+      );
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.studentHandRaise(
+          variables.classroomId,
+          variables.studentId
+        ),
+      });
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.handRaises(variables.classroomId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: CLASSROOM_KEYS.students(variables.classroomId),
+      });
     },
   });
 };

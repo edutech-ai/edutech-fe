@@ -42,23 +42,21 @@ export default function ClassroomDetailPage() {
     currentClassroom,
     allClassrooms,
     uiStudents,
-    selectedClass,
-    selectedClassId,
-    selectedSubject,
     sessionStatus,
+    currentSession,
+    sessionHandRaises,
     seatingChart,
     classroomStats,
     selectedStudent,
+    isUpdatingHandRaises,
     randomHistory,
     showEndSessionDialog,
     showAddStudentModal,
-    setSelectedClassId,
-    handleClassChange,
-    handleSubjectChange,
     handleStartSession,
     handleEndSession,
     handleConfirmEndSession,
     handleStudentClick,
+    handleDecrementHandRaise,
     handleAddHistory,
     setShowEndSessionDialog,
     setShowAddStudentModal,
@@ -207,19 +205,18 @@ export default function ClassroomDetailPage() {
 
           <TabsContent value="classroom" className="mt-6">
             <ClassroomTab
-              classrooms={allClassrooms}
-              selectedClassId={selectedClassId}
-              selectedSubject={selectedSubject}
+              selectedClass={currentClassroom}
               sessionStatus={sessionStatus}
               seatingChart={seatingChart}
               classroomStats={classroomStats}
               selectedStudent={selectedStudent}
-              selectedClass={selectedClass}
-              onClassChange={handleClassChange}
-              onSubjectChange={handleSubjectChange}
+              currentSession={currentSession}
+              sessionHandRaises={sessionHandRaises}
+              isLoading={isUpdatingHandRaises}
               onStartSession={handleStartSession}
               onEndSession={handleEndSession}
               onStudentClick={handleStudentClick}
+              onDecrementHandRaise={handleDecrementHandRaise}
             />
           </TabsContent>
 
@@ -228,7 +225,7 @@ export default function ClassroomDetailPage() {
               classrooms={allClassrooms}
               students={uiStudents}
               selectedClassId={classroomId}
-              onClassChange={(id) => setSelectedClassId(id)}
+              onClassChange={() => {}}
               onAddStudent={() => setShowAddStudentModal(true)}
             />
           </TabsContent>
@@ -254,7 +251,8 @@ export default function ClassroomDetailPage() {
         open={showEndSessionDialog}
         onOpenChange={setShowEndSessionDialog}
         onConfirm={handleConfirmEndSession}
-        topStudent={classroomStats?.topActiveStudents[0]}
+        sessionHandRaises={sessionHandRaises}
+        isLoading={isUpdatingHandRaises}
       />
 
       <AddStudentModal

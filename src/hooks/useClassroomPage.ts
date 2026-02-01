@@ -5,6 +5,7 @@ import {
   useClassroomById,
   useClassroomStudents,
   useClassrooms,
+  useBatchUpdateHandRaises,
 } from "@/services/classroomService";
 import type {
   Student,
@@ -13,12 +14,15 @@ import type {
   ClassroomStats as ClassroomStatsType,
   Classroom,
   SeatData,
+  LocalClassSession,
 } from "@/types/classroom";
 import {
   SessionStatus,
   AttendanceStatus,
   ParticipationStatus,
 } from "@/types/classroom";
+import { SessionStorageService } from "@/services/storage/sessionStorage";
+import { toast } from "sonner";
 
 const RANDOM_HISTORY_KEY = "edutech_random_history";
 const MAX_HISTORY_ITEMS = 20;
@@ -55,21 +59,24 @@ export function useClassroomPage(classroomId: string) {
   // Fetch all classrooms for selector
   const { data: allClassroomsResponse } = useClassrooms({ limit: 100 });
 
+  // Batch update mutation
+  const batchUpdateHandRaises = useBatchUpdateHandRaises();
+
   const classroom = classroomResponse?.data;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const students = studentsResponse?.data ?? [];
 
-  // Classroom interface states
-  const [selectedClassId, setSelectedClassId] = useState<string>("");
-  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  // Session states
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>(
     SessionStatus.NOT_STARTED
   );
-  const [seatingChart, setSeatingChart] = useState<SeatingChartType | null>(
-    null
-  );
-  const [classroomStats, setClassroomStats] =
-    useState<ClassroomStatsType | null>(null);
+  const [currentSession, setCurrentSession] =
+    useState<LocalClassSession | null>(null);
+  const [sessionHandRaises, setSessionHandRaises] = useState<
+    Record<string, number>
+  >({});
+
+  // UI states
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   // Random picker states - load from localStorage
@@ -85,6 +92,20 @@ export function useClassroomPage(classroomId: string) {
   // Dialog states
   const [showEndSessionDialog, setShowEndSessionDialog] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+
+  // Load session from localStorage on mount
+  useEffect(() => {
+    const session = SessionStorageService.getSession();
+    if (
+      session &&
+      session.status === SessionStatus.IN_PROGRESS &&
+      session.classroomId === classroomId
+    ) {
+      setCurrentSession(session);
+      setSessionStatus(SessionStatus.IN_PROGRESS);
+      setSessionHandRaises(session.handRaises || {});
+    }
+  }, [classroomId]);
 
   // Create classroom object for current classroom
   const currentClassroom: Classroom | undefined = useMemo(() => {
@@ -140,129 +161,168 @@ export function useClassroomPage(classroomId: string) {
   }, [students, classroomId]);
 
   // Generate seating chart from real students
-  const generateSeatingChart = useCallback(
-    (studentsToChart: Student[]): SeatingChartType => {
-      const rows = Math.ceil(studentsToChart.length / 6) || 5;
-      const columns = 6;
-      const seats: SeatData[][] = [];
+  const seatingChart: SeatingChartType | null = useMemo(() => {
+    if (uiStudents.length === 0) return null;
 
-      for (let r = 0; r < rows; r++) {
-        const row: SeatData[] = [];
-        for (let c = 0; c < columns; c++) {
-          const studentIndex = r * columns + c;
-          const student = studentsToChart[studentIndex] || null;
-          row.push({
-            row: r,
-            column: c,
-            student,
-            isEmpty: !student,
-          });
-        }
-        seats.push(row);
+    const rows = Math.ceil(uiStudents.length / 6) || 5;
+    const columns = 6;
+    const seats: SeatData[][] = [];
+
+    for (let r = 0; r < rows; r++) {
+      const row: SeatData[] = [];
+      for (let c = 0; c < columns; c++) {
+        const studentIndex = r * columns + c;
+        const student = uiStudents[studentIndex] || null;
+        row.push({
+          row: r,
+          column: c,
+          student,
+          isEmpty: !student,
+        });
       }
+      seats.push(row);
+    }
 
-      return {
-        classId: classroomId,
-        rows,
-        columns,
-        seats,
-      };
-    },
-    [classroomId]
-  );
+    return {
+      classId: classroomId,
+      rows,
+      columns,
+      seats,
+    };
+  }, [classroomId, uiStudents]);
 
   // Generate classroom stats from real data
-  const generateClassroomStats = useCallback(
-    (studentsToStat: Student[]): ClassroomStatsType => {
-      const sortedByParticipation = [...studentsToStat].sort(
-        (a, b) => b.totalParticipations - a.totalParticipations
+  const classroomStats: ClassroomStatsType | null = useMemo(() => {
+    if (uiStudents.length === 0) return null;
+
+    const sortedByParticipation = [...uiStudents].sort(
+      (a, b) => b.totalParticipations - a.totalParticipations
+    );
+
+    const topActiveStudents = sortedByParticipation.slice(0, 5).map((s) => ({
+      id: s.id,
+      name: s.name,
+      participationCount: s.totalParticipations,
+    }));
+
+    const totalRaisedHands = uiStudents.reduce(
+      (sum, s) => sum + s.totalParticipations,
+      0
+    );
+
+    // Calculate participation by row
+    const rows = Math.ceil(uiStudents.length / 6) || 5;
+    const participationByRow = Array.from({ length: rows }, (_, rowIndex) => {
+      const rowStudents = uiStudents.filter(
+        (s) => s.seatPosition?.row === rowIndex
       );
-
-      const topActiveStudents = sortedByParticipation.slice(0, 5).map((s) => ({
-        id: s.id,
-        name: s.name,
-        participationCount: s.totalParticipations,
-      }));
-
-      const totalRaisedHands = studentsToStat.reduce(
+      const count = rowStudents.reduce(
         (sum, s) => sum + s.totalParticipations,
         0
       );
-
-      // Calculate participation by row
-      const rows = Math.ceil(studentsToStat.length / 6) || 5;
-      const participationByRow = Array.from({ length: rows }, (_, rowIndex) => {
-        const rowStudents = studentsToStat.filter(
-          (s) => s.seatPosition?.row === rowIndex
-        );
-        const count = rowStudents.reduce(
-          (sum, s) => sum + s.totalParticipations,
-          0
-        );
-        return {
-          row: rowIndex + 1,
-          count,
-          percentage:
-            totalRaisedHands > 0
-              ? Math.round((count / totalRaisedHands) * 100)
-              : 0,
-        };
-      });
-
       return {
-        topActiveStudents,
-        totalRaisedHands,
-        participationByRow,
+        row: rowIndex + 1,
+        count,
+        percentage:
+          totalRaisedHands > 0
+            ? Math.round((count / totalRaisedHands) * 100)
+            : 0,
       };
-    },
-    []
-  );
+    });
 
-  // Handlers for Classroom Interface
-  const handleClassChange = useCallback(
-    (classId: string) => {
-      setSelectedClassId(classId);
-      setSelectedSubject("");
-      // Use real students data for the selected class
-      if (classId === classroomId) {
-        setSeatingChart(generateSeatingChart(uiStudents));
-        setClassroomStats(generateClassroomStats(uiStudents));
-      }
-    },
-    [classroomId, uiStudents, generateSeatingChart, generateClassroomStats]
-  );
+    return {
+      topActiveStudents,
+      totalRaisedHands,
+      participationByRow,
+    };
+  }, [uiStudents]);
 
-  const handleSubjectChange = useCallback((subject: string) => {
-    setSelectedSubject(subject);
-  }, []);
-
+  // Session handlers
   const handleStartSession = useCallback(() => {
-    if (selectedClassId && selectedSubject) {
+    if (classroom) {
+      const session = SessionStorageService.startSession(
+        classroomId,
+        classroom.name,
+        ""
+      );
+      setCurrentSession(session);
       setSessionStatus(SessionStatus.IN_PROGRESS);
+      setSessionHandRaises({});
+      toast.success("Bắt đầu tiết học thành công!");
     }
-  }, [selectedClassId, selectedSubject]);
+  }, [classroomId, classroom]);
 
   const handleEndSession = useCallback(() => {
     setShowEndSessionDialog(true);
   }, []);
 
-  const handleConfirmEndSession = useCallback((notes: string) => {
-    // eslint-disable-next-line no-console
-    console.log("Session ended with notes:", notes);
-    setSessionStatus(SessionStatus.NOT_STARTED);
-    setShowEndSessionDialog(false);
+  const handleConfirmEndSession = useCallback(
+    async (notes: string) => {
+      const handRaisesData = SessionStorageService.getHandRaisesForBatch();
+
+      if (handRaisesData.length > 0) {
+        try {
+          await batchUpdateHandRaises.mutateAsync({
+            classroomId,
+            data: { students: handRaisesData },
+          });
+          toast.success(
+            `Đã lưu ${handRaisesData.length} lượt giơ tay thành công!`
+          );
+        } catch (error) {
+          console.error("Error saving hand raises:", error);
+          toast.error("Lỗi khi lưu dữ liệu giơ tay");
+        }
+      }
+
+      // End and clear session
+      SessionStorageService.endSession();
+      SessionStorageService.clearSession();
+
+      setSessionStatus(SessionStatus.NOT_STARTED);
+      setCurrentSession(null);
+      setSessionHandRaises({});
+      setShowEndSessionDialog(false);
+
+      // eslint-disable-next-line no-console
+      console.log("Session ended with notes:", notes);
+      toast.success("Kết thúc tiết học thành công!");
+    },
+    [classroomId, batchUpdateHandRaises]
+  );
+
+  // Hand raise handlers
+  const handleIncrementHandRaise = useCallback((studentId: string) => {
+    const session = SessionStorageService.incrementHandRaise(studentId);
+    if (session) {
+      setSessionHandRaises({ ...session.handRaises });
+    }
   }, []);
 
-  const handleStudentClick = useCallback((student: Student) => {
-    setSelectedStudent(student);
+  const handleDecrementHandRaise = useCallback((studentId: string) => {
+    const session = SessionStorageService.decrementHandRaise(studentId);
+    if (session) {
+      setSessionHandRaises({ ...session.handRaises });
+    }
   }, []);
+
+  const handleStudentClick = useCallback(
+    (student: Student) => {
+      setSelectedStudent(student);
+      if (sessionStatus === SessionStatus.IN_PROGRESS) {
+        handleIncrementHandRaise(student.id);
+        toast.success(`+1 giơ tay cho ${student.name}`, {
+          duration: 1500,
+        });
+      }
+    },
+    [sessionStatus, handleIncrementHandRaise]
+  );
 
   // Handlers for Random Picker
   const handleAddHistory = useCallback((history: RandomHistory) => {
     setRandomHistory((prev) => [history, ...prev].slice(0, MAX_HISTORY_ITEMS));
   }, []);
-
-  const selectedClass = allClassrooms.find((c) => c.id === selectedClassId);
 
   return {
     // Data
@@ -272,15 +332,17 @@ export function useClassroomPage(classroomId: string) {
     currentClassroom,
     allClassrooms,
     uiStudents,
-    selectedClass,
 
-    // Classroom interface state
-    selectedClassId,
-    selectedSubject,
+    // Session state
     sessionStatus,
+    currentSession,
+    sessionHandRaises,
     seatingChart,
     classroomStats,
     selectedStudent,
+
+    // Loading state
+    isUpdatingHandRaises: batchUpdateHandRaises.isPending,
 
     // Random picker state
     randomHistory,
@@ -290,13 +352,11 @@ export function useClassroomPage(classroomId: string) {
     showAddStudentModal,
 
     // Handlers
-    setSelectedClassId,
-    handleClassChange,
-    handleSubjectChange,
     handleStartSession,
     handleEndSession,
     handleConfirmEndSession,
     handleStudentClick,
+    handleDecrementHandRaise,
     handleAddHistory,
     setShowEndSessionDialog,
     setShowAddStudentModal,

@@ -16,6 +16,9 @@ export interface SeatingChartProps {
   onStudentClick?: (student: Student) => void;
   className?: string;
   title?: string;
+  sessionHandRaises?: Record<string, number>;
+  isSessionActive?: boolean;
+  onDecrementHandRaise?: (studentId: string) => void;
 }
 
 export function SeatingChart({
@@ -24,6 +27,9 @@ export function SeatingChart({
   onStudentClick,
   className,
   title = "Chọn lớp học",
+  sessionHandRaises = {},
+  isSessionActive = false,
+  onDecrementHandRaise,
 }: SeatingChartProps) {
   if (!seatingChart) {
     return (
@@ -69,6 +75,11 @@ export function SeatingChart({
                     onClick={onStudentClick}
                     isSelected={selectedStudent?.id === seat.student?.id}
                     size="sm"
+                    handRaiseCount={
+                      seat.student ? sessionHandRaises[seat.student.id] || 0 : 0
+                    }
+                    isSessionActive={isSessionActive}
+                    onDecrementHandRaise={onDecrementHandRaise}
                   />
                 ))}
               </div>

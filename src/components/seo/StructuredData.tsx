@@ -111,7 +111,7 @@ export function StructuredData() {
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: "4.8",
-      ratingCount: "150",
+      ratingCount: "10",
     },
   };
 

@@ -23,8 +23,9 @@ export const API_ENDPOINTS = {
 
   // Settings endpoints
   SETTINGS: {
-    PRICE_PLANS: "/settings/price-plans",
-    PRICE_PLAN_BY_ID: (id: string) => `/settings/price-plans/${id}`,
+    SUBSCRIPTION_PLANS: "/settings/subscription-plans",
+    SUBSCRIPTION_PLAN_BY_ID: (id: string) =>
+      `/settings/subscription-plans/${id}`,
     FAQS: "/settings/faqs",
     FAQ_BY_ID: (id: string) => `/settings/faqs/${id}`,
   },

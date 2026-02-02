@@ -25,56 +25,86 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  useCreatePricingPlan,
-  useUpdatePricingPlan,
-  useDeletePricingPlan,
-  type PricePlan,
-  type CreatePricePlanRequest,
+  useCreateSubscriptionPlan,
+  useUpdateSubscriptionPlan,
+  useDeleteSubscriptionPlan,
+  type SubscriptionPlan,
+  type CreateSubscriptionPlanRequest,
 } from "@/services/settingsService";
 import axiosInstance from "@/lib/axios";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
+// Format VND currency without decimals
+const formatCurrency = (value: number | string, currency: string = "VND") => {
+  const numValue = typeof value === "string" ? parseFloat(value) : value;
+  if (currency === "VND") {
+    return `${numValue.toLocaleString("vi-VN")}đ`;
+  }
+  return `${numValue.toLocaleString()} ${currency}`;
+};
+
+// Format storage display
+const formatStorage = (mb: number) => {
+  if (mb >= 1000) {
+    return `${(mb / 1000).toFixed(mb % 1000 === 0 ? 0 : 1)}GB`;
+  }
+  return `${mb}MB`;
+};
+
+// Format limit display (-1 means unlimited)
+const formatLimit = (value: number | null) => {
+  if (value === null || value === -1) return "Không giới hạn";
+  return value.toString();
+};
+
 export default function SubscriptionsPage() {
-  const [plans, setPlans] = useState<PricePlan[]>([]);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingPlan, setEditingPlan] = useState<PricePlan | null>(null);
+  const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
   const [benefits, setBenefits] = useState<string[]>([""]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<CreatePricePlanRequest>({
-    plan_name: "",
+  const [formData, setFormData] = useState<
+    CreateSubscriptionPlanRequest & { isActive?: boolean }
+  >({
+    code: "",
+    name: "",
     description: "",
     price: 0,
-    discount_percent: 0,
-    billing_type: "monthly",
-    button_text: "Đăng ký",
-    benefits: [],
-    display_order: 0,
+    currency: "VND",
+    durationDays: 30,
+    maxClasses: 5,
+    maxQuizzesPerMonth: 10,
+    maxStorageMb: 100,
+    hasAdvancedAi: false,
+    features: [],
+    displayOrder: 0,
+    isActive: true,
   });
 
-  const createMutation = useCreatePricingPlan();
-  const updateMutation = useUpdatePricingPlan();
-  const deleteMutation = useDeletePricingPlan();
+  const createMutation = useCreateSubscriptionPlan();
+  const updateMutation = useUpdateSubscriptionPlan();
+  const deleteMutation = useDeleteSubscriptionPlan();
 
   // Fetch pricing plans
   const fetchPlans = async () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(
-        `${API_ENDPOINTS.SETTINGS.PRICE_PLANS}?active=false`
+        `${API_ENDPOINTS.SETTINGS.SUBSCRIPTION_PLANS}?active=false`
       );
-      setPlans(response.data.data || []);
+      // Parse price from string to number
+      const parsedPlans = (response.data.data || []).map((plan: any) => ({
+        ...plan,
+        price:
+          typeof plan.price === "string" ? parseFloat(plan.price) : plan.price,
+      }));
+      setPlans(parsedPlans);
     } catch (error) {
       toast.error("Không thể tải danh sách gói đăng ký");
       console.error(error);
@@ -88,31 +118,43 @@ export default function SubscriptionsPage() {
   }, []);
 
   // Handle create/edit dialog
-  const handleOpenDialog = (plan?: PricePlan) => {
+  const handleOpenDialog = (plan?: SubscriptionPlan) => {
     if (plan) {
       setEditingPlan(plan);
+      const price =
+        typeof plan.price === "string" ? parseFloat(plan.price) : plan.price;
       setFormData({
-        plan_name: plan.plan_name,
-        description: plan.description,
-        price: plan.price,
-        discount_percent: plan.discount_percent,
-        billing_type: plan.billing_type,
-        button_text: plan.button_text,
-        benefits: plan.benefits,
-        display_order: plan.display_order,
+        code: plan.code,
+        name: plan.name,
+        currency: plan.currency || "VND",
+        description: plan.description || "",
+        price,
+        durationDays: plan.durationDays,
+        maxClasses: plan.maxClasses,
+        maxQuizzesPerMonth: plan.maxQuizzesPerMonth,
+        maxStorageMb: plan.maxStorageMb,
+        hasAdvancedAi: plan.hasAdvancedAi,
+        features: plan.features,
+        displayOrder: plan.displayOrder,
+        isActive: plan.isActive,
       });
-      setBenefits(plan.benefits.length > 0 ? plan.benefits : [""]);
+      setBenefits(plan.features.length > 0 ? plan.features : [""]);
     } else {
       setEditingPlan(null);
       setFormData({
-        plan_name: "",
+        code: "",
+        name: "",
         description: "",
         price: 0,
-        discount_percent: 0,
-        billing_type: "monthly",
-        button_text: "Đăng ký",
-        benefits: [],
-        display_order: 0,
+        currency: "VND",
+        durationDays: 30,
+        maxClasses: 5,
+        maxQuizzesPerMonth: 10,
+        maxStorageMb: 100,
+        hasAdvancedAi: false,
+        features: [],
+        displayOrder: 0,
+        isActive: true,
       });
       setBenefits([""]);
     }
@@ -123,14 +165,19 @@ export default function SubscriptionsPage() {
     setIsDialogOpen(false);
     setEditingPlan(null);
     setFormData({
-      plan_name: "",
+      code: "",
+      name: "",
       description: "",
       price: 0,
-      discount_percent: 0,
-      billing_type: "monthly",
-      button_text: "Đăng ký",
-      benefits: [],
-      display_order: 0,
+      currency: "VND",
+      durationDays: 30,
+      maxClasses: 5,
+      maxQuizzesPerMonth: 10,
+      maxStorageMb: 100,
+      hasAdvancedAi: false,
+      features: [],
+      displayOrder: 0,
+      isActive: true,
     });
     setBenefits([""]);
   };
@@ -155,16 +202,31 @@ export default function SubscriptionsPage() {
   // Handle submit
   const handleSubmit = async () => {
     // Validation
-    if (!formData.plan_name.trim()) {
+    if (!formData.code.trim()) {
+      toast.error("Vui lòng nhập mã gói");
+      return;
+    }
+    if (!formData.name.trim()) {
       toast.error("Vui lòng nhập tên gói");
       return;
     }
 
-    const filteredBenefits = benefits.filter((b) => b.trim() !== "");
+    const filteredFeatures = benefits.filter((b) => b.trim() !== "");
 
     const submitData = {
-      ...formData,
-      benefits: filteredBenefits,
+      code: formData.code,
+      name: formData.name,
+      description: formData.description,
+      price: formData.price,
+      currency: formData.currency,
+      durationDays: formData.durationDays,
+      maxClasses: formData.maxClasses,
+      maxQuizzesPerMonth: formData.maxQuizzesPerMonth,
+      maxStorageMb: formData.maxStorageMb,
+      hasAdvancedAi: formData.hasAdvancedAi,
+      features: filteredFeatures,
+      displayOrder: formData.displayOrder,
+      ...(editingPlan && { isActive: formData.isActive }),
     };
 
     try {
@@ -205,10 +267,6 @@ export default function SubscriptionsPage() {
     } finally {
       setDeletingPlanId(null);
     }
-  };
-
-  const calculateDiscountedPrice = (price: number, discount: number) => {
-    return price - (price * discount) / 100;
   };
 
   if (loading) {
@@ -266,11 +324,13 @@ export default function SubscriptionsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="min-w-20">Mã</TableHead>
                 <TableHead className="min-w-37.5">Tên gói</TableHead>
-                <TableHead className="min-w-50">Mô tả</TableHead>
                 <TableHead className="min-w-30">Giá</TableHead>
-                <TableHead className="min-w-25">Giảm giá</TableHead>
-                <TableHead className="min-w-20">Loại</TableHead>
+                <TableHead className="min-w-25">Thời hạn</TableHead>
+                <TableHead className="min-w-25">Lớp học</TableHead>
+                <TableHead className="min-w-25">Quiz/tháng</TableHead>
+                <TableHead className="min-w-20">Lưu trữ</TableHead>
                 <TableHead className="min-w-25">Trạng thái</TableHead>
                 <TableHead className="min-w-20">Thứ tự</TableHead>
                 <TableHead className="text-right min-w-25">Thao tác</TableHead>
@@ -279,58 +339,48 @@ export default function SubscriptionsPage() {
             <TableBody>
               {plans.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={10} className="text-center py-8">
                     Chưa có gói đăng ký nào
                   </TableCell>
                 </TableRow>
               ) : (
                 plans.map((plan) => (
                   <TableRow key={plan.id}>
+                    <TableCell>
+                      <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                        {plan.code}
+                      </span>
+                    </TableCell>
                     <TableCell className="font-medium">
-                      <div className="line-clamp-2">{plan.plan_name}</div>
+                      <div className="line-clamp-2">{plan.name}</div>
                     </TableCell>
                     <TableCell>
-                      <div className="line-clamp-2">{plan.description}</div>
+                      <span className="font-semibold">
+                        {formatCurrency(plan.price, plan.currency)}
+                      </span>
+                    </TableCell>
+                    <TableCell>{plan.durationDays} ngày</TableCell>
+                    <TableCell>{formatLimit(plan.maxClasses)}</TableCell>
+                    <TableCell>
+                      {formatLimit(plan.maxQuizzesPerMonth)}
                     </TableCell>
                     <TableCell>
-                      {plan.discount_percent > 0 ? (
-                        <div>
-                          <span className="line-through text-gray-500 text-sm">
-                            {plan.price.toLocaleString()}đ
-                          </span>
-                          <br />
-                          <span className="font-semibold text-green-600">
-                            {calculateDiscountedPrice(
-                              plan.price,
-                              plan.discount_percent
-                            ).toLocaleString()}
-                            đ
-                          </span>
-                        </div>
-                      ) : (
-                        <span>{plan.price.toLocaleString()}đ</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {plan.discount_percent > 0
-                        ? `${plan.discount_percent}%`
+                      {plan.maxStorageMb
+                        ? formatStorage(plan.maxStorageMb)
                         : "-"}
-                    </TableCell>
-                    <TableCell>
-                      {plan.billing_type === "monthly" ? "Tháng" : "Năm"}
                     </TableCell>
                     <TableCell>
                       <span
                         className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                          plan.is_active
+                          plan.isActive
                             ? "bg-green-100 text-green-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {plan.is_active ? "Hoạt động" : "Ẩn"}
+                        {plan.isActive ? "Hoạt động" : "Ẩn"}
                       </span>
                     </TableCell>
-                    <TableCell>{plan.display_order}</TableCell>
+                    <TableCell>{plan.displayOrder}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
@@ -386,25 +436,24 @@ export default function SubscriptionsPage() {
                   </Button>
                 </div>
 
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {plan.plan_name}
-                  </h3>
-                  {/* <span
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                    {plan.code}
+                  </span>
+                  <span
                     className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                      plan.is_active
+                      plan.isActive
                         ? "bg-green-100 text-green-700"
                         : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {plan.is_active ? "Active" : "Hidden"}
-                  </span> */}
-                  {plan.discount_percent > 0 && (
-                    <span className="inline-block px-2 py-0.5 bg-red-100 text-red-600 text-xs font-semibold rounded whitespace-nowrap">
-                      -{plan.discount_percent}%
-                    </span>
-                  )}
+                    {plan.isActive ? "Hoạt động" : "Ẩn"}
+                  </span>
                 </div>
+
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  {plan.name}
+                </h3>
 
                 <p className="text-sm text-gray-600 mb-4 line-clamp-2 min-h-10">
                   {plan.description}
@@ -412,32 +461,51 @@ export default function SubscriptionsPage() {
 
                 <div className="mb-4 py-4 border-y">
                   <div className="flex items-baseline gap-2">
-                    {plan.discount_percent > 0 ? (
-                      <>
-                        <span className="text-3xl font-bold text-blue-600">
-                          {calculateDiscountedPrice(
-                            plan.price,
-                            plan.discount_percent
-                          ).toLocaleString()}
-                          đ
-                        </span>
-                        <span className="text-sm text-gray-400 line-through">
-                          {plan.price.toLocaleString()}đ
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-3xl font-bold text-blue-600">
-                        {plan.price.toLocaleString()}đ
-                      </span>
-                    )}
+                    <span className="text-3xl font-bold text-blue-600">
+                      {formatCurrency(plan.price, plan.currency)}
+                    </span>
                   </div>
                   <span className="text-sm text-gray-500">
-                    / {plan.billing_type === "monthly" ? "tháng" : "năm"}
+                    / {plan.durationDays} ngày
                   </span>
                 </div>
 
+                {/* Plan limits */}
+                <div className="space-y-1.5 mb-4 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">Lớp học:</span>
+                    <span className="font-medium">
+                      {formatLimit(plan.maxClasses)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">Quiz/tháng:</span>
+                    <span className="font-medium">
+                      {formatLimit(plan.maxQuizzesPerMonth)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">Lưu trữ:</span>
+                    <span className="font-medium">
+                      {plan.maxStorageMb
+                        ? formatStorage(plan.maxStorageMb)
+                        : "-"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">AI nâng cao:</span>
+                    <span
+                      className={`font-medium ${
+                        plan.hasAdvancedAi ? "text-green-600" : "text-gray-400"
+                      }`}
+                    >
+                      {plan.hasAdvancedAi ? "Có" : "Không"}
+                    </span>
+                  </div>
+                </div>
+
                 <div className="space-y-2 mb-4">
-                  {plan.benefits.slice(0, 4).map((benefit, idx) => (
+                  {plan.features.slice(0, 4).map((feature, idx) => (
                     <div key={idx} className="flex items-start gap-2">
                       <svg
                         className="h-5 w-5 text-green-500 shrink-0"
@@ -452,19 +520,19 @@ export default function SubscriptionsPage() {
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      <span className="text-sm text-gray-700">{benefit}</span>
+                      <span className="text-sm text-gray-700">{feature}</span>
                     </div>
                   ))}
-                  {plan.benefits.length > 4 && (
+                  {plan.features.length > 4 && (
                     <span className="text-xs text-gray-500 pl-7">
-                      +{plan.benefits.length - 4} lợi ích khác
+                      +{plan.features.length - 4} tính năng khác
                     </span>
                   )}
                 </div>
 
                 <div className="pt-4 border-t">
                   <span className="text-xs text-gray-500">
-                    Thứ tự: {plan.display_order}
+                    Thứ tự: {plan.displayOrder}
                   </span>
                 </div>
               </div>
@@ -486,18 +554,38 @@ export default function SubscriptionsPage() {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="plan_name">
-                Tên gói <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="plan_name"
-                value={formData.plan_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, plan_name: e.target.value })
-                }
-                placeholder="Free, Pro, Premium..."
-              />
+            {/* Basic info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="code">
+                  Mã gói <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="code"
+                  value={formData.code}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      code: e.target.value.toUpperCase(),
+                    })
+                  }
+                  placeholder="FREE, BASIC, PRO..."
+                  className="font-mono"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="plan_name">
+                  Tên gói <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="plan_name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder="Miễn phí, Cơ bản, Chuyên nghiệp..."
+                />
+              </div>
             </div>
 
             <div className="grid gap-2">
@@ -509,14 +597,15 @@ export default function SubscriptionsPage() {
                   setFormData({ ...formData, description: e.target.value })
                 }
                 placeholder="Giáo viên mới bắt đầu..."
-                rows={3}
+                rows={2}
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Price & Duration */}
+            <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="price">
-                  Giá (VNĐ) <span className="text-red-500">*</span>
+                  Giá <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="price"
@@ -528,83 +617,167 @@ export default function SubscriptionsPage() {
                   min="0"
                 />
               </div>
-
               <div className="grid gap-2">
-                <Label htmlFor="discount">Giảm giá (%)</Label>
+                <Label htmlFor="currency">Đơn vị tiền</Label>
                 <Input
-                  id="discount"
-                  type="number"
-                  value={formData.discount_percent}
+                  id="currency"
+                  value={formData.currency}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      discount_percent: Number(e.target.value),
+                      currency: e.target.value.toUpperCase(),
                     })
                   }
-                  min="0"
-                  max="100"
+                  placeholder="VND"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="duration_days">Thời hạn (ngày)</Label>
+                <Input
+                  id="duration_days"
+                  type="number"
+                  value={formData.durationDays}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      durationDays: Number(e.target.value),
+                    })
+                  }
+                  min="1"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Limits */}
+            <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="billing_type">
-                  Loại thanh toán <span className="text-red-500">*</span>
+                <Label htmlFor="max_classes">
+                  Số lớp học tối đa
+                  <span className="text-xs text-gray-500 ml-1">
+                    (-1: không giới hạn)
+                  </span>
                 </Label>
-                <Select
-                  value={formData.billing_type}
-                  onValueChange={(value: "monthly" | "yearly") =>
-                    setFormData({ ...formData, billing_type: value })
+                <Input
+                  id="max_classes"
+                  type="number"
+                  value={formData.maxClasses ?? ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      maxClasses: e.target.value
+                        ? Number(e.target.value)
+                        : null,
+                    })
                   }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">Theo tháng</SelectItem>
-                    <SelectItem value="yearly">Theo năm</SelectItem>
-                  </SelectContent>
-                </Select>
+                  min="-1"
+                />
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="max_quizzes">
+                  Quiz/tháng
+                  <span className="text-xs text-gray-500 ml-1">
+                    (-1: không giới hạn)
+                  </span>
+                </Label>
+                <Input
+                  id="max_quizzes"
+                  type="number"
+                  value={formData.maxQuizzesPerMonth ?? ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      maxQuizzesPerMonth: e.target.value
+                        ? Number(e.target.value)
+                        : null,
+                    })
+                  }
+                  min="-1"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="max_storage">Lưu trữ (MB)</Label>
+                <Input
+                  id="max_storage"
+                  type="number"
+                  value={formData.maxStorageMb ?? ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      maxStorageMb: e.target.value
+                        ? Number(e.target.value)
+                        : null,
+                    })
+                  }
+                  min="0"
+                />
+              </div>
+            </div>
 
+            {/* Display order & AI */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="display_order">Thứ tự hiển thị</Label>
                 <Input
                   id="display_order"
                   type="number"
-                  value={formData.display_order}
+                  value={formData.displayOrder}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      display_order: Number(e.target.value),
+                      displayOrder: Number(e.target.value),
                     })
                   }
                   min="0"
                 />
               </div>
+              <div className="grid gap-2">
+                <Label>Tùy chọn</Label>
+                <div className="flex flex-col gap-3 pt-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="has_advanced_ai"
+                      checked={formData.hasAdvancedAi}
+                      onCheckedChange={(checked: boolean) =>
+                        setFormData({ ...formData, hasAdvancedAi: checked })
+                      }
+                    />
+                    <Label
+                      htmlFor="has_advanced_ai"
+                      className="font-normal cursor-pointer"
+                    >
+                      AI nâng cao
+                    </Label>
+                  </div>
+                  {editingPlan && (
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="is_active"
+                        checked={formData.isActive}
+                        onCheckedChange={(checked: boolean) =>
+                          setFormData({ ...formData, isActive: checked })
+                        }
+                      />
+                      <Label
+                        htmlFor="is_active"
+                        className="font-normal cursor-pointer"
+                      >
+                        Hoạt động
+                      </Label>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
+            {/* Features */}
             <div className="grid gap-2">
-              <Label htmlFor="button_text">Chữ trên nút</Label>
-              <Input
-                id="button_text"
-                value={formData.button_text}
-                onChange={(e) =>
-                  setFormData({ ...formData, button_text: e.target.value })
-                }
-                placeholder="Đăng ký, Bắt đầu ngay..."
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Danh sách lợi ích</Label>
+              <Label>Danh sách tính năng</Label>
               {benefits.map((benefit, index) => (
                 <div key={index} className="flex gap-2">
                   <Input
                     value={benefit}
                     onChange={(e) => handleBenefitChange(index, e.target.value)}
-                    placeholder="Nhập lợi ích..."
+                    placeholder="Nhập tính năng..."
                   />
                   {benefits.length > 1 && (
                     <Button
@@ -626,7 +799,7 @@ export default function SubscriptionsPage() {
                 className="w-fit"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Thêm lợi ích
+                Thêm tính năng
               </Button>
             </div>
           </div>

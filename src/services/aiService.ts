@@ -53,14 +53,29 @@ export interface AIGeneratedQuiz {
   created_at: string;
 }
 
+export interface ValidationErrorData {
+  is_test_description: boolean;
+  comment: string;
+  suggested_fix: string;
+  validation_result?: {
+    is_test_description: boolean;
+    comment: string;
+    signals?: Record<string, boolean>;
+    confidence?: number;
+    suggested_fix: string;
+  };
+}
+
 export interface CreateQuizWithQuestionsResponse {
   success: boolean;
   message: string;
-  data: {
-    quiz: AIGeneratedQuiz;
-    questions: AIGeneratedQuestion[];
-    total: number;
-  };
+  data:
+    | {
+        quiz: AIGeneratedQuiz;
+        questions: AIGeneratedQuestion[];
+        total: number;
+      }
+    | ValidationErrorData;
 }
 
 // ==================== MUTATION HOOKS ====================

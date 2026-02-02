@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Users,
   Building2,
   CreditCard,
   FileText,
@@ -40,11 +39,11 @@ const navItems: NavItem[] = [
     href: "/admin/customers",
     icon: Building2,
   },
-  {
-    title: "Người dùng",
-    href: "/admin/users",
-    icon: Users,
-  },
+  // {
+  //   title: "Người dùng",
+  //   href: "/admin/users",
+  //   icon: Users,
+  // },
   {
     title: "Doanh thu",
     icon: DollarSign,
@@ -62,7 +61,7 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    title: "Nội dung",
+    title: "Blog & Nội dung",
     href: "/admin/content",
     icon: FileText,
   },

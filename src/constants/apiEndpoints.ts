@@ -114,6 +114,21 @@ export const API_ENDPOINTS = {
     CREATE_QUIZ_WITH_QUESTIONS: "/ai/create-quiz-with-questions",
     ANALYZE_QUIZ: "/ai/analyze-quiz",
   },
+
+  // Admin Dashboard endpoints
+  ADMIN: {
+    DASHBOARD: {
+      SUMMARY: "/admin/dashboard/summary",
+      REVENUE_METRICS: "/admin/dashboard/revenue-metrics",
+      ACTIVE_CUSTOMERS: "/admin/dashboard/active-customers",
+      TOTAL_USERS: "/admin/dashboard/total-users",
+      AVG_REVENUE_PER_CUSTOMER: "/admin/dashboard/avg-revenue-per-customer",
+      TRIAL_USERS: "/admin/dashboard/trial-users",
+      EXAMS_CREATED: "/admin/dashboard/exams-created",
+      REVENUE_CHART: "/admin/dashboard/revenue-chart",
+      USER_GROWTH_CHART: "/admin/dashboard/user-growth-chart",
+    },
+  },
 } as const;
 
 export type ApiEndpoint = (typeof API_ENDPOINTS)[keyof typeof API_ENDPOINTS];

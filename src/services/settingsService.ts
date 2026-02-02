@@ -3,42 +3,54 @@ import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 import axiosInstance from "@/lib/axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-export interface PricePlan {
+export interface SubscriptionPlan {
   id: string;
-  plan_name: string;
-  description: string;
+  code: string;
+  name: string;
+  description: string | null;
   price: number;
-  discount_percent: number;
-  billing_type: "monthly" | "yearly";
-  button_text: string;
-  benefits: string[];
-  is_active: boolean;
-  display_order: number;
-  created_at: string;
-  updated_at: string;
+  currency: string;
+  durationDays: number;
+  maxClasses: number | null;
+  maxQuizzesPerMonth: number | null;
+  maxStorageMb: number | null;
+  hasAdvancedAi: boolean;
+  features: string[];
+  isActive: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface CreatePricePlanRequest {
-  plan_name: string;
+export interface CreateSubscriptionPlanRequest {
+  code: string;
+  name: string;
   description: string;
   price: number;
-  discount_percent?: number;
-  billing_type: "monthly" | "yearly";
-  button_text?: string;
-  benefits?: string[];
-  display_order?: number;
+  currency: string;
+  durationDays: number;
+  maxClasses: number | null;
+  maxQuizzesPerMonth: number | null;
+  maxStorageMb: number | null;
+  hasAdvancedAi: boolean;
+  features: string[];
+  displayOrder: number;
 }
 
-export interface UpdatePricePlanRequest {
-  plan_name?: string;
+export interface UpdateSubscriptionPlanRequest {
+  code?: string;
+  name?: string;
   description?: string;
   price?: number;
-  discount_percent?: number;
-  billing_type?: "monthly" | "yearly";
-  button_text?: string;
-  benefits?: string[];
-  is_active?: boolean;
-  display_order?: number;
+  currency?: string;
+  durationDays?: number;
+  maxClasses?: number | null;
+  maxQuizzesPerMonth?: number | null;
+  maxStorageMb?: number | null;
+  hasAdvancedAi?: boolean;
+  features?: string[];
+  isActive?: boolean;
+  displayOrder?: number;
 }
 
 export interface FAQ {
@@ -70,61 +82,72 @@ export interface UpdateFAQRequest {
 // ==================== PRICING PLANS SERVICES ====================
 
 // Get all pricing plans
-export const useGetPricingPlans = (activeOnly = true) => {
+export const useGetSubscriptionPlans = (activeOnly = true) => {
   return useQueryClient().fetchQuery({
-    queryKey: ["pricing-plans", activeOnly],
+    queryKey: ["subscription-plans", activeOnly],
     queryFn: async () => {
       const response = await axiosInstance.get(
-        `${API_ENDPOINTS.SETTINGS.PRICE_PLANS}?active=${activeOnly}`
+        `${API_ENDPOINTS.SETTINGS.SUBSCRIPTION_PLANS}?active=${activeOnly}`
       );
       return response.data;
     },
   });
 };
 
-// Get pricing plan by ID
-export const useGetPricingPlanById = (id: string) => {
+// Get subscription plan by ID
+export const useGetSubscriptionPlanById = (id: string) => {
   return createQueryHook(
-    "pricing-plan",
-    `${API_ENDPOINTS.SETTINGS.PRICE_PLANS}/${id}`
+    "subscription-plan",
+    `${API_ENDPOINTS.SETTINGS.SUBSCRIPTION_PLANS}/${id}`
   )();
 };
 
-// Create pricing plan
-export const useCreatePricingPlan = () => {
+// Create subscription plan
+export const useCreateSubscriptionPlan = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreatePricePlanRequest) =>
-      axiosInstance.post(API_ENDPOINTS.SETTINGS.PRICE_PLANS, data),
+    mutationFn: (data: CreateSubscriptionPlanRequest) =>
+      axiosInstance.post(API_ENDPOINTS.SETTINGS.SUBSCRIPTION_PLANS, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pricing-plans"] });
+      queryClient.invalidateQueries({ queryKey: ["subscription-plans"] });
     },
   });
 };
 
-// Update pricing plan
-export const useUpdatePricingPlan = () => {
+// Update subscription plan
+export const useUpdateSubscriptionPlan = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdatePricePlanRequest }) =>
-      axiosInstance.put(`${API_ENDPOINTS.SETTINGS.PRICE_PLANS}/${id}`, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateSubscriptionPlanRequest;
+    }) =>
+      axiosInstance.put(
+        `${API_ENDPOINTS.SETTINGS.SUBSCRIPTION_PLANS}/${id}`,
+        data
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pricing-plans"] });
+      queryClient.invalidateQueries({ queryKey: ["subscription-plans"] });
     },
   });
 };
 
-// Delete pricing plan
-export const useDeletePricingPlan = () => {
+// Delete subscription plan
+export const useDeleteSubscriptionPlan = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) =>
-      axiosInstance.delete(`${API_ENDPOINTS.SETTINGS.PRICE_PLANS}/${id}`),
+      axiosInstance.delete(
+        `${API_ENDPOINTS.SETTINGS.SUBSCRIPTION_PLANS}/${id}`
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pricing-plans"] });
+      queryClient.invalidateQueries({ queryKey: ["subscription-plans"] });
     },
   });
 };

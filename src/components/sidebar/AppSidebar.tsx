@@ -9,7 +9,6 @@ import {
   Home,
   FileQuestion,
   Library,
-  BarChart3,
   Settings,
   X,
   Users,
@@ -53,11 +52,11 @@ const teacherMenuItems: MenuItem[] = [
     url: "/dashboard/classroom",
     icon: Users,
   },
-  {
-    title: "Thống kê",
-    url: "/dashboard/analytics",
-    icon: BarChart3,
-  },
+  // {
+  //   title: "Thống kê",
+  //   url: "/dashboard/analytics",
+  //   icon: BarChart3,
+  // },
   {
     title: "Cài đặt",
     url: "/dashboard/profile",

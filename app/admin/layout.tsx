@@ -84,7 +84,7 @@ export default function AdminLayout({
                 Admin Panel
               </h1>
               <p className="text-sm text-gray-500 hidden sm:block">
-                Manage your platform and customers
+                Quản trị hệ thống
               </p>
             </div>
           </div>

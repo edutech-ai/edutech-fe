@@ -16,32 +16,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { SUBJECTS, GRADES, QuestionTypeUI, Difficulty } from "@/types";
+import { SUBJECTS, GRADES, Difficulty } from "@/types";
 import { toast } from "sonner";
 import { ActionButton } from "@/components/molecules/action-button";
-import { useCreateQuizWithAI } from "@/services/aiService";
-
-interface QuestionTypeOption {
-  value: string;
-  label: string;
-  allowMultiple: boolean;
-}
-
-const questionTypeOptions: QuestionTypeOption[] = [
-  {
-    value: QuestionTypeUI.SINGLE_CHOICE,
-    label: "Một đáp án",
-    allowMultiple: false,
-  },
-  {
-    value: QuestionTypeUI.MULTIPLE_CHOICE,
-    label: "Nhiều đáp án",
-    allowMultiple: false,
-  },
-  { value: QuestionTypeUI.TRUE_FALSE, label: "Đúng/Sai", allowMultiple: false },
-  { value: QuestionTypeUI.ESSAY, label: "Tự luận", allowMultiple: false },
-];
+import {
+  useCreateQuizWithAI,
+  type ValidationErrorData,
+} from "@/services/aiService";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { AlertTriangle } from "lucide-react";
 
 const difficultyOptions = [
   { value: Difficulty.RECOGNITION, label: "Dễ" },
@@ -61,33 +51,11 @@ export default function PromptBasedGeneratorPage() {
   const [difficulty, setDifficulty] = useState<Difficulty>(
     Difficulty.RECOGNITION
   );
-  const [selectedQuestionTypes, setSelectedQuestionTypes] = useState<
-    Set<string>
-  >(new Set([QuestionTypeUI.SINGLE_CHOICE]));
-  const [multipleCorrectAnswers, setMultipleCorrectAnswers] = useState<
-    Map<string, boolean>
-  >(new Map());
   const [learningObjectives, setLearningObjectives] = useState<string>("");
   const [prompt, setPrompt] = useState<string>("");
-
-  const handleQuestionTypeToggle = (type: string) => {
-    const newTypes = new Set(selectedQuestionTypes);
-    if (newTypes.has(type)) {
-      newTypes.delete(type);
-      const newMultiple = new Map(multipleCorrectAnswers);
-      newMultiple.delete(type);
-      setMultipleCorrectAnswers(newMultiple);
-    } else {
-      newTypes.add(type);
-    }
-    setSelectedQuestionTypes(newTypes);
-  };
-
-  const handleMultipleCorrectToggle = (type: string, checked: boolean) => {
-    const newMultiple = new Map(multipleCorrectAnswers);
-    newMultiple.set(type, checked);
-    setMultipleCorrectAnswers(newMultiple);
-  };
+  const [duration, setDuration] = useState<string>("45");
+  const [validationError, setValidationError] =
+    useState<ValidationErrorData | null>(null);
 
   const handleGenerate = async () => {
     // Validation
@@ -97,10 +65,6 @@ export default function PromptBasedGeneratorPage() {
     }
     if (!grade) {
       toast.error("Vui lòng chọn lớp");
-      return;
-    }
-    if (selectedQuestionTypes.size === 0) {
-      toast.error("Vui lòng chọn ít nhất một loại câu hỏi");
       return;
     }
     if (!prompt.trim()) {
@@ -114,7 +78,11 @@ export default function PromptBasedGeneratorPage() {
       return;
     }
 
-    const questionTypesArray = Array.from(selectedQuestionTypes);
+    const durationValue = parseInt(duration);
+    if (durationValue < 1 || durationValue > 180) {
+      toast.error("Thời gian làm bài phải từ 1 đến 180 phút.");
+      return;
+    }
 
     // Map difficulty from Vietnamese enum to API enum
     const difficultyMap: Record<string, "easy" | "medium" | "hard"> = {
@@ -128,17 +96,29 @@ export default function PromptBasedGeneratorPage() {
         subject,
         grade: parseInt(grade),
         numberOfQuestions: count,
+        duration: durationValue,
         difficulty: difficultyMap[difficulty] || "medium",
-        questionTypes: questionTypesArray,
         customPrompt: prompt,
         topic: learningObjectives || undefined,
         status: "draft",
       },
       {
         onSuccess: (response) => {
+          if (!response.success) {
+            // Handle validation error
+            const errorData = response.data as ValidationErrorData;
+            if (errorData.is_test_description === false) {
+              setValidationError(errorData);
+              return;
+            }
+            toast.error(response.message || "Có lỗi xảy ra khi tạo đề thi");
+            return;
+          }
+
           toast.success("Tạo đề thi thành công!");
           // Navigate to the created quiz detail page
-          router.push(`/dashboard/quiz/${response.data.quiz.id}`);
+          const quizData = response.data as { quiz: { id: string } };
+          router.push(`/dashboard/quiz/${quizData.quiz.id}`);
         },
         onError: (error) => {
           console.error("Error generating quiz:", error);
@@ -228,8 +208,8 @@ export default function PromptBasedGeneratorPage() {
           </div>
         </div>
 
-        {/* Question Count & Difficulty */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Question Count, Difficulty & Duration */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="questionCount">
               Số lượng câu hỏi <span className="text-red-500">*</span>
@@ -241,7 +221,7 @@ export default function PromptBasedGeneratorPage() {
               max="25"
               value={questionCount}
               onChange={(e) => setQuestionCount(e.target.value)}
-              placeholder="Nhập số câu hỏi (tối đa 25)"
+              placeholder="Tối đa 25"
             />
           </div>
 
@@ -265,58 +245,20 @@ export default function PromptBasedGeneratorPage() {
               </SelectContent>
             </Select>
           </div>
-        </div>
 
-        {/* Question Types */}
-        <div className="space-y-3">
-          <Label>
-            Loại câu hỏi <span className="text-red-500">*</span>
-          </Label>
-          <div className="space-y-3 border border-gray-200 rounded-lg p-4">
-            {questionTypeOptions.map((option) => (
-              <div key={option.value} className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id={option.value}
-                    checked={selectedQuestionTypes.has(option.value)}
-                    onCheckedChange={() =>
-                      handleQuestionTypeToggle(option.value)
-                    }
-                  />
-                  <Label
-                    htmlFor={option.value}
-                    className="text-sm font-medium cursor-pointer"
-                  >
-                    {option.label}
-                  </Label>
-                </div>
-
-                {/* Multiple correct answers option for MULTIPLE_CHOICE */}
-                {option.value === QuestionTypeUI.MULTIPLE_CHOICE &&
-                  selectedQuestionTypes.has(option.value) && (
-                    <div className="ml-6 flex items-center gap-2">
-                      <Checkbox
-                        id={`${option.value}-multiple`}
-                        checked={
-                          multipleCorrectAnswers.get(option.value) || false
-                        }
-                        onCheckedChange={(checked) =>
-                          handleMultipleCorrectToggle(
-                            option.value,
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <Label
-                        htmlFor={`${option.value}-multiple`}
-                        className="text-sm text-gray-600 cursor-pointer"
-                      >
-                        Cho phép nhiều đáp án đúng
-                      </Label>
-                    </div>
-                  )}
-              </div>
-            ))}
+          <div className="space-y-2">
+            <Label htmlFor="duration">
+              Thời gian (phút) <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="duration"
+              type="number"
+              min="1"
+              max="180"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              placeholder="Ví dụ: 45"
+            />
           </div>
         </div>
 
@@ -394,6 +336,44 @@ export default function PromptBasedGeneratorPage() {
           </div>
         </div>
       </div>
+
+      {/* Validation Error Dialog */}
+      <Dialog
+        open={validationError !== null}
+        onOpenChange={(open) => !open && setValidationError(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+              </div>
+              <DialogTitle>Mô tả chưa hợp lệ</DialogTitle>
+            </div>
+            <DialogDescription className="pt-2">
+              {validationError?.comment ||
+                "Mô tả bài kiểm tra chưa đủ thông tin hoặc không hợp lệ"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {validationError?.suggested_fix && (
+              <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                <p className="text-sm font-medium text-blue-900 mb-1">
+                  Gợi ý cải thiện:
+                </p>
+                <p className="text-sm text-blue-800">
+                  {validationError.suggested_fix}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setValidationError(null)}>Đã hiểu</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

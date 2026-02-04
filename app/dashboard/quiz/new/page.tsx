@@ -19,6 +19,7 @@ import {
   useQuizQuestions,
 } from "@/services/quizService";
 import { useBulkCreateQuestions } from "@/services/questionService";
+import { QuizNewTour } from "@/components/organisms/tour-guide/quiz-new-tour";
 
 export default function QuizNewPage() {
   const router = useRouter();
@@ -503,7 +504,7 @@ export default function QuizNewPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div data-tour="quiz-actions" className="flex items-center gap-2">
           <Button variant="outline" onClick={handleExportPDF}>
             Xuất PDF
           </Button>
@@ -534,9 +535,14 @@ export default function QuizNewPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="info">Thông tin đề thi</TabsTrigger>
-          <TabsTrigger value="questions">
+        <TabsList
+          data-tour="quiz-tabs"
+          className="grid w-full max-w-md grid-cols-2"
+        >
+          <TabsTrigger data-tour="tab-info" value="info">
+            Thông tin đề thi
+          </TabsTrigger>
+          <TabsTrigger data-tour="tab-questions" value="questions">
             Danh sách câu hỏi ({quiz.questions?.length || 0})
           </TabsTrigger>
         </TabsList>
@@ -560,6 +566,9 @@ export default function QuizNewPage() {
         open={showPDFPreview}
         onClose={() => setShowPDFPreview(false)}
       />
+
+      {/* Tour Guide */}
+      <QuizNewTour />
     </div>
   );
 }

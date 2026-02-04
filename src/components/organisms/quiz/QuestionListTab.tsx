@@ -100,7 +100,10 @@ export function QuestionListTab({ questions, onUpdate }: QuestionListTabProps) {
             Tổng điểm: <span className="font-semibold">{totalPoints}</span>
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)}>
+        <Button
+          data-tour="add-question-btn"
+          onClick={() => setShowAddModal(true)}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Thêm câu hỏi
         </Button>

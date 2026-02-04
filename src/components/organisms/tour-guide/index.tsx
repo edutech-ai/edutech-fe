@@ -17,11 +17,13 @@ import "./tour-guide.css";
 
 // Types
 export interface TourStep {
-  target: string; // CSS selector với data-tour="..."
+  target: string; // CSS selector với data-tour="..." (empty = centered)
   title: string;
   description: React.ReactNode;
   placement?: "top" | "bottom" | "left" | "right";
   highlight?: boolean; // Nhấn mạnh step này quan trọng
+  onEnter?: () => void; // Callback khi vào step này
+  clickTarget?: boolean; // Tự động click vào target element
 }
 
 interface TourGuideProps {
@@ -194,6 +196,32 @@ export const TourGuide: React.FC<TourGuideProps> = ({
       window.removeEventListener("scroll", updatePosition, true);
     };
   }, [isOpen, currentStep, updatePosition]);
+
+  // Handle step callbacks (onEnter, clickTarget)
+  useEffect(() => {
+    if (!isOpen || !currentStepData) return;
+
+    // Call onEnter callback
+    if (currentStepData.onEnter) {
+      const timer = setTimeout(() => {
+        currentStepData.onEnter?.();
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+
+    // Auto click target if clickTarget is true
+    if (currentStepData.clickTarget && currentStepData.target) {
+      const timer = setTimeout(() => {
+        const element = document.querySelector(
+          `[data-tour="${currentStepData.target}"]`
+        ) as HTMLElement;
+        if (element) {
+          element.click();
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, currentStep, currentStepData]);
 
   // Auto start tour
   useEffect(() => {

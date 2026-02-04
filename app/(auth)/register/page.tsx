@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { GoogleLoginButton } from "@/components/atoms/GoogleLoginButton";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 import { getProfile } from "@/services/profileService";
+import { Eye, EyeOff } from "lucide-react";
 
 type Subject = "TOAN" | "VAN" | "ANH" | string;
 
@@ -23,6 +24,8 @@ export default function RegisterPage() {
   const setUser = useUserStore((state) => state.setUser);
   const [step, setStep] = useState<"register" | "verify">("register");
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
@@ -219,12 +222,12 @@ export default function RegisterPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Mật khẩu *
               </label>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={formData.password}
                 onChange={(e) =>
@@ -233,14 +236,25 @@ export default function RegisterPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                className="absolute right-3 top-9 text-sm text-gray-500 hover:text-gray-700"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <Eye className="w-4 h-4" />
+                ) : (
+                  <EyeOff className="w-4 h-4" />
+                )}
+              </button>
             </div>
 
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Xác nhận *
               </label>
               <input
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 required
                 value={formData.confirmPassword}
                 onChange={(e) =>
@@ -249,6 +263,17 @@ export default function RegisterPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                className="absolute right-3 top-9 text-sm text-gray-500 hover:text-gray-700"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <Eye className="w-4 h-4" />
+                ) : (
+                  <EyeOff className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
 
@@ -352,7 +377,7 @@ export default function RegisterPage() {
             maxLength={6}
             value={otpCode}
             onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center text-2xl tracking-widest"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center tracking-widest"
             placeholder="000000"
             autoFocus
           />

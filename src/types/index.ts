@@ -295,3 +295,6 @@ export * from "./question";
 
 // ==================== FOLDER ====================
 export * from "./folder";
+
+// ==================== DOCUMENT ====================
+export * from "./document";

@@ -17,6 +17,7 @@ interface LibraryToolbarProps {
   onViewModeChange: (mode: "grid" | "list") => void;
   onCreateFolder: () => void;
   canCreateSubfolder: boolean;
+  onUploadDocument: () => void;
 }
 
 export function LibraryToolbar({
@@ -27,6 +28,7 @@ export function LibraryToolbar({
   onViewModeChange,
   onCreateFolder,
   canCreateSubfolder,
+  onUploadDocument,
 }: LibraryToolbarProps) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -75,7 +77,7 @@ export function LibraryToolbar({
               </TooltipContent>
             </Tooltip>
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={onUploadDocument}>
             <Upload className="w-4 h-4 mr-2" />
             <Tooltip>
               <TooltipTrigger asChild>

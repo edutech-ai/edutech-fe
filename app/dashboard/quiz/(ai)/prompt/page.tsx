@@ -32,6 +32,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
+import { PromptQuizTour } from "@/components/organisms/tour-guide/prompt-quiz-tour";
 
 const difficultyOptions = [
   { value: Difficulty.RECOGNITION, label: "Dễ" },
@@ -148,9 +149,12 @@ export default function PromptBasedGeneratorPage() {
       <ActionButton isBack label="Quay lại" href="/dashboard/quiz" />
 
       {/* Form */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+      <div
+        data-tour="prompt-form"
+        className="bg-white rounded-xl border border-gray-200 p-6 space-y-6"
+      >
         {/* Topic/Prompt */}
-        <div className="space-y-2">
+        <div data-tour="prompt-input" className="space-y-2">
           <Label htmlFor="prompt">
             Chủ đề / Nội dung cần kiểm tra{" "}
             <span className="text-red-500">*</span>
@@ -170,7 +174,10 @@ export default function PromptBasedGeneratorPage() {
         </div>
 
         {/* Subject & Grade */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          data-tour="subject-grade"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
           <div className="space-y-2">
             <Label htmlFor="subject">
               Môn học <span className="text-red-500">*</span>
@@ -209,7 +216,10 @@ export default function PromptBasedGeneratorPage() {
         </div>
 
         {/* Question Count, Difficulty & Duration */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div
+          data-tour="quiz-settings"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
           <div className="space-y-2">
             <Label htmlFor="questionCount">
               Số lượng câu hỏi <span className="text-red-500">*</span>
@@ -263,7 +273,7 @@ export default function PromptBasedGeneratorPage() {
         </div>
 
         {/* Learning Objectives (Optional) */}
-        <div className="space-y-2">
+        <div data-tour="learning-objectives" className="space-y-2">
           <Label htmlFor="learningObjectives">
             Mục tiêu học tập (Tùy chọn)
           </Label>
@@ -281,7 +291,10 @@ export default function PromptBasedGeneratorPage() {
         </div>
 
         {/* Generate Button */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <div
+          data-tour="generate-btn"
+          className="flex justify-end gap-3 pt-4 border-t border-gray-200"
+        >
           <Link href="/dashboard/quiz">
             <Button variant="outline">Hủy</Button>
           </Link>
@@ -374,6 +387,9 @@ export default function PromptBasedGeneratorPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Tour Guide */}
+      <PromptQuizTour />
     </div>
   );
 }

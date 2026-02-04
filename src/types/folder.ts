@@ -1,3 +1,5 @@
+import type { Document } from "./document";
+
 // ==================== FOLDER TYPES ====================
 
 // Backend supported colors (6 colors)
@@ -63,7 +65,7 @@ export interface FolderItemsResponse {
   success: boolean;
   data: {
     folders: Folder[];
-    // documents: Document[]; // TODO: Add when documents API is ready
+    documents: Document[];
   };
 }
 

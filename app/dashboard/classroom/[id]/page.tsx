@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { ActionButton } from "@/components/molecules/action-button";
 import Image from "next/image";
+import { ClassroomTour } from "@/components/organisms/tour-guide/classroom-tour";
 
 export type ClassroomTab = "random" | "classroom" | "data" | "performance";
 
@@ -162,8 +163,9 @@ export default function ClassroomDetailPage() {
           onValueChange={handleTabChange}
           className="space-y-6"
         >
-          <TabsList>
+          <TabsList data-tour="classroom-tabs">
             <TabsTrigger
+              data-tour="tab-random"
               value="random"
               className="flex items-center gap-2 rounded-md transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white"
             >
@@ -171,6 +173,7 @@ export default function ClassroomDetailPage() {
               Random Học Sinh
             </TabsTrigger>
             <TabsTrigger
+              data-tour="tab-classroom"
               value="classroom"
               className="flex items-center gap-2 rounded-md transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white"
             >
@@ -178,6 +181,7 @@ export default function ClassroomDetailPage() {
               Giao Diện Lớp Học
             </TabsTrigger>
             <TabsTrigger
+              data-tour="tab-data"
               value="data"
               className="flex items-center gap-2 rounded-md transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white"
             >
@@ -185,6 +189,7 @@ export default function ClassroomDetailPage() {
               Dữ Liệu Học Sinh
             </TabsTrigger>
             <TabsTrigger
+              data-tour="tab-performance"
               value="performance"
               className="flex items-center gap-2 rounded-md transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white"
             >
@@ -260,6 +265,9 @@ export default function ClassroomDetailPage() {
         onOpenChange={setShowAddStudentModal}
         classroomId={classroomId}
       />
+
+      {/* Tour Guide */}
+      <ClassroomTour />
     </div>
   );
 }

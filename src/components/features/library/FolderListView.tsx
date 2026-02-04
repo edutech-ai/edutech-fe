@@ -1,22 +1,49 @@
 "use client";
 
-import type { Folder } from "@/types";
-import type { File } from "@/data/library";
+import { Download, Trash2, Eye } from "lucide-react";
+import type { Folder, Document } from "@/types";
+import { formatFileSize } from "@/types/document";
 
 interface FolderListViewProps {
   folders: Folder[];
-  files: File[];
+  documents: Document[];
   selectedItems: Set<string>;
   onFolderClick: (folderId: string) => void;
   onSelectItem: (itemId: string) => void;
+  onDownloadDocument: (document: Document) => void;
+  onDeleteDocument: (document: Document) => void;
+  onPreviewDocument: (document: Document, allDocuments: Document[]) => void;
 }
+
+const getFileIcon = (type: string) => {
+  switch (type.toLowerCase()) {
+    case "pdf":
+      return "📄";
+    case "docx":
+    case "doc":
+      return "📝";
+    case "xlsx":
+    case "xls":
+      return "📊";
+    case "pptx":
+    case "ppt":
+      return "📽️";
+    case "image":
+      return "🖼️";
+    default:
+      return "📄";
+  }
+};
 
 export function FolderListView({
   folders,
-  files,
+  documents,
   selectedItems,
   onFolderClick,
   onSelectItem,
+  onDownloadDocument,
+  onDeleteDocument,
+  onPreviewDocument,
 }: FolderListViewProps) {
   return (
     <div className="bg-white rounded-lg border border-gray-200">
@@ -53,37 +80,84 @@ export function FolderListView({
             </div>
           </div>
         ))}
-        {files.map((file) => (
-          <div
-            key={file.id}
-            className="flex items-center gap-4 p-4 hover:bg-gray-50 cursor-pointer"
-          >
+        {documents.map((document) => {
+          const isPreviewable =
+            document.type === "image" ||
+            document.type === "pdf" ||
+            ["jpg", "jpeg", "png", "gif", "webp"].includes(
+              document.type.toLowerCase()
+            );
+
+          return (
             <div
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectItem(file.id);
-              }}
+              key={document.id}
+              className="flex items-center gap-4 p-4 hover:bg-gray-50 cursor-pointer group"
+              onClick={() => onPreviewDocument(document, documents)}
             >
-              <input
-                type="checkbox"
-                checked={selectedItems.has(file.id)}
-                onChange={(e) => {
+              <div
+                onClick={(e) => {
                   e.stopPropagation();
+                  onSelectItem(document.id);
                 }}
-                className="w-4 h-4 cursor-pointer"
-              />
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedItems.has(document.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                  }}
+                  className="w-4 h-4 cursor-pointer"
+                />
+              </div>
+              <div className="shrink-0">
+                <span className="text-2xl">{getFileIcon(document.type)}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 truncate">
+                  {document.name}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {formatFileSize(document.file_size)} •{" "}
+                  {document.type.toUpperCase()}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {isPreviewable && (
+                  <button
+                    className="p-2 rounded hover:bg-purple-100 transition"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPreviewDocument(document, documents);
+                    }}
+                    title="Xem trước"
+                  >
+                    <Eye className="w-4 h-4 text-purple-600" />
+                  </button>
+                )}
+                <button
+                  className="p-2 rounded hover:bg-blue-100 transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownloadDocument(document);
+                  }}
+                  title="Tải xuống"
+                >
+                  <Download className="w-4 h-4 text-blue-600" />
+                </button>
+                <button
+                  className="p-2 rounded hover:bg-red-100 transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteDocument(document);
+                  }}
+                  title="Xóa"
+                >
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                </button>
+              </div>
             </div>
-            <div className="shrink-0">
-              <span className="text-2xl">📄</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-gray-900 truncate">{file.name}</p>
-              <p className="text-sm text-gray-500">
-                {file.size} • {file.type.toUpperCase()}
-              </p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

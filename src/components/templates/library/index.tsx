@@ -5,17 +5,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Library, Loader2, Trash2, FileMinusCorner } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { QuizCard } from "@/components/molecules/quiz-card";
-import type { Quiz, QuizQueryParams, Folder } from "@/types";
+import type { Quiz, QuizQueryParams, Folder, Document } from "@/types";
 import { CreateQuizCard } from "@/components/molecules/quiz-card/CreateQuizCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { mockFiles, type File } from "@/data/library";
 import { toast } from "sonner";
 import { useMyQuizzes } from "@/services/quizService";
 import {
   useFolders,
   useFolderPath,
   useFolderTree,
+  useFolderItems,
 } from "@/services/folderService";
+import { useDocuments } from "@/services/documentService";
 import { MAX_FOLDER_DEPTH } from "@/constants/folders";
 import { useLibraryActions } from "@/hooks/useLibraryActions";
 import { LibraryBreadcrumb } from "@/components/features/library/LibraryBreadcrumb";
@@ -23,12 +24,12 @@ import { LibraryToolbar } from "@/components/features/library/LibraryToolbar";
 import { FolderGridView } from "@/components/features/library/FolderGridView";
 import { FolderListView } from "@/components/features/library/FolderListView";
 import { LibraryDialogs } from "@/components/features/library/LibraryDialogs";
+import { ImageModal } from "@/components/molecules/image-modal/ImageModal";
 
 export function LibraryTemplate() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [files] = useState<File[]>(mockFiles);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
@@ -44,17 +45,45 @@ export function LibraryTemplate() {
   const activeTab = searchParams.get("tab") || "all";
   const searchQuery = searchParams.get("search") || "";
 
-  // Fetch data
+  // Fetch data - use useFolderItems when inside a folder, otherwise use separate calls
   const {
     data: foldersResponse,
-    isLoading: isLoadingFolders,
+    isLoading: isLoadingRootFolders,
     error: foldersError,
-  } = useFolders(currentFolderId);
+  } = useFolders(currentFolderId, {
+    enabled: !currentFolderId, // Only fetch when at root level
+  });
+
+  // Use folder items endpoint when inside a folder (returns both folders and documents)
+  const {
+    data: folderItemsResponse,
+    isLoading: isLoadingFolderItems,
+    error: folderItemsError,
+  } = useFolderItems(currentFolderId ?? undefined, {
+    enabled: !!currentFolderId, // Only fetch when inside a folder
+  });
 
   const { data: folderPathResponse } = useFolderPath(
     currentFolderId ?? undefined
   );
   const { data: folderTreeResponse } = useFolderTree();
+
+  // Fetch documents for root level (when no folder selected)
+  const {
+    data: documentsResponse,
+    isLoading: isLoadingRootDocuments,
+    error: documentsError,
+  } = useDocuments(currentFolderId, {
+    enabled: !currentFolderId, // Only fetch at root level
+  });
+
+  // Combined loading state
+  const isLoadingFolders = currentFolderId
+    ? isLoadingFolderItems
+    : isLoadingRootFolders;
+  const isLoadingDocuments = currentFolderId
+    ? isLoadingFolderItems
+    : isLoadingRootDocuments;
 
   const [quizFilters] = useState<QuizQueryParams>({ page: 1, limit: 100 });
   const {
@@ -63,8 +92,14 @@ export function LibraryTemplate() {
     error: quizzesError,
   } = useMyQuizzes(quizFilters);
 
-  // Derived data
-  const folders: Folder[] = foldersResponse?.data ?? [];
+  // Derived data - use folder items when inside a folder, otherwise use root data
+  const folders: Folder[] = currentFolderId
+    ? (folderItemsResponse?.data?.folders ?? [])
+    : (foldersResponse?.data ?? []);
+  const documents: Document[] = currentFolderId
+    ? (folderItemsResponse?.data?.documents ?? [])
+    : (documentsResponse?.data ?? []);
+
   const folderPath = useMemo(
     () => folderPathResponse?.data ?? [],
     [folderPathResponse?.data]
@@ -78,10 +113,6 @@ export function LibraryTemplate() {
   }, [currentFolderId, folderPath]);
 
   const canCreateSubfolder = currentFolderDepth < MAX_FOLDER_DEPTH;
-
-  const getCurrentFiles = () =>
-    files.filter((f) => f.folderId === currentFolderId);
-  const currentFiles = getCurrentFiles();
 
   const filteredQuizzes = quizzes.filter(
     (quiz) =>
@@ -168,10 +199,16 @@ export function LibraryTemplate() {
   }, [quizzesError]);
 
   useEffect(() => {
-    if (foldersError) {
+    if (foldersError || folderItemsError) {
       toast.error("Không thể tải danh sách thư mục. Vui lòng thử lại!");
     }
-  }, [foldersError]);
+  }, [foldersError, folderItemsError]);
+
+  useEffect(() => {
+    if (documentsError) {
+      toast.error("Không thể tải danh sách tài liệu. Vui lòng thử lại!");
+    }
+  }, [documentsError]);
 
   return (
     <div className="space-y-6">
@@ -193,6 +230,7 @@ export function LibraryTemplate() {
         onViewModeChange={setViewMode}
         onCreateFolder={() => actions.setCreateFolderOpen(true)}
         canCreateSubfolder={canCreateSubfolder}
+        onUploadDocument={() => actions.setUploadDocumentOpen(true)}
       />
 
       {/* Content */}
@@ -226,15 +264,15 @@ export function LibraryTemplate() {
 
         {/* All Files Tab */}
         <TabsContent value="all" className="mt-6">
-          {isLoadingFolders ? (
+          {isLoadingFolders || isLoadingDocuments ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-              <span className="ml-3 text-gray-600">Đang tải thư mục...</span>
+              <span className="ml-3 text-gray-600">Đang tải dữ liệu...</span>
             </div>
           ) : viewMode === "grid" ? (
             <FolderGridView
               folders={folders}
-              files={currentFiles}
+              documents={documents}
               selectedItems={selectedItems}
               onFolderClick={handleFolderClick}
               onSelectItem={handleSelectItem}
@@ -242,14 +280,20 @@ export function LibraryTemplate() {
               onDeleteFolder={actions.handleDeleteFolder}
               onShareFolder={actions.handleShareFolder}
               onMoveFolder={actions.handleMoveFolder}
+              onDownloadDocument={actions.handleDownloadDocument}
+              onDeleteDocument={actions.handleDeleteDocument}
+              onPreviewDocument={actions.handlePreviewDocument}
             />
           ) : (
             <FolderListView
               folders={folders}
-              files={currentFiles}
+              documents={documents}
               selectedItems={selectedItems}
               onFolderClick={handleFolderClick}
               onSelectItem={handleSelectItem}
+              onDownloadDocument={actions.handleDownloadDocument}
+              onDeleteDocument={actions.handleDeleteDocument}
+              onPreviewDocument={actions.handlePreviewDocument}
             />
           )}
         </TabsContent>
@@ -344,7 +388,26 @@ export function LibraryTemplate() {
         deleteQuizConfirmOpen={actions.deleteQuizConfirmOpen}
         setDeleteQuizConfirmOpen={actions.setDeleteQuizConfirmOpen}
         onConfirmDeleteQuiz={actions.handleConfirmDeleteQuiz}
+        uploadDocumentOpen={actions.uploadDocumentOpen}
+        setUploadDocumentOpen={actions.setUploadDocumentOpen}
+        onUploadDocument={actions.handleUploadDocument}
+        isUploadingDocument={actions.isUploadingDocument}
+        uploadProgress={actions.uploadProgress}
+        deleteDocumentDialogOpen={actions.deleteDocumentDialogOpen}
+        setDeleteDocumentDialogOpen={actions.setDeleteDocumentDialogOpen}
+        onConfirmDeleteDocument={actions.handleConfirmDeleteDocument}
       />
+
+      {/* Image Preview Modal */}
+      {actions.imagePreviewOpen && actions.previewImages.length > 0 && (
+        <ImageModal
+          isOpen={actions.imagePreviewOpen}
+          onClose={actions.handleCloseImagePreview}
+          imageSrc={actions.previewImages[actions.currentImageIndex]?.src || ""}
+          imageAlt={actions.previewImages[actions.currentImageIndex]?.alt || ""}
+          title={actions.previewImages[actions.currentImageIndex]?.alt}
+        />
+      )}
     </div>
   );
 }

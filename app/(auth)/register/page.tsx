@@ -377,7 +377,7 @@ export default function RegisterPage() {
             maxLength={6}
             value={otpCode}
             onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center text-2xl tracking-widest"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center tracking-widest"
             placeholder="000000"
             autoFocus
           />

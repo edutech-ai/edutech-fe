@@ -109,6 +109,16 @@ export const API_ENDPOINTS = {
     MOVE: (id: string) => `/folders/${id}/move`,
   },
 
+  // Document endpoints
+  DOCUMENT: {
+    BASE: "/documents",
+    UPLOAD: "/documents/upload",
+    BY_ID: (id: string) => `/documents/${id}`,
+    MOVE: (id: string) => `/documents/${id}/move`,
+    SHARE: (id: string) => `/documents/${id}/share`,
+    DOWNLOAD: (id: string) => `/documents/${id}/download`,
+  },
+
   // AI endpoints
   AI: {
     CREATE_QUIZ_WITH_QUESTIONS: "/ai/create-quiz-with-questions",

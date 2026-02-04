@@ -91,7 +91,7 @@ export default function DashboardPage() {
     {
       title: "Tạo giáo án",
       description: "Soạn giáo án nhanh chóng với AI",
-      href: "/dashboard/library?tab=lessons",
+      href: "/dashboard/library",
       color: "green",
     },
     {

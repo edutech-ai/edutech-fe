@@ -3,12 +3,11 @@
 import { Library } from "lucide-react";
 import { FolderCard } from "./FolderCard";
 import { FileCard } from "./FileCard";
-import type { Folder } from "@/types";
-import type { File } from "@/data/library";
+import type { Folder, Document } from "@/types";
 
 interface FolderGridViewProps {
   folders: Folder[];
-  files: File[];
+  documents: Document[];
   selectedItems: Set<string>;
   onFolderClick: (folderId: string) => void;
   onSelectItem: (itemId: string) => void;
@@ -16,11 +15,14 @@ interface FolderGridViewProps {
   onDeleteFolder: (folder: Folder) => void;
   onShareFolder: (folder: Folder) => void;
   onMoveFolder: (folder: Folder) => void;
+  onDownloadDocument: (document: Document) => void;
+  onDeleteDocument: (document: Document) => void;
+  onPreviewDocument: (document: Document, allDocuments: Document[]) => void;
 }
 
 export function FolderGridView({
   folders,
-  files,
+  documents,
   selectedItems,
   onFolderClick,
   onSelectItem,
@@ -28,8 +30,11 @@ export function FolderGridView({
   onDeleteFolder,
   onShareFolder,
   onMoveFolder,
+  onDownloadDocument,
+  onDeleteDocument,
+  onPreviewDocument,
 }: FolderGridViewProps) {
-  if (folders.length === 0 && files.length === 0) {
+  if (folders.length === 0 && documents.length === 0) {
     return (
       <div className="text-center py-16 text-gray-500">
         <Library className="w-16 h-16 mx-auto mb-4 opacity-20" />
@@ -63,20 +68,20 @@ export function FolderGridView({
         </div>
       )}
 
-      {/* Files */}
-      {files.length > 0 && (
+      {/* Documents */}
+      {documents.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-500 mb-3">Tệp tin</h3>
+          <h3 className="text-sm font-medium text-gray-500 mb-3">Tài liệu</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {files.map((file) => (
+            {documents.map((document) => (
               <FileCard
-                key={file.id}
-                file={file}
-                isSelected={selectedItems.has(file.id)}
-                onClick={() => {
-                  // console.log("Open file:", file.id);
-                }}
-                onSelect={() => onSelectItem(file.id)}
+                key={document.id}
+                document={document}
+                isSelected={selectedItems.has(document.id)}
+                onClick={() => onPreviewDocument(document, documents)}
+                onSelect={() => onSelectItem(document.id)}
+                onDownload={() => onDownloadDocument(document)}
+                onDelete={() => onDeleteDocument(document)}
               />
             ))}
           </div>

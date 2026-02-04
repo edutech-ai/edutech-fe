@@ -16,7 +16,7 @@ interface DeleteConfirmDialogProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   itemCount: number;
-  itemType?: "folder" | "file" | "quiz";
+  itemType?: "folder" | "file" | "quiz" | "document";
 }
 
 export function DeleteConfirmDialog({
@@ -34,6 +34,8 @@ export function DeleteConfirmDialog({
         return itemCount === 1 ? "tệp tin" : "tệp tin";
       case "quiz":
         return itemCount === 1 ? "đề thi" : "đề thi";
+      case "document":
+        return itemCount === 1 ? "tài liệu" : "tài liệu";
       default:
         return "mục";
     }

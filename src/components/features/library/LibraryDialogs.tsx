@@ -6,6 +6,7 @@ import { CreateFolderDialog } from "./CreateFolderDialog";
 import { RenameFolderDialog } from "./RenameFolderDialog";
 import { MoveFolderDialog } from "./MoveFolderDialog";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
+import { UploadDocumentDialog } from "./UploadDocumentDialog";
 
 interface LibraryDialogsProps {
   // Current folder context
@@ -55,6 +56,23 @@ interface LibraryDialogsProps {
   deleteQuizConfirmOpen: boolean;
   setDeleteQuizConfirmOpen: (open: boolean) => void;
   onConfirmDeleteQuiz: () => void;
+
+  // Upload document dialog
+  uploadDocumentOpen: boolean;
+  setUploadDocumentOpen: (open: boolean) => void;
+  onUploadDocument: (
+    file: File,
+    name: string,
+    description: string,
+    folderId: string | null
+  ) => Promise<void>;
+  isUploadingDocument: boolean;
+  uploadProgress: number;
+
+  // Delete document dialog
+  deleteDocumentDialogOpen: boolean;
+  setDeleteDocumentDialogOpen: (open: boolean) => void;
+  onConfirmDeleteDocument: () => void;
 }
 
 export function LibraryDialogs({
@@ -84,6 +102,14 @@ export function LibraryDialogs({
   deleteQuizConfirmOpen,
   setDeleteQuizConfirmOpen,
   onConfirmDeleteQuiz,
+  uploadDocumentOpen,
+  setUploadDocumentOpen,
+  onUploadDocument,
+  isUploadingDocument,
+  uploadProgress,
+  deleteDocumentDialogOpen,
+  setDeleteDocumentDialogOpen,
+  onConfirmDeleteDocument,
 }: LibraryDialogsProps) {
   return (
     <>
@@ -141,6 +167,25 @@ export function LibraryDialogs({
         onConfirm={onConfirmDeleteQuiz}
         itemCount={1}
         itemType="quiz"
+      />
+
+      {/* Upload Document Dialog */}
+      <UploadDocumentDialog
+        open={uploadDocumentOpen}
+        onOpenChange={setUploadDocumentOpen}
+        onUpload={onUploadDocument}
+        folderId={currentFolderId}
+        isLoading={isUploadingDocument}
+        uploadProgress={uploadProgress}
+      />
+
+      {/* Delete Document Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={deleteDocumentDialogOpen}
+        onOpenChange={setDeleteDocumentDialogOpen}
+        onConfirm={onConfirmDeleteDocument}
+        itemCount={1}
+        itemType="document"
       />
     </>
   );

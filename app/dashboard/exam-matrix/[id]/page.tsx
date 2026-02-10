@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 import { MatrixBuilder } from "@/components/organisms/exam-matrix/MatrixBuilder";
 import { CoreLoading } from "@/components/atoms/CoreLoading";
-import { examMatrixMockService } from "@/services/mock";
+import { useMatrixById, useUpdateMatrix } from "@/services/examMatrixService";
 import type { ExamMatrix } from "@/types";
 
 export default function EditMatrixPage() {
@@ -12,38 +12,24 @@ export default function EditMatrixPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const [matrix, setMatrix] = useState<ExamMatrix | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: matrix, isLoading, error } = useMatrixById(id);
+  const updateMatrix = useUpdateMatrix();
 
-  useEffect(() => {
-    const fetchMatrix = async () => {
-      try {
-        const data = await examMatrixMockService.getById(id);
-        setMatrix(data);
-      } catch (error) {
-        console.error("Failed to fetch matrix:", error);
-        // eslint-disable-next-line no-alert
-        alert("Không tìm thấy ma trận");
-        router.push("/dashboard/exam-matrix");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchMatrix();
-  }, [id, router]);
-
-  const handleSave = async (
+  const handleSave = (
     data: Omit<ExamMatrix, "id" | "createdAt" | "updatedAt">
   ) => {
-    try {
-      await examMatrixMockService.update(id, data);
-      router.push("/dashboard/exam-matrix");
-    } catch (error) {
-      console.error("Failed to update matrix:", error);
-      // eslint-disable-next-line no-alert
-      alert("Có lỗi xảy ra khi cập nhật ma trận");
-    }
+    updateMatrix.mutate(
+      { id, data },
+      {
+        onSuccess: () => {
+          toast.success("Cập nhật ma trận thành công");
+          router.push("/dashboard/exam-matrix");
+        },
+        onError: () => {
+          toast.error("Có lỗi xảy ra khi cập nhật ma trận");
+        },
+      }
+    );
   };
 
   const handleCancel = () => {
@@ -54,8 +40,18 @@ export default function EditMatrixPage() {
     return <CoreLoading message="Đang tải ma trận..." fullScreen />;
   }
 
-  if (!matrix) {
-    return null;
+  if (error || !matrix) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-600">Không tìm thấy ma trận</p>
+        <button
+          onClick={() => router.push("/dashboard/exam-matrix")}
+          className="mt-4 text-blue-600 hover:underline"
+        >
+          Quay lại danh sách
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -69,6 +65,7 @@ export default function EditMatrixPage() {
         initialData={matrix}
         onSave={handleSave}
         onCancel={handleCancel}
+        isSaving={updateMatrix.isPending}
       />
     </div>
   );

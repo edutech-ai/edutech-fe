@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, ExternalLink } from "lucide-react";
-import { examMatrixMockService } from "@/services/mock";
+import { useMyMatrices } from "@/services/examMatrixService";
 import type { ExamMatrix } from "@/types";
 
 interface MatrixSelectorProps {
@@ -19,27 +18,11 @@ export function MatrixSelector({
   subject,
   grade,
 }: MatrixSelectorProps) {
-  const [matrices, setMatrices] = useState<ExamMatrix[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    fetchMatrices();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subject, grade]);
-
-  const fetchMatrices = async () => {
-    setIsLoading(true);
-    try {
-      const filters: { subject?: string; grade?: number } = {};
-      if (subject) filters.subject = subject;
-      if (grade) filters.grade = grade;
-
-      const data = await examMatrixMockService.getAll(filters);
-      setMatrices(data);
-    } finally {
-      setIsLoading(false);
-    }
+  const filters = {
+    ...(subject && { subject }),
+    ...(grade && { grade }),
   };
+  const { data: matrices = [], isLoading } = useMyMatrices(filters);
 
   const handleSelect = (matrixId: string) => {
     const matrix = matrices.find((m) => m.id === matrixId);

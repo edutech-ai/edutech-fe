@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -17,8 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { examMatrixMockService } from "@/services/mock";
-import type { ExamMatrix } from "@/types";
+import { useMyMatrices } from "@/services/examMatrixService";
 import { toast } from "sonner";
 import { SUBJECTS, GRADES, QuestionTypeUI, Difficulty } from "@/types";
 import { ActionButton } from "@/components/molecules/action-button";
@@ -49,8 +48,6 @@ const difficultyOptions = [
 export default function MatrixBasedGeneratorPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [matrices, setMatrices] = useState<ExamMatrix[]>([]);
-  const [loadingMatrices, setLoadingMatrices] = useState(true);
 
   // Form state
   const [selectedMatrix, setSelectedMatrix] = useState<string>("");
@@ -69,32 +66,12 @@ export default function MatrixBasedGeneratorPage() {
   const [learningObjectives, setLearningObjectives] = useState<string>("");
   const [prompt, setPrompt] = useState<string>("");
 
-  // Load matrices on mount
-  useEffect(() => {
-    loadMatrices();
-  }, []);
-
-  // Filter matrices when subject/grade changes
-  useEffect(() => {
-    if (subject || grade) {
-      loadMatrices({
-        subject: subject || undefined,
-        grade: grade ? parseInt(grade) : undefined,
-      });
-    }
-  }, [subject, grade]);
-
-  async function loadMatrices(filters?: { subject?: string; grade?: number }) {
-    try {
-      setLoadingMatrices(true);
-      const data = await examMatrixMockService.getAll(filters);
-      setMatrices(data);
-    } catch (error) {
-      console.error("Error loading matrices:", error);
-    } finally {
-      setLoadingMatrices(false);
-    }
-  }
+  const matrixFilters = {
+    ...(subject && { subject }),
+    ...(grade && { grade: parseInt(grade) }),
+  };
+  const { data: matrices = [], isLoading: loadingMatrices } =
+    useMyMatrices(matrixFilters);
 
   const handleQuestionTypeToggle = (type: string) => {
     const newTypes = new Set(selectedQuestionTypes);

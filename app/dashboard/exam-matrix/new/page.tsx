@@ -1,24 +1,27 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { MatrixBuilder } from "@/components/organisms/exam-matrix/MatrixBuilder";
-import { examMatrixMockService } from "@/services/mock";
+import { useCreateMatrix } from "@/services/examMatrixService";
 import type { ExamMatrix } from "@/types";
 
 export default function NewMatrixPage() {
   const router = useRouter();
+  const createMatrix = useCreateMatrix();
 
-  const handleSave = async (
+  const handleSave = (
     data: Omit<ExamMatrix, "id" | "createdAt" | "updatedAt">
   ) => {
-    try {
-      await examMatrixMockService.create(data);
-      router.push("/dashboard/exam-matrix");
-    } catch (error) {
-      console.error("Failed to create matrix:", error);
-      // eslint-disable-next-line no-alert
-      alert("Có lỗi xảy ra khi tạo ma trận");
-    }
+    createMatrix.mutate(data, {
+      onSuccess: () => {
+        toast.success("Tạo ma trận thành công");
+        router.push("/dashboard/exam-matrix");
+      },
+      onError: () => {
+        toast.error("Có lỗi xảy ra khi tạo ma trận");
+      },
+    });
   };
 
   const handleCancel = () => {
@@ -34,7 +37,11 @@ export default function NewMatrixPage() {
         </p>
       </div>
 
-      <MatrixBuilder onSave={handleSave} onCancel={handleCancel} />
+      <MatrixBuilder
+        onSave={handleSave}
+        onCancel={handleCancel}
+        isSaving={createMatrix.isPending}
+      />
     </div>
   );
 }

@@ -1,63 +1,42 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { Plus, Search, Copy, Edit, Trash2, FileText } from "lucide-react";
+import Image from "next/image";
+import { Plus, Search, Copy, Edit, Trash2 } from "lucide-react";
 import { CoreLoading } from "@/components/atoms/CoreLoading";
-import { examMatrixMockService } from "@/services/mock";
-import type { ExamMatrix } from "@/types";
+import {
+  useMyMatrices,
+  useDeleteMatrix,
+  useDuplicateMatrix,
+} from "@/services/examMatrixService";
 import { SUBJECTS, GRADES } from "@/types";
+import type { ExamMatrixQueryParams } from "@/types";
 
 export default function ExamMatrixPage() {
-  const [matrices, setMatrices] = useState<ExamMatrix[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [selectedGrade, setSelectedGrade] = useState<number | "">("");
 
-  useEffect(() => {
-    fetchMatrices();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSubject, selectedGrade]);
-
-  const fetchMatrices = async () => {
-    setIsLoading(true);
-    try {
-      const filters: { subject?: string; grade?: number } = {};
-      if (selectedSubject) filters.subject = selectedSubject;
-      if (selectedGrade) filters.grade = Number(selectedGrade);
-
-      const data = await examMatrixMockService.getAll(filters);
-      setMatrices(data);
-    } finally {
-      setIsLoading(false);
-    }
+  const filters: ExamMatrixQueryParams = {
+    ...(selectedSubject && { subject: selectedSubject }),
+    ...(selectedGrade && { grade: Number(selectedGrade) }),
+    ...(searchQuery && { search: searchQuery }),
   };
 
-  const handleDuplicate = async (id: string) => {
-    try {
-      await examMatrixMockService.duplicate(id);
-      fetchMatrices();
-    } catch (error) {
-      console.error("Failed to duplicate matrix:", error);
-    }
+  const { data: matrices = [], isLoading } = useMyMatrices(filters);
+  const deleteMatrix = useDeleteMatrix();
+  const duplicateMatrix = useDuplicateMatrix();
+
+  const handleDuplicate = (id: string) => {
+    duplicateMatrix.mutate(id);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     // eslint-disable-next-line no-alert
     if (!confirm("Bạn có chắc chắn muốn xóa ma trận này?")) return;
-
-    try {
-      await examMatrixMockService.delete(id);
-      fetchMatrices();
-    } catch (error) {
-      console.error("Failed to delete matrix:", error);
-    }
+    deleteMatrix.mutate(id);
   };
-
-  const filteredMatrices = matrices.filter((matrix) =>
-    matrix.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   if (isLoading) {
     return <CoreLoading message="Đang tải ma trận..." fullScreen />;
@@ -138,9 +117,15 @@ export default function ExamMatrixPage() {
       </div>
 
       {/* Matrix List */}
-      {filteredMatrices.length === 0 ? (
+      {matrices.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <Image
+            src="/images/empty/empty_matrix.svg"
+            alt="Chưa có ma trận"
+            width={160}
+            height={120}
+            className="mx-auto mb-4"
+          />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
             Chưa có ma trận nào
           </h3>
@@ -157,7 +142,7 @@ export default function ExamMatrixPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {filteredMatrices.map((matrix) => (
+          {matrices.map((matrix) => (
             <div
               key={matrix.id}
               className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition"
@@ -181,7 +166,7 @@ export default function ExamMatrixPage() {
                     </p>
                   )}
                   <div className="flex items-center gap-6 text-sm text-gray-600">
-                    <span>{matrix.chapters.length} chương</span>
+                    <span>{matrix.totalChapters} chương</span>
                     <span>{matrix.totalQuestions} câu hỏi</span>
                     <span>{matrix.totalPoints} điểm</span>
                     <span>
@@ -202,14 +187,16 @@ export default function ExamMatrixPage() {
                   </Link>
                   <button
                     onClick={() => handleDuplicate(matrix.id)}
-                    className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition"
+                    disabled={duplicateMatrix.isPending}
+                    className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition disabled:opacity-50"
                     title="Sao chép"
                   >
                     <Copy className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => handleDelete(matrix.id)}
-                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                    disabled={deleteMatrix.isPending}
+                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50"
                     title="Xóa"
                   >
                     <Trash2 className="w-5 h-5" />

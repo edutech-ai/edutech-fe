@@ -125,6 +125,16 @@ export const API_ENDPOINTS = {
     ANALYZE_QUIZ: "/ai/analyze-quiz",
   },
 
+  // Exam Matrix endpoints
+  EXAM_MATRIX: {
+    BASE: "/exam-matrices",
+    MY_MATRICES: "/exam-matrices/my-matrices",
+    BY_ID: (id: string) => `/exam-matrices/${id}`,
+    CHAPTERS: (id: string) => `/exam-matrices/${id}/chapters`,
+    CHAPTER_BY_ID: (matrixId: string, chapterId: string) =>
+      `/exam-matrices/${matrixId}/chapters/${chapterId}`,
+  },
+
   // Admin Dashboard endpoints
   ADMIN: {
     DASHBOARD: {

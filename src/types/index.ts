@@ -179,6 +179,7 @@ export interface ExamMatrix {
   subject: string;
   grade: number;
   chapters: ChapterDistribution[];
+  totalChapters?: number;
   totalQuestions: number;
   totalPoints: number;
   createdBy: string;
@@ -285,6 +286,9 @@ export const GRADES = [6, 7, 8, 9] as const;
 
 export type Subject = (typeof SUBJECTS)[number];
 export type Grade = (typeof GRADES)[number];
+
+// ==================== EXAM MATRIX API ====================
+export * from "./examMatrix";
 
 // ==================== CLASSROOM ====================
 export * from "./classroom";

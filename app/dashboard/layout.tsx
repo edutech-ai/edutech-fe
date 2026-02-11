@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Bell, User as UserIcon } from "lucide-react";
+import { User as UserIcon } from "lucide-react";
+import { NotificationPopover } from "@/components/features/notification/NotificationPopover";
 import { CoreLoading } from "@/components/atoms/CoreLoading";
 import { AppSidebar } from "@/components/sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -94,16 +96,21 @@ export default function DashboardLayout({
             {/* Right side: Notification + User */}
             <div className="flex items-center gap-2">
               {/* Notification */}
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
-              </Button>
+              <NotificationPopover />
 
               {/* User Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2">
-                    <UserIcon className="h-5 w-5" />
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 px-1"
+                  >
+                    <Image
+                      src="/images/icons/icon_profile.svg"
+                      alt="Thông báo"
+                      width={32}
+                      height={32}
+                    />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">

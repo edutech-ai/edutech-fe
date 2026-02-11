@@ -297,6 +297,9 @@ export * from "./classroom";
 export * from "./quiz";
 export * from "./question";
 
+// ==================== NOTIFICATION ====================
+export * from "./notification";
+
 // ==================== FOLDER ====================
 export * from "./folder";
 

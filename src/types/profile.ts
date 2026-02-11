@@ -28,3 +28,22 @@ export interface ProfileResponse {
   success: boolean;
   data: Profile;
 }
+
+export interface TeacherStats {
+  total_quizzes: number;
+  total_matrices: number;
+  total_students: number;
+  total_classrooms: number;
+}
+
+export interface RecentActivity {
+  type: "quiz_created" | "matrix_created" | "grading_completed";
+  title: string;
+  description: string;
+  timestamp: string;
+  metadata?: {
+    quiz_id?: string;
+    matrix_id?: string;
+    student_count?: number;
+  };
+}

@@ -19,6 +19,8 @@ export const API_ENDPOINTS = {
     BASE: "/profile",
     PROFILE: "/profile",
     BY_ID: (id: string) => `/profile/${id}`,
+    STATS: "/profile/stats",
+    RECENT_ACTIVITIES: "/profile/recent-activities",
   },
 
   // Settings endpoints

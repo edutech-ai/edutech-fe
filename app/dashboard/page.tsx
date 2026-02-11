@@ -1,18 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import {
-  FileQuestion,
-  BookOpen,
-  Users,
-  TrendingUp,
-  Clock,
-  ArrowRight,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { CoreLoading } from "@/components/atoms/CoreLoading";
-import { analyticsMockService } from "@/services/mock";
-import type { AnalyticsData } from "@/types";
+import {
+  useTeacherStats,
+  useRecentActivities,
+} from "@/services/profileService";
 import { useUserStore } from "@/store/useUserStore";
 import { UpgradeBanner } from "@/components/molecules/upgrade-banner";
 import { PricingModal } from "@/components/organisms/dashboard/pricing-modal";
@@ -20,64 +15,42 @@ import { InviteFriendModal } from "@/components/organisms/dashboard/invite-frien
 import Image from "next/image";
 
 export default function DashboardPage() {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isInviteFriendModalOpen, setIsInviteFriendModalOpen] = useState(false);
 
   const { isPaidUser } = useUserStore();
+  const { data: teacherStats, isLoading: statsLoading } = useTeacherStats();
+  const { data: recentActivities = [], isLoading: activitiesLoading } =
+    useRecentActivities();
 
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        const data = await analyticsMockService.getDashboardData();
-        setAnalytics(data);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchAnalytics();
-  }, []);
-
-  if (isLoading) {
+  if (statsLoading) {
     return <CoreLoading message="Đang tải dữ liệu..." fullScreen />;
   }
-
-  if (!analytics) return null;
 
   const stats = [
     {
       name: "Đề thi",
-      value: analytics.totalQuizzes,
-      icon: FileQuestion,
-      bgColor: "bg-blue-100",
-      iconColor: "text-blue-600",
+      value: teacherStats?.total_quizzes ?? 0,
+      iconSrc: "/images/icons/icon_test.svg",
       href: "/dashboard/library?tab=quizzes",
     },
     {
-      name: "Giáo án",
-      value: analytics.totalLessonPlans,
-      icon: BookOpen,
-      bgColor: "bg-green-100",
-      iconColor: "text-green-600",
-      href: "/dashboard/library?tab=lessons",
+      name: "Ma trận",
+      value: teacherStats?.total_matrices ?? 0,
+      iconSrc: "/images/icons/icon_create_matrix.svg",
+      href: "/dashboard/exam-matrix",
     },
     {
       name: "Học sinh",
-      value: analytics.totalStudents,
-      icon: Users,
-      bgColor: "bg-purple-100",
-      iconColor: "text-purple-600",
+      value: teacherStats?.total_students ?? 0,
+      iconSrc: "/images/icons/icon_student.svg",
       href: "/dashboard/classroom?tab=data",
     },
     {
-      name: "Điểm trung bình",
-      value: analytics.averageScore.toFixed(1),
-      icon: TrendingUp,
-      bgColor: "bg-orange-100",
-      iconColor: "text-orange-600",
-      href: "/dashboard/classroom?tab=data",
+      name: "Lớp học",
+      value: teacherStats?.total_classrooms ?? 0,
+      iconSrc: "/images/icons/icon_class.svg",
+      href: "/dashboard/classroom",
     },
   ];
 
@@ -125,11 +98,12 @@ export default function DashboardPage() {
                   {stat.value}
                 </p>
               </div>
-              <div
-                className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}
-              >
-                <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
-              </div>
+              <Image
+                src={stat.iconSrc}
+                alt={stat.name}
+                width={48}
+                height={48}
+              />
             </div>
           </Link>
         ))}
@@ -166,66 +140,65 @@ export default function DashboardPage() {
           Hoạt động gần đây
         </h2>
         <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-200">
-          {analytics.recentActivities.slice(0, 5).map((activity) => (
-            <div key={activity.id} className="p-4 hover:bg-gray-50 transition">
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
-                  <Clock className="w-5 h-5 text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">
-                    {activity.title}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {activity.description}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    {new Date(activity.timestamp).toLocaleDateString("vi-VN", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              </div>
+          {activitiesLoading ? (
+            <div className="p-8 text-center text-gray-500 text-sm">
+              Đang tải...
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Topic Performance */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Hiệu suất theo chủ đề
-        </h2>
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="space-y-4">
-            {analytics.performanceByTopic.map((topic) => (
-              <div key={topic.topic}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-900">
-                    {topic.topic}
-                  </span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {topic.accuracy}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all"
-                    style={{ width: `${topic.accuracy}%` }}
+          ) : recentActivities.length === 0 ? (
+            <div className="p-8 text-center">
+              <Image
+                src="/images/empty/empty_previous_activities.svg"
+                alt="Chưa có hoạt động"
+                width={136}
+                height={108}
+                className="mx-auto mb-3"
+              />
+              <p className="text-gray-500 text-sm">Chưa có hoạt động nào</p>
+            </div>
+          ) : (
+            recentActivities.slice(0, 5).map((activity, idx) => (
+              <div
+                key={`${activity.type}-${activity.timestamp}-${idx}`}
+                className="p-4 hover:bg-gray-50 transition"
+              >
+                <div className="flex items-start space-x-3">
+                  <Image
+                    src={
+                      activity.type === "quiz_created"
+                        ? "/images/icons/icon_create_quiz.svg"
+                        : activity.type === "matrix_created"
+                          ? "/images/icons/icon_create_matrix.svg"
+                          : "/images/icons/icon_mark.svg"
+                    }
+                    alt={activity.type}
+                    width={40}
+                    height={40}
+                    className="shrink-0"
                   />
-                </div>
-                <div className="flex justify-between mt-1">
-                  <span className="text-xs text-gray-500">
-                    {topic.correctAnswers}/{topic.totalQuestions} câu đúng
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">
+                      {activity.title}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {activity.description}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {new Date(activity.timestamp).toLocaleDateString(
+                        "vi-VN",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
       </div>
 

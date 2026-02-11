@@ -137,6 +137,14 @@ export const API_ENDPOINTS = {
       `/exam-matrices/${matrixId}/chapters/${chapterId}`,
   },
 
+  // Notification endpoints
+  NOTIFICATION: {
+    BASE: "/notifications",
+    UNREAD_COUNT: "/notifications/unread-count",
+    READ: (id: string) => `/notifications/${id}/read`,
+    READ_ALL: "/notifications/read-all",
+  },
+
   // Admin Dashboard endpoints
   ADMIN: {
     DASHBOARD: {

@@ -4,6 +4,27 @@
 
 @custom-variant dark (&:is(.dark *));
 
+:root {
+  --color-rainbow-1: #2563eb;
+  --color-rainbow-2: #7c3aed;
+  --color-rainbow-3: #06b6d4;
+  --color-rainbow-4: #f59e0b;
+  --color-rainbow-5: #ec4899;
+}
+
+@keyframes rainbow {
+  0% {
+    background-position: 0%;
+  }
+  100% {
+    background-position: 200%;
+  }
+}
+
+@utility animate-rainbow {
+  animation: rainbow 2s linear infinite;
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 80px;

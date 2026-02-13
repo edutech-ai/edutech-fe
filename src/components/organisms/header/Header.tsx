@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X, Compass } from "lucide-react";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 
 interface NavItem {
   label: string;
@@ -102,19 +103,20 @@ export function Header() {
           <nav className="hidden md:flex items-center gap-8">
             {navItems.map((item) =>
               item.highlight ? (
-                <Link
+                <RainbowButton
                   key={item.label}
-                  href={item.href}
-                  onClick={(e) => handleNavClick(e, item)}
-                  className={`relative inline-flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-semibold rounded-full transition-all duration-300 cursor-pointer ${
-                    isActive(item.href)
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/25"
-                      : "bg-linear-to-r from-blue-50 to-indigo-50 text-blue-700 hover:from-blue-600 hover:to-indigo-600 hover:text-white hover:shadow-md hover:shadow-blue-500/25"
-                  }`}
+                  asChild
+                  size="default"
+                  variant="outline"
                 >
-                  <Compass className="w-3.5 h-3.5" />
-                  {item.label}
-                </Link>
+                  <Link
+                    href={item.href}
+                    onClick={(e) => handleNavClick(e, item)}
+                  >
+                    <Compass className="w-4 h-4" />
+                    {item.label}
+                  </Link>
+                </RainbowButton>
               ) : (
                 <Link
                   key={item.label}
@@ -124,7 +126,7 @@ export function Header() {
                       : item.href
                   }
                   onClick={(e) => handleNavClick(e, item)}
-                  className={`text-sm font-medium transition-colors relative group cursor-pointer ${
+                  className={`text-base font-medium transition-colors relative group cursor-pointer ${
                     isActive(item.href)
                       ? "text-blue-600"
                       : "text-gray-600 hover:text-blue-600"
@@ -170,32 +172,50 @@ export function Header() {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-100 shadow-xl p-4 flex flex-col gap-2 animate-fade-in-up">
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              href={
-                isHomePage && item.scrollTarget ? item.scrollTarget : item.href
-              }
-              className={`text-base font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer ${
-                item.highlight
-                  ? isActive(item.href)
-                    ? "text-white bg-blue-600 flex items-center gap-2"
-                    : "text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white flex items-center gap-2"
-                  : isActive(item.href)
+          {navItems.map((item) =>
+            item.highlight ? (
+              <RainbowButton
+                key={item.label}
+                asChild
+                size="default"
+                variant="outline"
+                className="w-full"
+              >
+                <Link
+                  href={item.href}
+                  onClick={(e) => {
+                    handleNavClick(e, item);
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <Compass className="w-4 h-4" />
+                  {item.label}
+                </Link>
+              </RainbowButton>
+            ) : (
+              <Link
+                key={item.label}
+                href={
+                  isHomePage && item.scrollTarget
+                    ? item.scrollTarget
+                    : item.href
+                }
+                className={`text-base font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer ${
+                  isActive(item.href)
                     ? "text-blue-600 bg-blue-50"
                     : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
-              }`}
-              onClick={(e) => {
-                handleNavClick(e, item);
-                if (!item.scrollTarget || !isHomePage) {
-                  setIsMobileMenuOpen(false);
-                }
-              }}
-            >
-              {item.highlight && <Compass className="w-4 h-4" />}
-              {item.label}
-            </Link>
-          ))}
+                }`}
+                onClick={(e) => {
+                  handleNavClick(e, item);
+                  if (!item.scrollTarget || !isHomePage) {
+                    setIsMobileMenuOpen(false);
+                  }
+                }}
+              >
+                {item.label}
+              </Link>
+            )
+          )}
           <hr className="border-gray-100 my-2" />
           <Link
             href="/login"

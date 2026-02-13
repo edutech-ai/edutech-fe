@@ -203,4 +203,15 @@ axiosInstance.interceptors.response.use(
   }
 );
 
+/**
+ * Public axios instance — no auth token, no 401 redirect.
+ */
+export const publicAxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 export default axiosInstance;

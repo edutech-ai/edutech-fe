@@ -4,20 +4,22 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Compass } from "lucide-react";
 
 interface NavItem {
   label: string;
   href: string;
   scrollTarget?: string; // For homepage scroll
+  highlight?: boolean;
 }
 
 const navItems: NavItem[] = [
+  { label: "Khám phá", href: "/explore", highlight: true },
   { label: "Về chúng tôi", href: "/about", scrollTarget: "#about" },
   { label: "Tính năng", href: "/features", scrollTarget: "#features" },
   { label: "Bảng giá", href: "/pricing" },
   { label: "Bài viết", href: "/blog" },
-  { label: "Hướng dẫn", href: "/guide" },
+  // { label: "Hướng dẫn", href: "/guide" },
 ];
 
 export function Header() {
@@ -98,29 +100,45 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={
-                  isHomePage && item.scrollTarget
-                    ? item.scrollTarget
-                    : item.href
-                }
-                onClick={(e) => handleNavClick(e, item)}
-                className={`text-sm font-medium transition-colors relative group cursor-pointer ${
-                  isActive(item.href)
-                    ? "text-blue-600"
-                    : "text-gray-600 hover:text-blue-600"
-                }`}
-              >
-                {item.label}
-                <span
-                  className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
-                    isActive(item.href) ? "w-full" : "w-0 group-hover:w-full"
+            {navItems.map((item) =>
+              item.highlight ? (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item)}
+                  className={`relative inline-flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-semibold rounded-full transition-all duration-300 cursor-pointer ${
+                    isActive(item.href)
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/25"
+                      : "bg-linear-to-r from-blue-50 to-indigo-50 text-blue-700 hover:from-blue-600 hover:to-indigo-600 hover:text-white hover:shadow-md hover:shadow-blue-500/25"
                   }`}
-                />
-              </Link>
-            ))}
+                >
+                  <Compass className="w-3.5 h-3.5" />
+                  {item.label}
+                </Link>
+              ) : (
+                <Link
+                  key={item.label}
+                  href={
+                    isHomePage && item.scrollTarget
+                      ? item.scrollTarget
+                      : item.href
+                  }
+                  onClick={(e) => handleNavClick(e, item)}
+                  className={`text-sm font-medium transition-colors relative group cursor-pointer ${
+                    isActive(item.href)
+                      ? "text-blue-600"
+                      : "text-gray-600 hover:text-blue-600"
+                  }`}
+                >
+                  {item.label}
+                  <span
+                    className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
+                      isActive(item.href) ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
+                  />
+                </Link>
+              )
+            )}
           </nav>
 
           {/* Auth Buttons */}
@@ -159,9 +177,13 @@ export function Header() {
                 isHomePage && item.scrollTarget ? item.scrollTarget : item.href
               }
               className={`text-base font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer ${
-                isActive(item.href)
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                item.highlight
+                  ? isActive(item.href)
+                    ? "text-white bg-blue-600 flex items-center gap-2"
+                    : "text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white flex items-center gap-2"
+                  : isActive(item.href)
+                    ? "text-blue-600 bg-blue-50"
+                    : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
               }`}
               onClick={(e) => {
                 handleNavClick(e, item);
@@ -170,6 +192,7 @@ export function Header() {
                 }
               }}
             >
+              {item.highlight && <Compass className="w-4 h-4" />}
               {item.label}
             </Link>
           ))}

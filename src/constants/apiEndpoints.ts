@@ -41,6 +41,7 @@ export const API_ENDPOINTS = {
     BY_EXAM_CODE: (examCode: string) => `/quizzes/exam-code/${examCode}`,
     QUESTIONS: (id: string) => `/quizzes/${id}/questions`,
     STATS: (id: string) => `/quizzes/${id}/stats`,
+    VISIBILITY: (id: string) => `/quizzes/${id}/visibility`,
   },
 
   // Question endpoints

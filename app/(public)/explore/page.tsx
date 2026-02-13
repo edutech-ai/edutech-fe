@@ -9,6 +9,7 @@ import { Footer } from "@/components/organisms/footer";
 import { ExploreQuizCard } from "@/components/molecules/explore/ExploreQuizCard";
 import { usePublicQuizzes } from "@/services/quizService";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUserStore } from "@/store/useUserStore";
 
 const PAGE_SIZE = 20;
 
@@ -16,6 +17,7 @@ export default function ExplorePage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
+  const isAuthenticated = useUserStore((s) => s.isAuthenticated);
 
   // Debounce search input
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function ExplorePage() {
                   />
                 </div>
                 <Link
-                  href="/register"
+                  href={isAuthenticated() ? "/dashboard/quiz" : "/register"}
                   className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition shrink-0"
                 >
                   <Sparkles className="w-4 h-4" />

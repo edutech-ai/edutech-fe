@@ -2,7 +2,7 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import axiosInstance from "@/lib/axios";
+import axiosInstance, { publicAxiosInstance } from "@/lib/axios";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 import type {
   Quiz,
@@ -145,6 +145,39 @@ export const useQuizStats = (id?: string, options?: any) => {
   });
 };
 
+// ==================== PUBLIC QUERY HOOKS (no auth) ====================
+
+export const usePublicQuizById = (id?: string) => {
+  return useQuery<QuizApiResponse<QuizWithDetails>, AxiosError>({
+    queryKey: [...QUIZ_KEYS.detail(id!), "public"],
+    queryFn: async () => {
+      const { data } = await publicAxiosInstance.get<
+        QuizApiResponse<QuizWithDetails>
+      >(API_ENDPOINTS.QUIZ.BY_ID(id!));
+      return data;
+    },
+    enabled: !!id,
+  });
+};
+
+/**
+ * Get quiz questions — public (no auth token, no 401 redirect)
+ */
+export const usePublicQuizQuestions = (id?: string) => {
+  return useQuery<QuizQuestionsResponse, AxiosError>({
+    queryKey: [...QUIZ_KEYS.questions(id!), "public"],
+    queryFn: async () => {
+      const { data } = await publicAxiosInstance.get<QuizQuestionsResponse>(
+        API_ENDPOINTS.QUIZ.QUESTIONS(id!),
+        { params: { includeAnswers: "false" } }
+      );
+      return data;
+    },
+    enabled: !!id,
+    retry: false,
+  });
+};
+
 // ==================== MUTATION HOOKS ====================
 
 /**
@@ -204,6 +237,39 @@ export const useUpdateQuiz = (): UseMutationResult<
       });
       // Invalidate quiz lists
       queryClient.invalidateQueries({ queryKey: QUIZ_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: QUIZ_KEYS.all });
+    },
+  });
+};
+
+/**
+ * Update quiz visibility (private / community)
+ */
+export const useUpdateVisibility = (): UseMutationResult<
+  QuizApiResponse<Quiz>,
+  AxiosError,
+  { id: string; visibility: "private" | "community" }
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      visibility,
+    }: {
+      id: string;
+      visibility: "private" | "community";
+    }) => {
+      const response = await axiosInstance.patch<QuizApiResponse<Quiz>>(
+        API_ENDPOINTS.QUIZ.VISIBILITY(id),
+        { visibility }
+      );
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: QUIZ_KEYS.detail(variables.id),
+      });
       queryClient.invalidateQueries({ queryKey: QUIZ_KEYS.all });
     },
   });

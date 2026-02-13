@@ -4,20 +4,23 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Compass } from "lucide-react";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 
 interface NavItem {
   label: string;
   href: string;
   scrollTarget?: string; // For homepage scroll
+  highlight?: boolean;
 }
 
 const navItems: NavItem[] = [
+  { label: "Khám phá", href: "/explore", highlight: true },
   { label: "Về chúng tôi", href: "/about", scrollTarget: "#about" },
   { label: "Tính năng", href: "/features", scrollTarget: "#features" },
   { label: "Bảng giá", href: "/pricing" },
   { label: "Bài viết", href: "/blog" },
-  { label: "Hướng dẫn", href: "/guide" },
+  // { label: "Hướng dẫn", href: "/guide" },
 ];
 
 export function Header() {
@@ -98,29 +101,46 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={
-                  isHomePage && item.scrollTarget
-                    ? item.scrollTarget
-                    : item.href
-                }
-                onClick={(e) => handleNavClick(e, item)}
-                className={`text-sm font-medium transition-colors relative group cursor-pointer ${
-                  isActive(item.href)
-                    ? "text-blue-600"
-                    : "text-gray-600 hover:text-blue-600"
-                }`}
-              >
-                {item.label}
-                <span
-                  className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
-                    isActive(item.href) ? "w-full" : "w-0 group-hover:w-full"
+            {navItems.map((item) =>
+              item.highlight ? (
+                <RainbowButton
+                  key={item.label}
+                  asChild
+                  size="default"
+                  variant="outline"
+                >
+                  <Link
+                    href={item.href}
+                    onClick={(e) => handleNavClick(e, item)}
+                  >
+                    <Compass className="w-4 h-4" />
+                    {item.label}
+                  </Link>
+                </RainbowButton>
+              ) : (
+                <Link
+                  key={item.label}
+                  href={
+                    isHomePage && item.scrollTarget
+                      ? item.scrollTarget
+                      : item.href
+                  }
+                  onClick={(e) => handleNavClick(e, item)}
+                  className={`text-base font-medium transition-colors relative group cursor-pointer ${
+                    isActive(item.href)
+                      ? "text-blue-600"
+                      : "text-gray-600 hover:text-blue-600"
                   }`}
-                />
-              </Link>
-            ))}
+                >
+                  {item.label}
+                  <span
+                    className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
+                      isActive(item.href) ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
+                  />
+                </Link>
+              )
+            )}
           </nav>
 
           {/* Auth Buttons */}
@@ -152,27 +172,50 @@ export function Header() {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-100 shadow-xl p-4 flex flex-col gap-2 animate-fade-in-up">
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              href={
-                isHomePage && item.scrollTarget ? item.scrollTarget : item.href
-              }
-              className={`text-base font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer ${
-                isActive(item.href)
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
-              }`}
-              onClick={(e) => {
-                handleNavClick(e, item);
-                if (!item.scrollTarget || !isHomePage) {
-                  setIsMobileMenuOpen(false);
+          {navItems.map((item) =>
+            item.highlight ? (
+              <RainbowButton
+                key={item.label}
+                asChild
+                size="default"
+                variant="outline"
+                className="w-full"
+              >
+                <Link
+                  href={item.href}
+                  onClick={(e) => {
+                    handleNavClick(e, item);
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <Compass className="w-4 h-4" />
+                  {item.label}
+                </Link>
+              </RainbowButton>
+            ) : (
+              <Link
+                key={item.label}
+                href={
+                  isHomePage && item.scrollTarget
+                    ? item.scrollTarget
+                    : item.href
                 }
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
+                className={`text-base font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer ${
+                  isActive(item.href)
+                    ? "text-blue-600 bg-blue-50"
+                    : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                }`}
+                onClick={(e) => {
+                  handleNavClick(e, item);
+                  if (!item.scrollTarget || !isHomePage) {
+                    setIsMobileMenuOpen(false);
+                  }
+                }}
+              >
+                {item.label}
+              </Link>
+            )
+          )}
           <hr className="border-gray-100 my-2" />
           <Link
             href="/login"

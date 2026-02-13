@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Save, Loader2 } from "lucide-react";
+import { stripHtmlToLatex } from "@/lib/html-sanitizer";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QuizInfoTab } from "@/components/organisms/quiz/QuizInfoTab";
@@ -190,16 +191,20 @@ export default function QuizEditPage() {
             }
 
             return {
-              content: q.content,
-              options: q.options ?? undefined,
-              correct_answer,
+              content: stripHtmlToLatex(q.content),
+              options: q.options?.map(stripHtmlToLatex),
+              correct_answer: Array.isArray(correct_answer)
+                ? correct_answer.map(stripHtmlToLatex)
+                : stripHtmlToLatex(correct_answer),
               type: q.type as
                 | "MCQ"
                 | "MULTIPLE_ANSWER"
                 | "TRUE_FALSE"
                 | "ESSAY",
               point: q.points,
-              explanation: q.explanation ?? undefined,
+              explanation: q.explanation
+                ? stripHtmlToLatex(q.explanation)
+                : undefined,
             };
           }),
         });

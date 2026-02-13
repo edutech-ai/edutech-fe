@@ -168,6 +168,42 @@ export function sanitizeAndRenderLatex(html: string): string {
     }
   });
 
+  // Pattern 5: Handle $$...$$ (display math) and $...$ (inline math)
+  // Process $$ first to avoid $...$ matching inside $$...$$
+  const displayDollarRegex = /\$\$([\s\S]+?)\$\$/g;
+  rendered = rendered.replace(displayDollarRegex, (_match, formula) => {
+    try {
+      const decoded = decodeHTMLEntities(formula.trim());
+      const prepared = prepareForKatex(decoded);
+      const renderedFormula = katex.renderToString(prepared, {
+        throwOnError: false,
+        displayMode: true,
+        output: "html",
+      });
+      return `<div class="latex-formula latex-display">${renderedFormula}</div>`;
+    } catch (error) {
+      console.error("LaTeX render error:", error);
+      return `<span class="latex-error" title="Invalid formula">${formula}</span>`;
+    }
+  });
+
+  const inlineDollarRegex = /\$([^\$\n]+?)\$/g;
+  rendered = rendered.replace(inlineDollarRegex, (_match, formula) => {
+    try {
+      const decoded = decodeHTMLEntities(formula.trim());
+      const prepared = prepareForKatex(decoded);
+      const renderedFormula = katex.renderToString(prepared, {
+        throwOnError: false,
+        displayMode: false,
+        output: "html",
+      });
+      return `<span class="latex-formula">${renderedFormula}</span>`;
+    } catch (error) {
+      console.error("LaTeX render error:", error);
+      return `<span class="latex-error" title="Invalid formula">${formula}</span>`;
+    }
+  });
+
   // Pattern 4: Match plain <span>content</span> (from backend data)
   // Only render as full LaTeX if NO delimiters and content looks like pure LaTeX
   const plainSpanRegex = /<span>([^<]*)<\/span>/gi;
@@ -242,6 +278,59 @@ function prepareForKatex(latex: string): string {
 }
 
 /**
+ * Strip HTML from Quill editor output, converting to plain text + $...$ LaTeX.
+ *
+ * Transforms:
+ *   <span class="ql-formula" data-value="x^2">...</span>  →  $x^2$
+ *   <span>\frac{1}{2}</span>  (pure LaTeX)                →  $\frac{1}{2}$
+ *   <p>Text&nbsp;here</p>                                 →  Text here
+ *   <p></p> or <p><br></p>                                 →  ""
+ *
+ * Use this to normalize question content/options before saving to API.
+ */
+export function stripHtmlToLatex(html: string): string {
+  if (!html) return "";
+
+  let result = html;
+
+  // 1. Convert Quill formula spans: <span class="ql-formula" data-value="X">...</span> → $X$
+  result = result.replace(
+    /<span[^>]*class="[^"]*ql-formula[^"]*"[^>]*data-value="([^"]*)"[^>]*>.*?<\/span>/gi,
+    (_match, formula) => `$${decodeHTMLEntities(formula)}$`
+  );
+
+  // 2. Convert plain <span> with LaTeX content → $...$
+  result = result.replace(/<span>([^<]*)<\/span>/gi, (_match, content) => {
+    if (!content || content.trim() === "") return "";
+    const decoded = decodeHTMLEntities(content);
+    if (containsLatex(decoded)) {
+      return `$${decoded}$`;
+    }
+    return decoded;
+  });
+
+  // 3. Replace <br> and block-level closing tags with newline
+  result = result.replace(/<br\s*\/?>/gi, "\n");
+  result = result.replace(/<\/p>\s*<p[^>]*>/gi, "\n");
+
+  // 4. Strip all remaining HTML tags
+  result = result.replace(/<[^>]+>/g, "");
+
+  // 5. Decode HTML entities
+  result = decodeHTMLEntities(result);
+
+  // 6. Clean up whitespace (preserve single newlines)
+  result = result
+    .split("\n")
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  return result;
+}
+
+/**
  * Extract plain text from HTML (for search/preview purposes)
  */
 export function extractPlainText(html: string): string {
@@ -266,6 +355,11 @@ export function hasLatexFormulas(html: string): boolean {
 
   // Check for ql-formula class (from Quill editor)
   if (html.includes("ql-formula") || html.includes("data-value=")) {
+    return true;
+  }
+
+  // Check for $...$ or $$...$$ delimiters
+  if (/\$\$[\s\S]+?\$\$/.test(html) || /\$[^\$\n]+?\$/.test(html)) {
     return true;
   }
 

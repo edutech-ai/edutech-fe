@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FolderCard } from "./FolderCard";
 import { FileCard } from "./FileCard";
-import type { FolderColor } from "@/components/atoms/FolderIcon";
+import type { Folder, Document } from "@/types";
 
 interface FileManagerProps {
   viewMode: "grid" | "list";
@@ -11,72 +11,113 @@ interface FileManagerProps {
   onNavigate: (path: string[]) => void;
 }
 
-// Mock data
-const mockFolders: Array<{
-  id: string;
-  name: string;
-  itemCount: number;
-  createdAt: string;
-  color: FolderColor;
-}> = [
+// Mock data with API-compatible Folder type
+const mockFolders: Folder[] = [
   {
     id: "1",
+    teacher_id: "teacher-1",
     name: "Đề thi Toán",
-    itemCount: 12,
-    createdAt: "2025-01-15",
+    item_count: 12,
+    created_at: "2025-01-15T00:00:00Z",
+    updated_at: "2025-01-15T00:00:00Z",
     color: "blue",
+    parent_id: null,
+    depth: 0,
   },
   {
     id: "2",
+    teacher_id: "teacher-1",
     name: "Đề thi Văn",
-    itemCount: 8,
-    createdAt: "2025-01-10",
+    item_count: 8,
+    created_at: "2025-01-10T00:00:00Z",
+    updated_at: "2025-01-10T00:00:00Z",
     color: "green",
+    parent_id: null,
+    depth: 0,
   },
   {
     id: "3",
+    teacher_id: "teacher-1",
     name: "Giáo án Lớp 9",
-    itemCount: 24,
-    createdAt: "2025-01-05",
+    item_count: 24,
+    created_at: "2025-01-05T00:00:00Z",
+    updated_at: "2025-01-05T00:00:00Z",
     color: "purple",
+    parent_id: null,
+    depth: 0,
   },
   {
     id: "4",
+    teacher_id: "teacher-1",
     name: "Tài liệu tham khảo",
-    itemCount: 15,
-    createdAt: "2024-12-20",
+    item_count: 15,
+    created_at: "2024-12-20T00:00:00Z",
+    updated_at: "2024-12-20T00:00:00Z",
     color: "yellow",
+    parent_id: null,
+    depth: 0,
   },
 ];
 
-const mockFiles = [
+const mockDocuments: Document[] = [
   {
     id: "1",
-    name: "Đề kiểm tra học kì I - Toán 9.pdf",
+    teacher_id: "teacher-1",
+    name: "Đề kiểm tra học kì I - Toán 9",
+    original_name: "Đề kiểm tra học kì I - Toán 9.pdf",
     type: "pdf",
-    size: "2.4 MB",
-    createdAt: "2025-01-20",
+    file_url: "/files/de-kiem-tra-1.pdf",
+    file_size: 2516582,
+    mime_type: "application/pdf",
+    folder_id: null,
+    is_public: false,
+    created_at: "2025-01-20T00:00:00Z",
+    updated_at: "2025-01-20T00:00:00Z",
   },
   {
     id: "2",
-    name: "Đề thi thử THPT - Toán.docx",
+    teacher_id: "teacher-1",
+    name: "Đề thi thử THPT - Toán",
+    original_name: "Đề thi thử THPT - Toán.docx",
     type: "docx",
-    size: "1.8 MB",
-    createdAt: "2025-01-18",
+    file_url: "/files/de-thi-thu.docx",
+    file_size: 1887437,
+    mime_type:
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    folder_id: null,
+    is_public: false,
+    created_at: "2025-01-18T00:00:00Z",
+    updated_at: "2025-01-18T00:00:00Z",
   },
   {
     id: "3",
-    name: "Ma trận đề thi.xlsx",
+    teacher_id: "teacher-1",
+    name: "Ma trận đề thi",
+    original_name: "Ma trận đề thi.xlsx",
     type: "xlsx",
-    size: "856 KB",
-    createdAt: "2025-01-15",
+    file_url: "/files/ma-tran-de-thi.xlsx",
+    file_size: 876544,
+    mime_type:
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    folder_id: null,
+    is_public: false,
+    created_at: "2025-01-15T00:00:00Z",
+    updated_at: "2025-01-15T00:00:00Z",
   },
   {
     id: "4",
-    name: "Bài giảng hình học.pptx",
+    teacher_id: "teacher-1",
+    name: "Bài giảng hình học",
+    original_name: "Bài giảng hình học.pptx",
     type: "pptx",
-    size: "5.2 MB",
-    createdAt: "2025-01-12",
+    file_url: "/files/bai-giang-hinh-hoc.pptx",
+    file_size: 5452595,
+    mime_type:
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    folder_id: null,
+    is_public: false,
+    created_at: "2025-01-12T00:00:00Z",
+    updated_at: "2025-01-12T00:00:00Z",
   },
 ];
 
@@ -116,24 +157,24 @@ export function FileManager({
           </div>
         </div>
 
-        {/* Files */}
+        {/* Documents */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Tệp tin</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Tài liệu</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {mockFiles.map((file) => (
+            {mockDocuments.map((document) => (
               <FileCard
-                key={file.id}
-                file={file}
-                isSelected={selectedItems.includes(file.id)}
+                key={document.id}
+                document={document}
+                isSelected={selectedItems.includes(document.id)}
                 onClick={() => {}}
-                onSelect={() => toggleSelection(file.id)}
+                onSelect={() => toggleSelection(document.id)}
               />
             ))}
           </div>
         </div>
 
         {/* Empty State */}
-        {mockFolders.length === 0 && mockFiles.length === 0 && (
+        {mockFolders.length === 0 && mockDocuments.length === 0 && (
           <div className="text-center py-16">
             <div className="text-gray-400 mb-2">
               <svg
@@ -210,17 +251,17 @@ export function FileManager({
                 <span className="font-medium text-gray-900">{folder.name}</span>
               </td>
               <td className="py-3 px-4 text-sm text-gray-600">
-                {folder.itemCount} mục
+                {folder.item_count} mục
               </td>
               <td className="py-3 px-4 text-sm text-gray-600">
-                {folder.createdAt}
+                {folder.created_at}
               </td>
               <td className="py-3 px-4 text-sm text-gray-600">Thư mục</td>
             </tr>
           ))}
-          {mockFiles.map((file) => (
+          {mockDocuments.map((document) => (
             <tr
-              key={file.id}
+              key={document.id}
               className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
             >
               <td className="py-3 px-4 flex items-center gap-3">
@@ -239,14 +280,16 @@ export function FileManager({
                     />
                   </svg>
                 </div>
-                <span className="text-gray-900">{file.name}</span>
+                <span className="text-gray-900">{document.name}</span>
               </td>
-              <td className="py-3 px-4 text-sm text-gray-600">{file.size}</td>
               <td className="py-3 px-4 text-sm text-gray-600">
-                {file.createdAt}
+                {Math.round(document.file_size / 1024)} KB
+              </td>
+              <td className="py-3 px-4 text-sm text-gray-600">
+                {document.created_at}
               </td>
               <td className="py-3 px-4 text-sm text-gray-600 uppercase">
-                {file.type}
+                {document.type}
               </td>
             </tr>
           ))}

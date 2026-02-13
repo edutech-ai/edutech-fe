@@ -25,7 +25,7 @@ export function Breadcrumb({ items, onNavigate }: BreadcrumbProps) {
         return (
           <div key={item.id} className="flex items-center gap-1">
             {index > 0 && (
-              <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
             )}
             <button
               className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${
@@ -41,7 +41,7 @@ export function Breadcrumb({ items, onNavigate }: BreadcrumbProps) {
               ) : (
                 <Folder className="w-4 h-4" />
               )}
-              <span className="max-w-[150px] truncate" title={item.name}>
+              <span className="max-w-37.5 truncate" title={item.name}>
                 {item.name}
               </span>
             </button>

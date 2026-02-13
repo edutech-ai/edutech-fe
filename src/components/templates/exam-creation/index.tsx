@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Plus,
@@ -26,39 +26,132 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { QuizGeneratorForm } from "@/components/features/quiz-generator/QuizGeneratorForm";
-import type { Question as AIQuestion } from "@/types";
+import type { QuestionUI } from "@/types";
+import { QuestionTypeUI } from "@/types";
 import { AILoading } from "@/components/atoms/AILoading";
 import { PDFPreview } from "@/components/features/quiz-generator/PDFPreview";
+import { ExamStorageService } from "@/services/storage/examStorage";
+import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 export function ExamCreationTemplate() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [examInfo, setExamInfo] = useState<BasicExamInfo>({
-    name: "",
-    subject: "",
-    grade: 10,
+    name: "Đề thi mẫu - Test",
+    subject: "Tiếng Anh",
+    grade: 8,
     durationMinutes: 45,
     totalScore: 10,
-    instructions: "",
+    instructions: "Học sinh làm bài vào giấy thi. Không được sử dụng tài liệu.",
   });
 
-  const [questions, setQuestions] = useState<QuestionItemType[]>([]);
+  // 3 câu hỏi mẫu để test drag & drop
+  const [questions, setQuestions] = useState<QuestionItemType[]>([
+    {
+      id: "sample-1",
+      order: 1,
+      content: "What is the capital of Vietnam?",
+      type: "multiple_choice",
+      difficulty: "easy",
+      points: 2,
+      answers: ["Hanoi", "Ho Chi Minh City", "Da Nang", "Hue"],
+      correctAnswer: 0,
+    },
+    {
+      id: "sample-2",
+      order: 2,
+      content: "She _____ to school every day.",
+      type: "multiple_choice",
+      difficulty: "medium",
+      points: 2,
+      answers: ["go", "goes", "going", "went"],
+      correctAnswer: 1,
+    },
+    {
+      id: "sample-3",
+      order: 3,
+      content: "Translate to English: 'Tôi thích học tiếng Anh'",
+      type: "short_answer",
+      difficulty: "medium",
+      points: 3,
+      answers: [],
+      correctAnswer: undefined,
+    },
+  ]);
   const [editingQuestion, setEditingQuestion] = useState<QuestionData | null>(
     null
   );
   const [showQuestionEditor, setShowQuestionEditor] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedQuestions, setGeneratedQuestions] = useState<AIQuestion[]>(
+  const [generatedQuestions, setGeneratedQuestions] = useState<QuestionUI[]>(
     []
   );
   const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [currentExamId, setCurrentExamId] = useState<string | undefined>();
 
   // Derive active tab from URL params (single source of truth)
   const activeTab = (() => {
     const tab = searchParams.get("tab");
     return tab === "ai" || tab === "manual" ? tab : "manual";
   })();
+
+  // Load existing exam if exam ID is in URL
+  useEffect(() => {
+    const examId = searchParams.get("exam");
+    if (examId) {
+      const savedExam = ExamStorageService.getExamById(examId);
+      if (savedExam) {
+        // Loading initial data from localStorage is a valid use case
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setExamInfo(savedExam.examInfo);
+        setQuestions(savedExam.questions);
+        setCurrentExamId(savedExam.id);
+      }
+    }
+  }, [searchParams]);
+
+  // Drag & drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setQuestions((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+
+        const reorderedItems = arrayMove(items, oldIndex, newIndex);
+        // Update order numbers
+        return reorderedItems.map((item, index) => ({
+          ...item,
+          order: index + 1,
+        }));
+      });
+    }
+  };
 
   const handleAddQuestion = () => {
     setEditingQuestion({
@@ -121,30 +214,58 @@ export function ExamCreationTemplate() {
   };
 
   const handleSaveExam = () => {
-    // eslint-disable-next-line no-console
-    console.log("Saving exam:", { examInfo, questions });
-    // TODO: Call API to save exam
+    try {
+      // Validate exam info
+      if (!examInfo.name || !examInfo.subject) {
+        toast.error("Vui lòng điền đầy đủ thông tin đề thi!");
+        return;
+      }
+
+      if (questions.length === 0) {
+        toast.error("Vui lòng thêm ít nhất 1 câu hỏi!");
+        return;
+      }
+
+      // Save to localStorage
+      const savedExam = ExamStorageService.saveExam(
+        examInfo,
+        questions,
+        currentExamId
+      );
+
+      setCurrentExamId(savedExam.id);
+      toast.success("Đã lưu đề thi thành công!");
+    } catch (error) {
+      console.error("Error saving exam:", error);
+      toast.error("Có lỗi xảy ra khi lưu đề thi!");
+    }
   };
 
   const convertAIQuestionToQuestionItem = (
-    aiQuestion: AIQuestion
+    aiQuestion: QuestionUI
   ): QuestionItemType => {
     return {
       id: aiQuestion.id,
       order: questions.length + 1,
       content: aiQuestion.content,
-      type: aiQuestion.type === "MULTIPLE_CHOICE" ? "multiple_choice" : "essay",
-      difficulty: aiQuestion.difficulty.toLowerCase() as
-        | "easy"
-        | "medium"
-        | "hard",
+      type:
+        aiQuestion.type === QuestionTypeUI.SINGLE_CHOICE ||
+        aiQuestion.type === QuestionTypeUI.MULTIPLE_CHOICE
+          ? "multiple_choice"
+          : "essay",
+      difficulty: (typeof aiQuestion.difficulty === "string"
+        ? aiQuestion.difficulty.toLowerCase()
+        : "medium") as "easy" | "medium" | "hard",
       points: aiQuestion.points,
       answers: aiQuestion.options,
-      correctAnswer: aiQuestion.correctAnswer,
+      correctAnswer:
+        typeof aiQuestion.correctAnswer === "number"
+          ? aiQuestion.correctAnswer
+          : undefined,
     };
   };
 
-  const handleAIGenerate = (aiQuestions: AIQuestion[]) => {
+  const handleAIGenerate = (aiQuestions: QuestionUI[]) => {
     setGeneratedQuestions(aiQuestions);
   };
 
@@ -156,7 +277,7 @@ export function ExamCreationTemplate() {
     setGeneratedQuestions([]);
   };
 
-  const handleAddSingleQuestion = (aiQuestion: AIQuestion) => {
+  const handleAddSingleQuestion = (aiQuestion: QuestionUI) => {
     const converted = convertAIQuestionToQuestionItem(aiQuestion);
     setQuestions([...questions, converted]);
   };
@@ -194,7 +315,7 @@ export function ExamCreationTemplate() {
         onValueChange={(value) => {
           const params = new URLSearchParams();
           params.set("tab", value);
-          router.push(`/dashboard/quiz-generator?${params.toString()}`);
+          router.push(`/dashboard/quiz?${params.toString()}`);
         }}
         className="w-full"
       >
@@ -227,27 +348,38 @@ export function ExamCreationTemplate() {
             </div>
 
             {/* Question List */}
-            <div className="space-y-3">
-              {questions.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                  <p>
-                    Chưa có câu hỏi nào. Nhấn &quot;Thêm câu hỏi&quot; để bắt
-                    đầu.
-                  </p>
-                </div>
-              ) : (
-                questions.map((question) => (
-                  <QuestionItem
-                    key={question.id}
-                    question={question}
-                    onEdit={handleEditQuestion}
-                    onDelete={handleDeleteQuestion}
-                    isDraggable
-                  />
-                ))
-              )}
-            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="space-y-3">
+                {questions.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                    <p>
+                      Chưa có câu hỏi nào. Nhấn &quot;Thêm câu hỏi&quot; để bắt
+                      đầu.
+                    </p>
+                  </div>
+                ) : (
+                  <SortableContext
+                    items={questions.map((q) => q.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {questions.map((question) => (
+                      <QuestionItem
+                        key={question.id}
+                        question={question}
+                        onEdit={handleEditQuestion}
+                        onDelete={handleDeleteQuestion}
+                        isDraggable
+                      />
+                    ))}
+                  </SortableContext>
+                )}
+              </div>
+            </DndContext>
           </Card>
 
           {/* Question Editor Modal */}

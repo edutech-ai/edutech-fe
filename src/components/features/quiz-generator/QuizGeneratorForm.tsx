@@ -17,13 +17,13 @@ import { Card } from "@/components/ui/card";
 import { quizMockService } from "@/services/mock/quizService";
 import {
   Difficulty,
-  QuestionType,
-  type Question,
+  QuestionTypeUI,
+  type QuestionUI,
   type QuizGenerateRequest,
 } from "@/types";
 
 interface QuizGeneratorFormProps {
-  onGenerate: (questions: Question[]) => void;
+  onGenerate: (questions: QuestionUI[]) => void;
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
 }
@@ -38,8 +38,8 @@ export function QuizGeneratorForm({
     grade: 8,
     topic: "",
     numQuestions: 10,
-    difficulty: Difficulty.MEDIUM,
-    questionTypes: [QuestionType.MULTIPLE_CHOICE],
+    difficulty: Difficulty.COMPREHENSION,
+    questionTypes: [QuestionTypeUI.SINGLE_CHOICE],
     learningObjectives: "",
   });
 
@@ -152,10 +152,16 @@ export function QuizGeneratorForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={Difficulty.EASY}>Dễ</SelectItem>
-                <SelectItem value={Difficulty.MEDIUM}>Trung bình</SelectItem>
-                <SelectItem value={Difficulty.HARD}>Khó</SelectItem>
-                <SelectItem value={Difficulty.MIXED}>Trộn lẫn</SelectItem>
+                <SelectItem value={Difficulty.RECOGNITION}>
+                  Nhận biết
+                </SelectItem>
+                <SelectItem value={Difficulty.COMPREHENSION}>
+                  Thông hiểu
+                </SelectItem>
+                <SelectItem value={Difficulty.APPLICATION}>Vận dụng</SelectItem>
+                <SelectItem value={Difficulty.HIGH_APPLICATION}>
+                  Vận dụng cao
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -169,7 +175,7 @@ export function QuizGeneratorForm({
             onValueChange={(value) =>
               setFormData({
                 ...formData,
-                questionTypes: [value as QuestionType],
+                questionTypes: [value],
               })
             }
           >
@@ -177,14 +183,13 @@ export function QuizGeneratorForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={QuestionType.MULTIPLE_CHOICE}>
+              <SelectItem value={QuestionTypeUI.SINGLE_CHOICE}>
                 Trắc nghiệm
               </SelectItem>
-              <SelectItem value={QuestionType.TRUE_FALSE}>Đúng/Sai</SelectItem>
-              <SelectItem value={QuestionType.SHORT_ANSWER}>
-                Tự luận ngắn
+              <SelectItem value={QuestionTypeUI.TRUE_FALSE}>
+                Đúng/Sai
               </SelectItem>
-              <SelectItem value={QuestionType.ESSAY}>Tự luận dài</SelectItem>
+              <SelectItem value={QuestionTypeUI.ESSAY}>Tự luận</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -199,7 +204,7 @@ export function QuizGeneratorForm({
             onChange={(e) =>
               setFormData({ ...formData, learningObjectives: e.target.value })
             }
-            className="mt-1.5 min-h-[100px]"
+            className="mt-1.5 min-h-25"
           />
         </div>
 
@@ -207,7 +212,7 @@ export function QuizGeneratorForm({
         <Button
           onClick={handleGenerate}
           disabled={isGenerating || !formData.topic}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-12"
+          className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-12"
         >
           {isGenerating ? (
             <>

@@ -13,11 +13,18 @@ export function DashboardBreadcrumb() {
   const pageNames: Record<string, string> = {
     "/dashboard": "Tổng quan",
     "/dashboard/library": "Thư viện",
-    "/dashboard/quiz-generator": "Tạo đề thi",
+    "/dashboard/quiz": "Tạo đề thi",
+    "/dashboard/quiz/new": "Tạo đề mới",
+    "/dashboard/quiz/matrix": "Từ ma trận",
+    "/dashboard/quiz/upload": "Từ tài liệu",
+    "/dashboard/quiz/prompt": "Từ chủ đề",
+    "/dashboard/exam-matrix": "Ma trận đề thi",
     "/dashboard/classroom": "Quản lý lớp học",
     "/dashboard/slide-creator": "Slide bài giảng",
     "/dashboard/analytics": "Thống kê",
     "/dashboard/settings": "Cài đặt",
+    "/dashboard/exam-matrix/new": "Tạo mới",
+    "/dashboard/profile": "Thông tin cá nhân",
   };
 
   // Build folder hierarchy from current folder ID
@@ -112,7 +119,7 @@ export function DashboardBreadcrumb() {
               disabled={isLast}
             >
               {item.icon}
-              <span className="max-w-[150px] truncate" title={item.name}>
+              <span className="max-w-37.5 truncate" title={item.name}>
                 {item.name}
               </span>
             </button>

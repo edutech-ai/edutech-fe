@@ -1,18 +1,16 @@
 "use client";
 
-import { FileText, MoreVertical, Download, Trash2 } from "lucide-react";
+import { FileText, Download, Trash2, Eye } from "lucide-react";
+import type { Document } from "@/types";
+import { formatFileSize } from "@/types/document";
 
 interface FileCardProps {
-  file: {
-    id: string;
-    name: string;
-    type: string;
-    size: string;
-    createdAt: string;
-  };
+  document: Document;
   isSelected: boolean;
   onClick: () => void;
   onSelect: () => void;
+  onDownload?: () => void;
+  onDelete?: () => void;
 }
 
 const getFileIcon = (type: string) => {
@@ -74,11 +72,19 @@ const getFileColor = (type: string) => {
 };
 
 export function FileCard({
-  file,
+  document,
   isSelected,
   onClick,
   onSelect,
+  onDownload,
+  onDelete,
 }: FileCardProps) {
+  // Check if document is previewable (image or PDF)
+  const isPreviewable =
+    document.type === "image" ||
+    document.type === "pdf" ||
+    ["jpg", "jpeg", "png", "gif", "webp"].includes(document.type.toLowerCase());
+
   return (
     <div
       className={`group relative rounded-lg border ${
@@ -101,54 +107,64 @@ export function FileCard({
         />
       </div>
 
-      {/* More Menu */}
+      {/* Action Buttons */}
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-        <button
-          className="p-1 rounded hover:bg-blue-100 transition"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          title="Tải xuống"
-        >
-          <Download className="w-4 h-4 text-blue-600" />
-        </button>
-        <button
-          className="p-1 rounded hover:bg-red-100 transition"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          title="Xóa"
-        >
-          <Trash2 className="w-4 h-4 text-red-600" />
-        </button>
-        <button
-          className="p-1 rounded hover:bg-gray-100 transition"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <MoreVertical className="w-4 h-4 text-gray-600" />
-        </button>
+        {isPreviewable && (
+          <button
+            className="p-1 rounded hover:bg-purple-100 transition"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }}
+            title="Xem trước"
+          >
+            <Eye className="w-4 h-4 text-purple-600" />
+          </button>
+        )}
+        {onDownload && (
+          <button
+            className="p-1 rounded hover:bg-blue-100 transition"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownload();
+            }}
+            title="Tải xuống"
+          >
+            <Download className="w-4 h-4 text-blue-600" />
+          </button>
+        )}
+        {onDelete && (
+          <button
+            className="p-1 rounded hover:bg-red-100 transition"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            title="Xóa"
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        )}
       </div>
 
       {/* File Icon */}
       <div
-        className={`w-16 h-16 mx-auto mb-3 rounded-lg flex items-center justify-center ${getFileColor(file.type)}`}
+        className={`w-16 h-16 mx-auto mb-3 rounded-lg flex items-center justify-center ${getFileColor(document.type)}`}
       >
-        {getFileIcon(file.type)}
+        {getFileIcon(document.type)}
       </div>
 
       {/* File Name */}
       <h3
         className="text-sm font-medium text-gray-900 text-center truncate mb-1"
-        title={file.name}
+        title={document.name}
       >
-        {file.name}
+        {document.name}
       </h3>
 
       {/* File Size & Type */}
       <p className="text-xs text-gray-500 text-center">
-        {file.size} • {file.type.toUpperCase()}
+        {formatFileSize(document.file_size)} • {document.type.toUpperCase()}
       </p>
     </div>
   );

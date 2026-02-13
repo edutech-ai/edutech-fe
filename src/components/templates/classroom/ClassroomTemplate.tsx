@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClassSelector } from "@/components/molecules/classroom";
 import {
   SeatingChart,
   ClassroomStats,
@@ -19,17 +18,21 @@ import {
   mockStudents,
   getMockSeatingChart,
   getMockClassroomStats,
-  getMockStudentDetail,
-  randomSelectStudents,
-  getPresentStudents,
 } from "@/mock/classroom";
 import type {
+  Student as MockStudent,
+  LocalClassSession,
+} from "@/types/classroom";
+import {
+  AttendanceStatus,
+  ParticipationStatus,
+  SessionStatus,
+} from "@/types/classroom";
+import type {
   Student,
-  StudentDetail,
   RandomHistory,
   SeatingChart as SeatingChartType,
   ClassroomStats as ClassroomStatsType,
-  SessionStatus,
 } from "@/types/classroom";
 import {
   Shuffle,
@@ -40,7 +43,11 @@ import {
   FileText,
   BarChart3,
   Download,
+  Hand,
 } from "lucide-react";
+import { SessionStorageService } from "@/services/storage/sessionStorage";
+import { useBatchUpdateHandRaises } from "@/services/classroomService";
+import { toast } from "sonner";
 
 export type ClassroomTab = "random" | "classroom" | "data";
 
@@ -77,106 +84,183 @@ export function ClassroomTemplate({
   // Update state when URL changes
   useEffect(() => {
     if (tabFromUrl && ["random", "classroom", "data"].includes(tabFromUrl)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync tab state with URL
       setActiveTab(tabFromUrl);
     }
   }, [tabFromUrl]);
 
-  // Classroom interface states
-  const [selectedClassId, setSelectedClassId] = useState<string>("");
-  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  // Classroom interface states - auto-select first classroom
+  const defaultClassId = mockClassrooms[0]?.id || "";
+  const [selectedClassId] = useState<string>(defaultClassId);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>(
-    "NOT_STARTED" as SessionStatus
+    SessionStatus.NOT_STARTED
   );
   const [seatingChart, setSeatingChart] = useState<SeatingChartType | null>(
-    null
+    () => (defaultClassId ? getMockSeatingChart(defaultClassId) : null)
   );
   const [classroomStats, setClassroomStats] =
-    useState<ClassroomStatsType | null>(null);
+    useState<ClassroomStatsType | null>(() =>
+      defaultClassId ? getMockClassroomStats(defaultClassId) : null
+    );
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [currentSession, setCurrentSession] =
+    useState<LocalClassSession | null>(null);
+  const [sessionHandRaises, setSessionHandRaises] = useState<
+    Record<string, number>
+  >({});
 
   // Random picker states
   const [randomHistory, setRandomHistory] = useState<RandomHistory[]>([]);
 
+  // API mutation for batch hand raises
+  const batchUpdateHandRaises = useBatchUpdateHandRaises();
+
+  // Load session from localStorage on mount
+  // This is an initialization effect to restore session state
+  useEffect(() => {
+    const session = SessionStorageService.getSession();
+    if (session && session.status === SessionStatus.IN_PROGRESS) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- initialization from localStorage
+      setCurrentSession(session);
+      setSessionStatus(SessionStatus.IN_PROGRESS);
+      setSessionHandRaises(session.handRaises || {});
+      // Load seating chart for the session's classroom
+      const chart = getMockSeatingChart(session.classroomId);
+      setSeatingChart(chart);
+      const stats = getMockClassroomStats(session.classroomId);
+      setClassroomStats(stats);
+    }
+  }, []);
+
   // Student data states
   const [dataSelectedClassId, setDataSelectedClassId] = useState<string>("");
-  const [studentDetail, setStudentDetail] = useState<StudentDetail | null>(
-    null
-  );
+  const [selectedDataStudent, setSelectedDataStudent] =
+    useState<Student | null>(null);
 
   // Dialog states
   const [showEndSessionDialog, setShowEndSessionDialog] = useState(false);
 
   // Handlers for Classroom Interface
-  const handleClassChange = useCallback((classId: string) => {
-    setSelectedClassId(classId);
-    setSelectedSubject("");
-    const chart = getMockSeatingChart(classId);
-    setSeatingChart(chart);
-    const stats = getMockClassroomStats(classId);
-    setClassroomStats(stats);
-  }, []);
-
-  const handleSubjectChange = useCallback((subject: string) => {
-    setSelectedSubject(subject);
-  }, []);
-
   const handleStartSession = useCallback(() => {
-    if (selectedClassId && selectedSubject) {
-      setSessionStatus("IN_PROGRESS" as SessionStatus);
+    if (selectedClassId) {
+      const classroom = mockClassrooms.find((c) => c.id === selectedClassId);
+      const session = SessionStorageService.startSession(
+        selectedClassId,
+        classroom?.name || "",
+        "" // No subject required
+      );
+      setCurrentSession(session);
+      setSessionStatus(SessionStatus.IN_PROGRESS);
+      setSessionHandRaises({});
+      toast.success("Bắt đầu tiết học thành công!");
     }
-  }, [selectedClassId, selectedSubject]);
+  }, [selectedClassId]);
 
   const handleEndSession = useCallback(() => {
     setShowEndSessionDialog(true);
   }, []);
 
-  const handleConfirmEndSession = useCallback((notes: string) => {
-    // eslint-disable-next-line no-console
-    console.log("Session ended with notes:", notes);
-    setSessionStatus("NOT_STARTED" as SessionStatus);
-    setShowEndSessionDialog(false);
-  }, []);
+  const handleConfirmEndSession = useCallback(
+    async (notes: string) => {
+      // Get hand raises data from localStorage
+      const handRaisesData = SessionStorageService.getHandRaisesForBatch();
 
-  const handleStudentClick = useCallback((student: Student) => {
-    setSelectedStudent(student);
-  }, []);
+      if (handRaisesData.length > 0 && selectedClassId) {
+        try {
+          // Call API to batch update hand raises
+          await batchUpdateHandRaises.mutateAsync({
+            classroomId: selectedClassId,
+            data: { students: handRaisesData },
+          });
+          toast.success(
+            `Đã lưu ${handRaisesData.length} lượt giơ tay thành công!`
+          );
+        } catch (error) {
+          console.error("Error saving hand raises:", error);
+          toast.error("Lỗi khi lưu dữ liệu giơ tay");
+        }
+      }
 
-  // Handlers for Random Picker
-  const handleRandomSelect = useCallback(
-    (classId: string, count: number, onlyPresent: boolean) => {
-      return randomSelectStudents(classId, count, onlyPresent);
+      // End and clear session
+      SessionStorageService.endSession();
+      SessionStorageService.clearSession();
+
+      // Reset states
+      setSessionStatus(SessionStatus.NOT_STARTED);
+      setCurrentSession(null);
+      setSessionHandRaises({});
+      setShowEndSessionDialog(false);
+
+      // eslint-disable-next-line no-console
+      console.log("Session ended with notes:", notes);
+      toast.success("Kết thúc tiết học thành công!");
     },
-    []
+    [selectedClassId, batchUpdateHandRaises]
   );
 
+  // Handle hand raise increment
+  const handleIncrementHandRaise = useCallback((studentId: string) => {
+    const session = SessionStorageService.incrementHandRaise(studentId);
+    if (session) {
+      setSessionHandRaises({ ...session.handRaises });
+    }
+  }, []);
+
+  // Handle hand raise decrement
+  const handleDecrementHandRaise = useCallback((studentId: string) => {
+    const session = SessionStorageService.decrementHandRaise(studentId);
+    if (session) {
+      setSessionHandRaises({ ...session.handRaises });
+    }
+  }, []);
+
+  const handleStudentClick = useCallback(
+    (student: Student) => {
+      setSelectedStudent(student);
+      // If session is in progress, increment hand raise
+      if (sessionStatus === SessionStatus.IN_PROGRESS) {
+        handleIncrementHandRaise(student.id);
+        toast.success(`+1 giơ tay cho ${student.name}`, {
+          duration: 1500,
+        });
+      }
+    },
+    [sessionStatus, handleIncrementHandRaise]
+  );
+
+  // Random picker state - using first classroom as default
+  const defaultRandomClassId = mockClassrooms[0]?.id || "";
+
+  // Handlers for Random Picker
   const handleAddHistory = useCallback((history: RandomHistory) => {
     setRandomHistory((prev) => [history, ...prev].slice(0, 10));
   }, []);
 
-  const handleGetPresentCount = useCallback((classId: string) => {
-    return getPresentStudents(classId).length;
-  }, []);
+  // Get students for random picker (convert mock students to UI format)
+  const randomStudents: MockStudent[] = defaultRandomClassId
+    ? (mockStudents[defaultRandomClassId] || []).map((s) => ({
+        ...s,
+        attendanceStatus: AttendanceStatus.PRESENT,
+        participationStatus: ParticipationStatus.NOT_PARTICIPATED,
+      }))
+    : [];
+
+  const randomClassroom = mockClassrooms.find(
+    (c) => c.id === defaultRandomClassId
+  );
 
   // Handlers for Student Data
   const handleDataClassChange = useCallback((classId: string) => {
     setDataSelectedClassId(classId);
-    setStudentDetail(null);
+    setSelectedDataStudent(null);
   }, []);
 
   const handleStudentRowClick = useCallback((student: Student) => {
-    const detail = getMockStudentDetail(student.id);
-    setStudentDetail(detail);
+    setSelectedDataStudent(student);
   }, []);
 
   const handleCloseStudentDetail = useCallback(() => {
-    setStudentDetail(null);
-  }, []);
-
-  const handleSaveNote = useCallback((note: string) => {
-    // eslint-disable-next-line no-console
-    console.log("Saving note:", note);
-    // In real app, save to API
+    setSelectedDataStudent(null);
   }, []);
 
   // Get current class and students
@@ -222,44 +306,67 @@ export function ClassroomTemplate({
           <TabsContent value="random" className="mt-6">
             <RandomPicker
               classrooms={mockClassrooms}
+              students={randomStudents}
+              currentClassroom={randomClassroom}
               randomHistory={randomHistory}
-              onRandomSelect={handleRandomSelect}
               onAddHistory={handleAddHistory}
-              getPresentCount={handleGetPresentCount}
             />
           </TabsContent>
 
           {/* Tab 2: Classroom Interface */}
           <TabsContent value="classroom" className="mt-6 space-y-4">
             {/* Controls Bar */}
-            <div className="flex flex-wrap items-end justify-between gap-4 rounded-lg bg-blue-50 p-4">
-              <ClassSelector
-                classrooms={mockClassrooms}
-                selectedClassId={selectedClassId}
-                selectedSubject={selectedSubject}
-                onClassChange={handleClassChange}
-                onSubjectChange={handleSubjectChange}
-              />
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-blue-50 p-4">
+              {/* Class Name Display */}
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white">
+                  <School className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    {selectedClass?.name || "Lớp học"}
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    {selectedClass?.totalStudents || 0} học sinh
+                  </p>
+                </div>
+              </div>
 
               <div className="flex items-center gap-3">
-                {sessionStatus === ("NOT_STARTED" as SessionStatus) ? (
+                {sessionStatus === SessionStatus.NOT_STARTED ? (
                   <Button
                     onClick={handleStartSession}
-                    disabled={!selectedClassId || !selectedSubject}
+                    disabled={!selectedClassId}
                     className="gap-2 bg-blue-600 hover:bg-blue-700"
                   >
                     <Play className="h-4 w-4" />
                     Bắt đầu tiết học
                   </Button>
                 ) : (
-                  <Button
-                    onClick={handleEndSession}
-                    variant="destructive"
-                    className="gap-2"
-                  >
-                    <Square className="h-4 w-4" />
-                    Kết thúc tiết học
-                  </Button>
+                  <>
+                    <div className="flex items-center gap-2 rounded-md bg-green-100 px-3 py-1.5 text-green-700">
+                      <Hand className="h-4 w-4" />
+                      <span className="font-medium">
+                        Tổng:{" "}
+                        {Object.values(sessionHandRaises).reduce(
+                          (a, b) => a + b,
+                          0
+                        )}{" "}
+                        lượt
+                      </span>
+                    </div>
+                    <Button
+                      onClick={handleEndSession}
+                      variant="destructive"
+                      className="gap-2"
+                      disabled={batchUpdateHandRaises.isPending}
+                    >
+                      <Square className="h-4 w-4" />
+                      {batchUpdateHandRaises.isPending
+                        ? "Đang lưu..."
+                        : "Kết thúc tiết học"}
+                    </Button>
+                  </>
                 )}
 
                 <div className="flex items-center gap-2 border-l border-blue-200 pl-3">
@@ -291,6 +398,28 @@ export function ClassroomTemplate({
               </div>
             </div>
 
+            {/* Session Info Banner */}
+            {sessionStatus === SessionStatus.IN_PROGRESS && currentSession && (
+              <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-3 w-3 items-center justify-center">
+                    <span className="absolute h-3 w-3 animate-ping rounded-full bg-green-400 opacity-75" />
+                    <span className="relative h-2 w-2 rounded-full bg-green-500" />
+                  </div>
+                  <span className="text-sm font-medium text-green-700">
+                    Tiết học đang diễn ra - Click vào học sinh để ghi nhận giơ
+                    tay
+                  </span>
+                </div>
+                <span className="text-xs text-green-600">
+                  Bắt đầu lúc{" "}
+                  {new Date(currentSession.startTime).toLocaleTimeString(
+                    "vi-VN"
+                  )}
+                </span>
+              </div>
+            )}
+
             {/* Seating Chart & Stats */}
             <div className="grid gap-4 lg:grid-cols-4">
               <div className="lg:col-span-3">
@@ -298,17 +427,18 @@ export function ClassroomTemplate({
                   seatingChart={seatingChart}
                   selectedStudent={selectedStudent}
                   onStudentClick={handleStudentClick}
-                  title={
-                    selectedClass && selectedSubject
-                      ? `${selectedClass.name} - ${selectedSubject}`
-                      : selectedClass
-                        ? `${selectedClass.name} - Chọn môn học`
-                        : "Chọn lớp học"
-                  }
+                  title={selectedClass?.name || "Sơ đồ lớp học"}
+                  sessionHandRaises={sessionHandRaises}
+                  isSessionActive={sessionStatus === SessionStatus.IN_PROGRESS}
+                  onDecrementHandRaise={handleDecrementHandRaise}
                 />
               </div>
               <div className="lg:col-span-1">
-                <ClassroomStats stats={classroomStats} />
+                <ClassroomStats
+                  stats={classroomStats}
+                  sessionHandRaises={sessionHandRaises}
+                  isSessionActive={sessionStatus === SessionStatus.IN_PROGRESS}
+                />
               </div>
             </div>
           </TabsContent>
@@ -319,7 +449,7 @@ export function ClassroomTemplate({
               <div
                 className={cn(
                   "lg:col-span-2",
-                  !studentDetail && "lg:col-span-3"
+                  !selectedDataStudent && "lg:col-span-3"
                 )}
               >
                 <StudentDataTable
@@ -330,12 +460,12 @@ export function ClassroomTemplate({
                   onStudentClick={handleStudentRowClick}
                 />
               </div>
-              {studentDetail && (
+              {selectedDataStudent && (
                 <div className="lg:col-span-1">
                   <StudentDetailPanel
-                    student={studentDetail}
+                    student={selectedDataStudent}
+                    classroomId={dataSelectedClassId}
                     onClose={handleCloseStudentDetail}
-                    onSaveNote={handleSaveNote}
                   />
                 </div>
               )}
@@ -349,7 +479,8 @@ export function ClassroomTemplate({
         open={showEndSessionDialog}
         onOpenChange={setShowEndSessionDialog}
         onConfirm={handleConfirmEndSession}
-        topStudent={classroomStats?.topActiveStudents[0]}
+        sessionHandRaises={sessionHandRaises}
+        isLoading={batchUpdateHandRaises.isPending}
       />
     </div>
   );

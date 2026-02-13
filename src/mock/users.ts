@@ -3,6 +3,16 @@ import { UserRole } from "@/types";
 
 export const mockUsers: User[] = [
   {
+    id: "0",
+    email: "admin@edu.vn",
+    name: "Admin User",
+    role: UserRole.ADMIN,
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin",
+    phone: "0900000000",
+    school: "EduTech Platform",
+    createdAt: "2024-01-01T08:00:00Z",
+  },
+  {
     id: "1",
     email: "nguyen.van.a@edu.vn",
     name: "Nguyễn Văn A",
@@ -40,4 +50,5 @@ export const mockUsers: User[] = [
   },
 ];
 
-export const mockTeacher: User = mockUsers[0];
+export const mockTeacher: User = mockUsers[1]; // Nguyễn Văn A
+export const mockAdmin: User = mockUsers[0]; // Admin User

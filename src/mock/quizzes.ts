@@ -1,10 +1,28 @@
-import type { Quiz, Question } from "@/types";
-import { QuestionType, Difficulty, QuizStatus } from "@/types";
+import type { QuestionUI } from "@/types";
+import { QuestionTypeUI, Difficulty, QuizStatus } from "@/types";
 
-export const mockQuestions: Question[] = [
+// Mock Quiz type for local state (includes fields not in backend)
+interface MockQuiz {
+  id: string;
+  title: string;
+  description?: string;
+  subject: string;
+  grade: number;
+  totalQuestions: number;
+  totalPoints: number;
+  duration: number;
+  questions: QuestionUI[];
+  status: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  tags?: string[];
+}
+
+export const mockQuestions: QuestionUI[] = [
   {
     id: "q1",
-    type: QuestionType.MULTIPLE_CHOICE,
+    type: QuestionTypeUI.SINGLE_CHOICE,
     content: "Phương trình bậc nhất một ẩn có dạng tổng quát là gì?",
     options: [
       "ax + b = 0 (a ≠ 0)",
@@ -15,34 +33,34 @@ export const mockQuestions: Question[] = [
     correctAnswer: 0,
     explanation: "Phương trình bậc nhất một ẩn có dạng ax + b = 0 với a ≠ 0",
     points: 1,
-    difficulty: Difficulty.EASY,
+    difficulty: Difficulty.RECOGNITION,
     tags: ["đại số", "phương trình"],
   },
   {
     id: "q2",
-    type: QuestionType.MULTIPLE_CHOICE,
+    type: QuestionTypeUI.SINGLE_CHOICE,
     content: "Nghiệm của phương trình 2x + 6 = 0 là?",
     options: ["-3", "3", "-2", "2"],
     correctAnswer: 0,
     explanation: "2x + 6 = 0 ⇒ 2x = -6 ⇒ x = -3",
     points: 1,
-    difficulty: Difficulty.MEDIUM,
+    difficulty: Difficulty.COMPREHENSION,
     tags: ["đại số", "phương trình"],
   },
   {
     id: "q3",
-    type: QuestionType.ESSAY,
+    type: QuestionTypeUI.ESSAY,
     content:
       "Giải phương trình: 3(x - 2) + 5 = 2(x + 1) và trình bày các bước giải.",
     correctAnswer: "x = 5",
     explanation: "3x - 6 + 5 = 2x + 2 ⇒ 3x - 1 = 2x + 2 ⇒ x = 3",
     points: 2,
-    difficulty: Difficulty.HARD,
+    difficulty: Difficulty.APPLICATION,
     tags: ["đại số", "phương trình"],
   },
 ];
 
-export const mockQuizzes: Quiz[] = [
+export const mockQuizzes: MockQuiz[] = [
   {
     id: "quiz-1",
     title: "Kiểm tra 15 phút - Phương trình bậc nhất",

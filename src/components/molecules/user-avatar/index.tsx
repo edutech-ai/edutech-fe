@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export interface UserAvatarProps {
   name: string;
@@ -56,8 +56,13 @@ export function UserAvatar({
   return (
     <div className={cn("relative inline-block", className)}>
       {avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
+          width={
+            size === "sm" ? 32 : size === "md" ? 40 : size === "lg" ? 48 : 64
+          }
+          height={
+            size === "sm" ? 32 : size === "md" ? 40 : size === "lg" ? 48 : 64
+          }
           src={avatarUrl}
           alt={name}
           className={cn("rounded-full object-cover", sizeClasses[size])}

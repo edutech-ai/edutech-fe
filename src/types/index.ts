@@ -6,24 +6,55 @@ export enum UserRole {
   STAFF = "STAFF",
 }
 
-export enum QuestionType {
-  MULTIPLE_CHOICE = "MULTIPLE_CHOICE",
-  ESSAY = "ESSAY",
+// Re-export QuestionType from question.ts (backend values: MCQ, MULTIPLE_ANSWER, TRUE_FALSE, ESSAY)
+// UI-friendly enum for form components (maps to backend values)
+export enum QuestionTypeUI {
+  SINGLE_CHOICE = "MCQ", // Single choice -> backend MCQ
+  MULTIPLE_CHOICE = "MULTIPLE_ANSWER", // Multiple choice -> backend MULTIPLE_ANSWER
   TRUE_FALSE = "TRUE_FALSE",
-  SHORT_ANSWER = "SHORT_ANSWER",
+  ESSAY = "ESSAY", // Essay/Short answer -> backend ESSAY
 }
 
 export enum Difficulty {
-  EASY = "EASY",
-  MEDIUM = "MEDIUM",
-  HARD = "HARD",
-  MIXED = "MIXED",
+  RECOGNITION = "RECOGNITION", // Nhận biết
+  COMPREHENSION = "COMPREHENSION", // Thông hiểu
+  APPLICATION = "APPLICATION", // Vận dụng
+  HIGH_APPLICATION = "HIGH_APPLICATION", // Vận dụng cao
 }
 
+// Quiz status values match backend (lowercase)
+export type QuizStatusType = "draft" | "public" | "archived";
+
+// Legacy enum for backward compatibility with existing code
 export enum QuizStatus {
-  DRAFT = "DRAFT",
-  PUBLISHED = "PUBLISHED",
-  ARCHIVED = "ARCHIVED",
+  DRAFT = "draft",
+  PUBLISHED = "public",
+  ARCHIVED = "archived",
+}
+
+// ==================== QUIZ GENERATE REQUEST ====================
+export interface QuizGenerateRequest {
+  subject: string;
+  grade: number;
+  topic: string;
+  numQuestions: number;
+  difficulty: Difficulty;
+  questionTypes: string[];
+  learningObjectives?: string;
+}
+
+// ==================== UI QUESTION TYPE (for forms and local state) ====================
+export interface QuestionUI {
+  id: string;
+  type: string;
+  content: string;
+  options?: string[];
+  correctAnswer?: number | string;
+  correctAnswers?: number[];
+  points: number;
+  difficulty: Difficulty | string;
+  explanation?: string;
+  tags?: string[];
 }
 
 export enum LessonPlanStatus {
@@ -76,6 +107,7 @@ export interface User {
   school?: string;
   subject?: string;
   grade?: number;
+  isPaidUser?: boolean;
   createdAt: string;
 }
 
@@ -83,48 +115,6 @@ export interface AuthResponse {
   user: User;
   token: string;
   refreshToken: string;
-}
-
-// ==================== QUIZ/EXAM ====================
-export interface Question {
-  id: string;
-  type: QuestionType;
-  content: string;
-  options?: string[]; // For multiple choice
-  correctAnswer?: string | number; // Index or text
-  explanation?: string;
-  points: number;
-  difficulty: Difficulty;
-  tags?: string[];
-  imageUrl?: string;
-}
-
-export interface Quiz {
-  id: string;
-  title: string;
-  description?: string;
-  subject: string;
-  grade: number;
-  totalQuestions: number;
-  totalPoints: number;
-  duration?: number; // minutes
-  questions: Question[];
-  status: QuizStatus;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  tags?: string[];
-}
-
-export interface QuizGenerateRequest {
-  topic: string;
-  subject: string;
-  grade: number;
-  numQuestions: number;
-  questionTypes: QuestionType[];
-  difficulty: Difficulty;
-  learningObjectives?: string;
-  language?: "vi" | "en";
 }
 
 // ==================== LESSON PLAN ====================
@@ -151,7 +141,6 @@ export interface LessonActivity {
   description: string;
   type: ActivityType;
 }
-
 export interface LessonPlanGenerateRequest {
   topic: string;
   subject: string;
@@ -162,31 +151,40 @@ export interface LessonPlanGenerateRequest {
 }
 
 // ==================== EXAM MATRIX ====================
-export interface ExamMatrix {
-  id: string;
-  title: string;
-  subject: string;
-  grade: number;
-  chapters: ChapterDistribution[];
-  totalQuestions: number;
-  difficultyDistribution: {
-    easy: number;
-    medium: number;
-    hard: number;
-  };
-  createdBy: string;
-  createdAt: string;
+export enum CognitiveDomain {
+  RECOGNITION = "RECOGNITION",
+  COMPREHENSION = "COMPREHENSION",
+  APPLICATION = "APPLICATION",
+  HIGH_APPLICATION = "HIGH_APPLICATION",
+}
+
+export interface CognitiveDomainDistribution {
+  recognition: { count: number; points: number };
+  comprehension: { count: number; points: number };
+  application: { count: number; points: number };
+  highApplication: { count: number; points: number };
 }
 
 export interface ChapterDistribution {
-  chapterId: string;
+  id: string;
+  chapterNumber: number;
   chapterName: string;
-  numQuestions: number;
-  difficulty: {
-    easy: number;
-    medium: number;
-    hard: number;
-  };
+  distribution: CognitiveDomainDistribution;
+}
+
+export interface ExamMatrix {
+  id: string;
+  name: string;
+  description?: string;
+  subject: string;
+  grade: number;
+  chapters: ChapterDistribution[];
+  totalChapters?: number;
+  totalQuestions: number;
+  totalPoints: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ==================== STUDENT EXAM ====================
@@ -282,23 +280,28 @@ export interface ApiResponse<T> {
 }
 
 // ==================== SUBJECTS & GRADES ====================
-export const SUBJECTS = [
-  "Toán",
-  "Ngữ Văn",
-  "Tiếng Anh",
-  "Vật Lý",
-  "Hóa Học",
-  "Sinh Học",
-  "Lịch Sử",
-  "Địa Lý",
-  "GDCD",
-  "Tin Học",
-] as const;
+export const SUBJECTS = ["Toán", "Ngữ Văn", "Tiếng Anh"] as const;
 
-export const GRADES = [6, 7, 8, 9, 10, 11, 12] as const;
+export const GRADES = [6, 7, 8, 9] as const;
 
 export type Subject = (typeof SUBJECTS)[number];
 export type Grade = (typeof GRADES)[number];
 
+// ==================== EXAM MATRIX API ====================
+export * from "./examMatrix";
+
 // ==================== CLASSROOM ====================
 export * from "./classroom";
+
+// ==================== QUIZ & QUESTION (Backend API) ====================
+export * from "./quiz";
+export * from "./question";
+
+// ==================== NOTIFICATION ====================
+export * from "./notification";
+
+// ==================== FOLDER ====================
+export * from "./folder";
+
+// ==================== DOCUMENT ====================
+export * from "./document";

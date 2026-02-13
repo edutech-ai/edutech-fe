@@ -1,7 +1,25 @@
-import type { Quiz, Question, QuizGenerateRequest } from "@/types";
-import { QuestionType, Difficulty, QuizStatus } from "@/types";
+import type { QuestionUI, QuizGenerateRequest } from "@/types";
+import { QuestionTypeUI, Difficulty, QuizStatus } from "@/types";
 import { mockQuizzes } from "@/mock";
 import { mockApiResponse, delay } from "./mockApi";
+
+// Mock Quiz type for local state (includes fields not in backend)
+interface MockQuiz {
+  id: string;
+  title: string;
+  description?: string;
+  subject: string;
+  grade: number;
+  totalQuestions: number;
+  totalPoints: number;
+  duration: number;
+  questions: QuestionUI[];
+  status: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  tags?: string[];
+}
 
 // Subject-specific question templates
 const questionTemplates: Record<
@@ -110,24 +128,26 @@ const questionTemplates: Record<
 };
 
 // Mock AI generation with realistic content
-const generateMockQuestions = (request: QuizGenerateRequest): Question[] => {
-  const questions: Question[] = [];
+const generateMockQuestions = (request: QuizGenerateRequest): QuestionUI[] => {
+  const questions: QuestionUI[] = [];
   const templates =
     questionTemplates[request.subject] || questionTemplates["Toán"];
 
   for (let i = 0; i < request.numQuestions; i++) {
     const type =
       request.questionTypes[i % request.questionTypes.length] ||
-      QuestionType.MULTIPLE_CHOICE;
+      QuestionTypeUI.SINGLE_CHOICE;
 
     // Select a template and customize it
     const template = templates[i % templates.length];
-    const difficulty =
-      request.difficulty === Difficulty.MIXED
-        ? [Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD][i % 3]
-        : request.difficulty;
+    const difficulty = [
+      Difficulty.RECOGNITION,
+      Difficulty.COMPREHENSION,
+      Difficulty.APPLICATION,
+      Difficulty.HIGH_APPLICATION,
+    ][i % 4];
 
-    if (type === QuestionType.MULTIPLE_CHOICE && template.options) {
+    if (type === QuestionTypeUI.SINGLE_CHOICE && template.options) {
       questions.push({
         id: `q-${Date.now()}-${i}`,
         type,
@@ -135,7 +155,19 @@ const generateMockQuestions = (request: QuizGenerateRequest): Question[] => {
         options: template.options,
         correctAnswer: template.correctAnswer as number,
         explanation: template.explanation,
-        points: difficulty === Difficulty.HARD ? 2 : 1,
+        points: difficulty === Difficulty.HIGH_APPLICATION ? 2 : 1,
+        difficulty,
+        tags: [request.subject, request.topic || ""],
+      });
+    } else if (type === QuestionTypeUI.MULTIPLE_CHOICE && template.options) {
+      questions.push({
+        id: `q-${Date.now()}-${i}`,
+        type,
+        content: template.content.replace("${topic}", request.topic || ""),
+        options: template.options,
+        correctAnswers: [template.correctAnswer as number],
+        explanation: template.explanation,
+        points: difficulty === Difficulty.HIGH_APPLICATION ? 2 : 1,
         difficulty,
         tags: [request.subject, request.topic || ""],
       });
@@ -144,10 +176,10 @@ const generateMockQuestions = (request: QuizGenerateRequest): Question[] => {
       questions.push({
         id: `q-${Date.now()}-${i}`,
         type,
-        content: `Phân tích và trình bày ${request.topic ? `về ${request.topic}` : "nội dung"} (${difficulty === Difficulty.HARD ? "phân tích chuyên sâu" : "trình bày ngắn gọn"})`,
+        content: `Phân tích và trình bày ${request.topic ? `về ${request.topic}` : "nội dung"} (${difficulty === Difficulty.HIGH_APPLICATION ? "phân tích chuyên sâu" : "trình bày ngắn gọn"})`,
         correctAnswer: `Học sinh cần phân tích và trình bày các điểm chính về ${request.topic || "nội dung"}, có dẫn chứng và lập luận rõ ràng.`,
         explanation: "Câu hỏi tự luận, cần phân tích toàn diện và logic.",
-        points: difficulty === Difficulty.HARD ? 3 : 2,
+        points: difficulty === Difficulty.HIGH_APPLICATION ? 3 : 2,
         difficulty,
         tags: [request.subject, request.topic || ""],
       });
@@ -158,25 +190,29 @@ const generateMockQuestions = (request: QuizGenerateRequest): Question[] => {
 };
 
 export const quizMockService = {
-  getAll: async (): Promise<Quiz[]> => {
+  getAll: async (): Promise<MockQuiz[]> => {
     return mockApiResponse(mockQuizzes);
   },
 
-  getById: async (id: string): Promise<Quiz | undefined> => {
-    const quiz = mockQuizzes.find((q) => q.id === id);
+  getById: async (id: string): Promise<MockQuiz | undefined> => {
+    const quiz = mockQuizzes.find((q: MockQuiz) => q.id === id);
     return mockApiResponse(quiz);
   },
 
-  create: async (quiz: Partial<Quiz>): Promise<Quiz> => {
-    const newQuiz: Quiz = {
+  create: async (quiz: Partial<MockQuiz>): Promise<MockQuiz> => {
+    const newQuiz: MockQuiz = {
       id: `quiz-${Date.now()}`,
       title: quiz.title || "Đề thi mới",
       description: quiz.description,
       subject: quiz.subject || "Toán",
       grade: quiz.grade || 9,
       totalQuestions: quiz.questions?.length || 0,
-      totalPoints: quiz.questions?.reduce((sum, q) => sum + q.points, 0) || 0,
-      duration: quiz.duration,
+      totalPoints:
+        quiz.questions?.reduce(
+          (sum: number, q: QuestionUI) => sum + q.points,
+          0
+        ) || 0,
+      duration: quiz.duration || 45,
       questions: quiz.questions || [],
       status: quiz.status || QuizStatus.DRAFT,
       createdBy: "1",
@@ -188,11 +224,11 @@ export const quizMockService = {
     return mockApiResponse(newQuiz);
   },
 
-  update: async (id: string, quiz: Partial<Quiz>): Promise<Quiz> => {
-    const existing = mockQuizzes.find((q) => q.id === id);
+  update: async (id: string, quiz: Partial<MockQuiz>): Promise<MockQuiz> => {
+    const existing = mockQuizzes.find((q: MockQuiz) => q.id === id);
     if (!existing) throw new Error("Quiz not found");
 
-    const updated: Quiz = {
+    const updated: MockQuiz = {
       ...existing,
       ...quiz,
       updatedAt: new Date().toISOString(),
@@ -207,7 +243,7 @@ export const quizMockService = {
   },
 
   // AI Generation - simulates 2-3 second processing
-  generateQuiz: async (request: QuizGenerateRequest): Promise<Question[]> => {
+  generateQuiz: async (request: QuizGenerateRequest): Promise<QuestionUI[]> => {
     // Simulate AI thinking time
     await delay(2500);
 
@@ -215,11 +251,11 @@ export const quizMockService = {
     return mockApiResponse(questions, 0); // No additional delay
   },
 
-  clone: async (id: string): Promise<Quiz> => {
-    const original = mockQuizzes.find((q) => q.id === id);
+  clone: async (id: string): Promise<MockQuiz> => {
+    const original = mockQuizzes.find((q: MockQuiz) => q.id === id);
     if (!original) throw new Error("Quiz not found");
 
-    const cloned: Quiz = {
+    const cloned: MockQuiz = {
       ...original,
       id: `quiz-${Date.now()}`,
       title: `${original.title} (Copy)`,

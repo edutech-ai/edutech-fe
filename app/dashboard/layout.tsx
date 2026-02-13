@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Bell, User as UserIcon } from "lucide-react";
-import { Loading } from "@/components/atoms/Loading";
+import { User as UserIcon } from "lucide-react";
+import { NotificationPopover } from "@/components/features/notification/NotificationPopover";
+import { CoreLoading } from "@/components/atoms/CoreLoading";
 import { AppSidebar } from "@/components/sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import {
@@ -16,13 +18,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { DashboardBreadcrumb } from "@/components/features/dashboard/DashboardBreadcrumb";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import type { User } from "@/types";
+import { useUserStore } from "@/store/useUserStore";
+import { useCurrentSubscription } from "@/services/paymentService";
 
 export default function DashboardLayout({
   children,
@@ -30,30 +28,46 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const { user: storeUser, isAuthenticated, setSubscription } = useUserStore();
   const [user, setUser] = useState<User | null>(null);
 
-  useEffect(() => {
-    // Check authentication and load user data
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
+  const { data: subscriptionData } = useCurrentSubscription(isAuthenticated());
 
-    if (!token || !userData) {
-      router.push("/login");
-    } else if (!user) {
-      // Only parse and set user if not already loaded
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setUser(JSON.parse(userData));
+  useEffect(() => {
+    if (subscriptionData?.data) {
+      setSubscription(subscriptionData.data);
     }
-  }, [router, user]);
+  }, [subscriptionData, setSubscription]);
+
+  useEffect(() => {
+    // Check authentication from Zustand store
+    if (!isAuthenticated()) {
+      router.push("/login");
+      return;
+    }
+
+    // Load user data from Zustand store
+    if (storeUser && !user) {
+      setUser({
+        id: storeUser.id,
+        name: storeUser.name || storeUser.email || "User",
+        email: storeUser.email || "",
+        role: storeUser.role || "TEACHER",
+        createdAt: storeUser.createdAt,
+        isPaidUser: storeUser.isPaidUser || false,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router, isAuthenticated, storeUser]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    // Clear Zustand store
+    useUserStore.getState().clearUser();
     router.push("/login");
   };
 
   if (!user) {
-    return <Loading message="Đang kiểm tra xác thực..." fullScreen />;
+    return <CoreLoading message="Đang kiểm tra xác thực..." fullScreen />;
   }
 
   return (
@@ -67,56 +81,54 @@ export default function DashboardLayout({
       }
     >
       <div className="flex min-h-screen w-full">
-        {/* Sidebar - Full Height Left */}
         <AppSidebar />
 
-        {/* Right side: Header + Content */}
+        {/* Header + Content */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
           <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-4 border-b bg-white px-6">
             {/* Sidebar trigger visible on all screen sizes */}
             <SidebarTrigger className="-ml-1" />
-            <div className="h-4 w-px bg-gray-200" />
-
-            {/* Logo/Title */}
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                EduTech AI
-              </h1>
-            </div>
 
             {/* Spacer */}
             <div className="flex-1" />
 
             {/* Right side: Notification + User */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {/* Notification */}
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
-              </Button>
+              <NotificationPopover />
 
               {/* User Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-sm">
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="hidden md:block text-left">
-                      <p className="text-sm font-medium">{user.name}</p>
-                      <p className="text-xs text-gray-500">{user.role}</p>
-                    </div>
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 px-1"
+                  >
+                    <Image
+                      src="/images/icons/icon_profile.svg"
+                      alt="Thông báo"
+                      width={32}
+                      height={32}
+                    />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>Tài khoản của tôi</DropdownMenuLabel>
+                  <DropdownMenuLabel>{user.name}! 👋</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-sm text-gray-500 font-light">
+                    {user.email}
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/dashboard/profile")}
+                  >
                     <UserIcon className="mr-2 h-4 w-4" />
                     Thông tin cá nhân
                   </DropdownMenuItem>
-                  <DropdownMenuItem>Cài đặt</DropdownMenuItem>
+                  {/* <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Cài đặt
+                  </DropdownMenuItem> */}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}

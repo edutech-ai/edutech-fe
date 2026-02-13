@@ -5,6 +5,9 @@ import { Edit, Trash2, GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSortable } from "@dnd-kit/sortable";
+import { LaTeXRenderer } from "@/components/atoms/latex-renderer";
+import { CSS } from "@dnd-kit/utilities";
 
 export interface Question {
   id: string;
@@ -45,8 +48,25 @@ export function QuestionItem({
   isDraggable = false,
   className,
 }: QuestionItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: question.id, disabled: !isDraggable });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   return (
     <div
+      ref={setNodeRef}
+      style={style}
       className={cn(
         "group bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow",
         className
@@ -55,7 +75,11 @@ export function QuestionItem({
       <div className="flex gap-3">
         {/* Drag Handle */}
         {isDraggable && (
-          <div className="flex items-start pt-1 cursor-grab active:cursor-grabbing">
+          <div
+            {...attributes}
+            {...listeners}
+            className="flex items-start pt-1 cursor-grab active:cursor-grabbing"
+          >
             <GripVertical className="w-5 h-5 text-gray-400" />
           </div>
         )}
@@ -69,9 +93,10 @@ export function QuestionItem({
         <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-2">
-            <h4 className="text-base font-medium text-gray-900 flex-1">
-              {question.content}
-            </h4>
+            <LaTeXRenderer
+              content={question.content}
+              className="text-base font-medium text-gray-900 flex-1"
+            />
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               {onEdit && (
                 <Button
@@ -121,7 +146,7 @@ export function QuestionItem({
                 <div
                   key={index}
                   className={cn(
-                    "text-sm px-3 py-1.5 rounded border",
+                    "text-sm px-3 py-1.5 rounded border flex items-center gap-1",
                     index === question.correctAnswer
                       ? "border-green-500 bg-green-50 text-green-700"
                       : "border-gray-200 bg-gray-50 text-gray-600"
@@ -130,7 +155,7 @@ export function QuestionItem({
                   <span className="font-medium mr-2">
                     {String.fromCharCode(65 + index)}.
                   </span>
-                  {answer}
+                  <LaTeXRenderer content={answer} as="span" />
                 </div>
               ))}
             </div>

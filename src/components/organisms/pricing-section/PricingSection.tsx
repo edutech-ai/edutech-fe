@@ -69,7 +69,7 @@ export function PricingSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-[1400px] mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-350 mx-auto">
           {plans.map((plan, index) => (
             <div
               key={index}
@@ -79,7 +79,7 @@ export function PricingSection() {
                 <h3 className="text-2xl font-medium text-gray-900 mb-4">
                   {plan.name}
                 </h3>
-                <p className="text-gray-500 text-sm min-h-[40px] px-4">
+                <p className="text-gray-500 text-sm min-h-10 px-4">
                   {plan.description}
                 </p>
               </div>
@@ -106,7 +106,7 @@ export function PricingSection() {
                 <ul className="space-y-4">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-gray-900 flex-shrink-0" />
+                      <Check className="w-5 h-5 text-gray-900 shrink-0" />
                       <span className="text-sm text-gray-600">{feature}</span>
                     </li>
                   ))}

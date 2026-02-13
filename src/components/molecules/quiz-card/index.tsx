@@ -9,17 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-
-export interface Quiz {
-  id: string;
-  name: string;
-  subject: string;
-  grade: number;
-  durationMinutes: number;
-  totalQuestions: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Quiz } from "@/types/quiz";
 
 interface QuizCardProps {
   quiz: Quiz;
@@ -149,9 +139,9 @@ export function QuizCard({
       <div className="space-y-0.5">
         <h3
           className="text-sm font-medium text-gray-900 text-center line-clamp-1 px-1s"
-          title={quiz.name}
+          title={quiz.title}
         >
-          {quiz.name}
+          {quiz.title}
         </h3>
 
         <div className="flex items-center justify-center gap-1 text-[12px] text-gray-700">
@@ -161,9 +151,9 @@ export function QuizCard({
         </div>
 
         <div className="flex items-center justify-center gap-1 text-[12px] text-gray-700">
-          <span>{quiz.totalQuestions} câu</span>
+          <span>{quiz.total_questions} câu</span>
           <span>•</span>
-          <span>{quiz.durationMinutes}p</span>
+          <span>{quiz.duration}p</span>
         </div>
       </div>
     </div>

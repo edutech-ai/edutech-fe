@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Linkedin, Twitter, Facebook } from "lucide-react";
 
 const footerLinks = {
   product: [
@@ -23,10 +22,21 @@ const footerLinks = {
     { name: "Cookie Policy", href: "/cookies" },
   ],
   social: [
-    { name: "Facebook", icon: Facebook, href: "#" },
-    { name: "Twitter", icon: Twitter, href: "#" },
-    { name: "LinkedIn", icon: Linkedin, href: "#" },
-    { name: "Email", icon: Mail, href: "mailto:contact@edutech.ai" },
+    {
+      name: "Facebook",
+      icon: "/images/brand/facebook.svg",
+      href: "https://www.facebook.com/aiedutechvn",
+    },
+    {
+      name: "TikTok",
+      icon: "/images/brand/tiktok.svg",
+      href: "https://www.tiktok.com/@aiedutechvn",
+    },
+    {
+      name: "Email",
+      icon: "/images/brand/mail.svg",
+      href: "mailto:edutechteam.work@gmail.com",
+    },
   ],
 };
 
@@ -36,11 +46,11 @@ export function Footer() {
   return (
     <footer className="bg-white border-t border-gray-100 relative overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03]">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')]" />
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05]">
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/grid.svg')]" />
       </div>
 
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-blue-50/50 to-transparent rounded-full blur-3xl -z-10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-250 h-125 bg-linear-to-b from-blue-50/50 to-transparent rounded-full blur-3xl -z-10" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-16">
@@ -71,15 +81,21 @@ export function Footer() {
             </p>
             <div className="flex gap-3">
               {footerLinks.social.map((social) => {
-                const Icon = social.icon;
                 return (
                   <a
                     key={social.name}
+                    target="_blank"
                     href={social.href}
-                    className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md"
+                    className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 hover:bg-primary hover:text-white hover:border-blue-600 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md"
                     aria-label={social.name}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Image
+                      src={social.icon}
+                      alt={social.name}
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
                   </a>
                 );
               })}

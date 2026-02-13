@@ -1,0 +1,88 @@
+{
+  "name": "EduTech AI - Hệ thống tạo đề thi thông minh",
+  "short_name": "EduTech AI",
+  "description": "Hệ thống tạo đề thi thông minh, hỗ trợ giáo viên tạo, quản lý và chia sẻ đề thi hiệu quả",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "vi",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/logo.png",
+      "sizes": "500x500",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/og-image.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Trang chủ EduTech AI trên desktop"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Tạo đề thi mới",
+      "short_name": "Đề thi mới",
+      "description": "Tạo đề thi mới nhanh chóng",
+      "url": "/lesson-plan/create",
+      "icons": [
+        {
+          "src": "/icons/lesson-plan.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Chấm điểm tự động",
+      "short_name": "Chấm điểm",
+      "description": "Truy cập tính năng chấm điểm tự động",
+      "url": "/auto-grading",
+      "icons": [
+        {
+          "src": "/icons/exam.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Thi trực tuyến",
+      "short_name": "Thi online",
+      "description": "Tạo và quản lý bài thi trực tuyến",
+      "url": "/exam",
+      "icons": [
+        {
+          "src": "/icons/exam.svg",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

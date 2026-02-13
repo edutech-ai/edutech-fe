@@ -12,25 +12,35 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 import {
   FolderIcon,
   FolderColorPicker,
-  type FolderColor,
+  type FolderColorBackend,
 } from "@/components/atoms/FolderIcon";
 
 interface CreateFolderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateFolder: (name: string, color: FolderColor) => void;
+  onCreateFolder: (
+    name: string,
+    color: FolderColorBackend,
+    parentId: string | null
+  ) => void;
+  parentId?: string | null;
+  isLoading?: boolean;
 }
 
 export function CreateFolderDialog({
   open,
   onOpenChange,
   onCreateFolder,
+  parentId = null,
+  isLoading = false,
 }: CreateFolderDialogProps) {
   const [folderName, setFolderName] = useState("");
-  const [selectedColor, setSelectedColor] = useState<FolderColor>("blue");
+  const [selectedColor, setSelectedColor] =
+    useState<FolderColorBackend>("blue");
   const [error, setError] = useState("");
 
   const handleCreate = () => {
@@ -39,20 +49,26 @@ export function CreateFolderDialog({
       return;
     }
 
-    onCreateFolder(folderName.trim(), selectedColor);
-    handleClose();
+    if (folderName.trim().length > 100) {
+      setError("Tên thư mục không được quá 100 ký tự");
+      return;
+    }
+
+    onCreateFolder(folderName.trim(), selectedColor, parentId);
   };
 
   const handleClose = () => {
-    setFolderName("");
-    setSelectedColor("blue");
-    setError("");
-    onOpenChange(false);
+    if (!isLoading) {
+      setFolderName("");
+      setSelectedColor("blue");
+      setError("");
+      onOpenChange(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle>Tạo thư mục mới</DialogTitle>
           <DialogDescription>
@@ -84,7 +100,14 @@ export function CreateFolderDialog({
                 setFolderName(e.target.value);
                 setError("");
               }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !isLoading) {
+                  handleCreate();
+                }
+              }}
               className={error ? "border-red-500" : ""}
+              disabled={isLoading}
+              maxLength={100}
             />
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -100,10 +123,19 @@ export function CreateFolderDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={isLoading}>
             Hủy
           </Button>
-          <Button onClick={handleCreate}>Tạo thư mục</Button>
+          <Button onClick={handleCreate} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Đang tạo...
+              </>
+            ) : (
+              "Tạo thư mục"
+            )}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

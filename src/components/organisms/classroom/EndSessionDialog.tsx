@@ -11,25 +11,22 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { StudentInitials } from "@/components/atoms/StudentInitials";
 import { Check } from "lucide-react";
 
 export interface EndSessionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (notes: string) => void;
-  topStudent?: {
-    name: string;
-    participationCount: number;
-  };
-  className?: string;
+  sessionHandRaises?: Record<string, number>;
+  isLoading?: boolean;
 }
 
 export function EndSessionDialog({
   open,
   onOpenChange,
   onConfirm,
-  topStudent,
+  sessionHandRaises = {},
+  isLoading = false,
 }: EndSessionDialogProps) {
   const [notes, setNotes] = React.useState("");
 
@@ -37,6 +34,14 @@ export function EndSessionDialog({
     onConfirm(notes);
     setNotes("");
   };
+
+  const sessionTotal = Object.values(sessionHandRaises).reduce(
+    (a, b) => a + b,
+    0
+  );
+  const sessionStudentCount = Object.keys(sessionHandRaises).filter(
+    (k) => sessionHandRaises[k] > 0
+  ).length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,23 +52,23 @@ export function EndSessionDialog({
           </div>
           <DialogTitle className="text-center">Kết thúc tiết học</DialogTitle>
           <DialogDescription className="text-center">
-            Tiết học đã kết thúc thành công. Gửi lời cảm ơn và thông kê nhanh.
+            Xác nhận kết thúc tiết học và lưu dữ liệu giơ tay.
           </DialogDescription>
         </DialogHeader>
 
-        {topStudent && (
-          <div className="my-4 flex items-center justify-center gap-4 rounded-lg bg-blue-50 p-4">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Học sinh tích cực nhất</p>
-              <div className="mt-2 flex items-center justify-center gap-2">
-                <StudentInitials name={topStudent.name} size="md" />
-                <span className="font-semibold text-gray-800">
-                  {topStudent.name}
-                </span>
-              </div>
-            </div>
+        {/* Session Summary */}
+        <div className="my-4 grid grid-cols-2 gap-3 rounded-lg bg-gray-50 p-4">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-blue-600">{sessionTotal}</p>
+            <p className="text-xs text-gray-600">Tổng lượt giơ tay</p>
           </div>
-        )}
+          <div className="text-center">
+            <p className="text-2xl font-bold text-green-600">
+              {sessionStudentCount}
+            </p>
+            <p className="text-xs text-gray-600">Học sinh tham gia</p>
+          </div>
+        </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">
@@ -73,15 +78,21 @@ export function EndSessionDialog({
             placeholder="Nhập ghi chú cho tiết học này..."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="min-h-[80px]"
+            className="min-h-20"
           />
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Đóng và chỉnh sửa
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            Hủy
           </Button>
-          <Button onClick={handleConfirm}>Lưu và Đóng</Button>
+          <Button onClick={handleConfirm} disabled={isLoading}>
+            {isLoading ? "Đang lưu..." : "Lưu và Kết thúc"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -4,11 +4,12 @@ import { Eye, Download, Save, Edit, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/atoms/Loading";
-import type { Question } from "@/types";
-import { QuestionType } from "@/types";
+import type { QuestionUI } from "@/types";
+import { QuestionTypeUI } from "@/types";
+import { LaTeXRenderer } from "@/components/atoms/latex-renderer";
 
 interface QuizPreviewProps {
-  questions: Question[] | null;
+  questions: QuestionUI[] | null;
   isGenerating: boolean;
 }
 
@@ -116,10 +117,14 @@ export function QuizPreview({ questions, isGenerating }: QuizPreviewProps) {
               </div>
 
               {/* Question Content */}
-              <p className="text-gray-800 mb-3">{question.content}</p>
+              <LaTeXRenderer
+                content={question.content}
+                className="text-gray-800 mb-3"
+              />
 
               {/* Options for Multiple Choice */}
-              {question.type === QuestionType.MULTIPLE_CHOICE &&
+              {(question.type === QuestionTypeUI.SINGLE_CHOICE ||
+                question.type === QuestionTypeUI.MULTIPLE_CHOICE) &&
                 question.options && (
                   <div className="space-y-2 ml-4">
                     {question.options.map((option, optIndex) => (
@@ -134,7 +139,11 @@ export function QuizPreview({ questions, isGenerating }: QuizPreviewProps) {
                         <span className="font-medium text-gray-700">
                           {String.fromCharCode(65 + optIndex)}.
                         </span>
-                        <span className="text-gray-800">{option}</span>
+                        <LaTeXRenderer
+                          content={option}
+                          className="text-gray-800 flex-1"
+                          as="span"
+                        />
                         {question.correctAnswer === optIndex && (
                           <CheckCircle2 className="w-4 h-4 text-green-600 ml-auto" />
                         )}
@@ -149,9 +158,10 @@ export function QuizPreview({ questions, isGenerating }: QuizPreviewProps) {
                   <p className="text-sm font-medium text-blue-900 mb-1">
                     Giải thích:
                   </p>
-                  <p className="text-sm text-blue-800">
-                    {question.explanation}
-                  </p>
+                  <LaTeXRenderer
+                    content={question.explanation}
+                    className="text-sm text-blue-800"
+                  />
                 </div>
               )}
 

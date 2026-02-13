@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useUserStore } from "@/store/useUserStore";
 
 export default function NotFound() {
+  const { user } = useUserStore();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-2xl w-full text-center">
@@ -27,7 +32,15 @@ export default function NotFound() {
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            href="/"
+            href={
+              user
+                ? user.role === "STUDENT"
+                  ? "/home"
+                  : user.role === "ADMIN"
+                    ? "/admin/dashboard"
+                    : "/dashboard"
+                : "/"
+            }
             className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
           >
             Về trang chủ

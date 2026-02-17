@@ -1,18 +1,9 @@
-// ==================== QUIZ TYPES (Backend Schema) ====================
-
-/**
- * Quiz difficulty levels from backend
- */
 export type QuizDifficulty = "easy" | "medium" | "hard";
 
-/**
- * Quiz status from backend
- */
 export type QuizStatus = "draft" | "public" | "archived";
 
-/**
- * Quiz entity from backend
- */
+export type QuizVisibility = "private" | "community";
+
 export interface Quiz {
   id: string;
   teacher_id: string;
@@ -22,6 +13,7 @@ export interface Quiz {
   exam_code?: string | null;
   qr_code?: string | null;
   status: QuizStatus;
+  visibility?: QuizVisibility;
   total_questions: number;
   grade?: number;
   subject: string;

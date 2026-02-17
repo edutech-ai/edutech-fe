@@ -408,7 +408,7 @@ export function LibraryTemplate() {
                       cls: "bg-amber-400 text-white border-0 rounded-sm",
                     },
                     public: {
-                      label: "Công khai",
+                      label: "Hoàn chỉnh",
                       cls: "bg-blue-500 text-white border-0 rounded-sm",
                     },
                     archived: {

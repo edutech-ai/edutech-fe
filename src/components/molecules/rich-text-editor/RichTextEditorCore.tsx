@@ -149,13 +149,22 @@ export function RichTextEditorCore({
     []
   );
 
+  const handleChange = useCallback(
+    (newValue: string, _delta: unknown, source: string) => {
+      if (source === "user") {
+        onChange(newValue);
+      }
+    },
+    [onChange]
+  );
+
   return (
     <div className={cn(variant === "minimal" && "quill-minimal", className)}>
       <ReactQuill
         ref={quillRef}
         theme="snow"
         value={value}
-        onChange={onChange}
+        onChange={handleChange}
         placeholder={placeholder}
         modules={modules}
         formats={formats}

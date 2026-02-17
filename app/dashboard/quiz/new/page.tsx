@@ -16,6 +16,7 @@ import type { QuestionUI } from "@/types";
 import { toast } from "sonner";
 import {
   useCreateQuiz,
+  useDeleteQuiz,
   useQuizById,
   useQuizQuestions,
 } from "@/services/quizService";
@@ -36,6 +37,7 @@ export default function QuizNewPage() {
 
   // API mutations
   const createQuizMutation = useCreateQuiz();
+  const deleteQuizMutation = useDeleteQuiz();
   const bulkCreateQuestionsMutation = useBulkCreateQuestions();
 
   // Fetch quiz for duplication
@@ -72,18 +74,48 @@ export default function QuizNewPage() {
       typeof opt === "string" ? opt : opt.text
     );
 
-    // Find the index of correct answer in options if it's MCQ
-    const correctAnswerIndex =
-      convertedOptions && typeof q.correct_answer === "string"
-        ? convertedOptions.findIndex((opt) => opt === q.correct_answer)
-        : -1;
+    const resolveOptionIndex = (ans: string): number => {
+      if (!convertedOptions) return -1;
+      let idx = convertedOptions.findIndex((opt) => opt === ans);
+      if (idx === -1 && /^[A-Za-z]$/.test(ans)) {
+        const letterIdx = ans.toUpperCase().charCodeAt(0) - 65;
+        if (letterIdx >= 0 && letterIdx < convertedOptions.length)
+          idx = letterIdx;
+      }
+      return idx;
+    };
+
+    let correctAnswer: number | string | undefined = undefined;
+    let correctAnswers: number[] | undefined = undefined;
+
+    if (q.type === "MULTIPLE_ANSWER" && Array.isArray(q.correct_answer)) {
+      correctAnswers = (q.correct_answer as string[])
+        .map(resolveOptionIndex)
+        .filter((idx) => idx !== -1);
+    } else if (q.type === "TRUE_FALSE") {
+      const val = String(q.correct_answer);
+      correctAnswer = val === "1" ? 1 : 0;
+    } else if (q.type === "ESSAY") {
+      correctAnswer =
+        typeof q.correct_answer === "string" ? q.correct_answer : "";
+    } else if (convertedOptions) {
+      if (typeof q.correct_answer === "number") {
+        const idx = q.correct_answer;
+        correctAnswer =
+          idx >= 0 && idx < convertedOptions.length ? idx : undefined;
+      } else if (typeof q.correct_answer === "string") {
+        const idx = resolveOptionIndex(q.correct_answer);
+        correctAnswer = idx >= 0 ? idx : undefined;
+      }
+    }
 
     return {
       id: q.id,
       type: q.type,
       content: q.content,
       options: convertedOptions,
-      correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : undefined,
+      correctAnswer,
+      correctAnswers,
       points: q.point,
       difficulty: q.difficulty,
       explanation: q.explanation ?? undefined,
@@ -372,54 +404,80 @@ export default function QuizNewPage() {
 
       // Step 2: Create questions if any
       if (quiz.questions && quiz.questions.length > 0) {
-        await bulkCreateQuestionsMutation.mutateAsync({
-          quiz_id: newQuizId,
-          questions: quiz.questions.map((q) => {
-            // Determine correct_answer based on question type
-            let correct_answer: string | string[];
+        try {
+          await bulkCreateQuestionsMutation.mutateAsync({
+            quiz_id: newQuizId,
+            questions: quiz.questions.map((q) => {
+              let correct_answer: string | string[];
 
-            if (q.type === "TRUE_FALSE") {
-              // TRUE_FALSE: send as string "0" or "1"
-              correct_answer = String(
-                typeof q.correctAnswer === "number" ? q.correctAnswer : 0
-              );
-            } else if (q.type === "ESSAY") {
-              // ESSAY: send as string
-              correct_answer = String(q.correctAnswer ?? "");
-            } else if (
-              q.type === "MULTIPLE_ANSWER" &&
-              q.correctAnswers &&
-              q.options
-            ) {
-              // MULTIPLE_ANSWER: convert array of indices to array of option texts
-              correct_answer = q.correctAnswers
-                .map((idx) => q.options![idx])
-                .filter(Boolean);
-            } else if (typeof q.correctAnswer === "number" && q.options) {
-              // MCQ: convert index to option text
-              correct_answer = q.options[q.correctAnswer] ?? "";
+              if (q.type === "TRUE_FALSE") {
+                correct_answer = String(
+                  typeof q.correctAnswer === "number" ? q.correctAnswer : 0
+                );
+              } else if (q.type === "ESSAY") {
+                correct_answer = String(q.correctAnswer ?? "");
+              } else if (
+                q.type === "MULTIPLE_ANSWER" &&
+                q.correctAnswers &&
+                q.options
+              ) {
+                correct_answer = q.correctAnswers
+                  .map((idx) => q.options![idx])
+                  .filter(Boolean);
+              } else if (typeof q.correctAnswer === "number" && q.options) {
+                correct_answer = q.options[q.correctAnswer] ?? "";
+              } else {
+                correct_answer = String(q.correctAnswer ?? "");
+              }
+
+              return {
+                content: stripHtmlToLatex(q.content),
+                options: q.options?.map(stripHtmlToLatex),
+                correct_answer: Array.isArray(correct_answer)
+                  ? correct_answer.map(stripHtmlToLatex)
+                  : stripHtmlToLatex(correct_answer),
+                type: q.type as
+                  | "MCQ"
+                  | "MULTIPLE_ANSWER"
+                  | "TRUE_FALSE"
+                  | "ESSAY",
+                point: q.points,
+                explanation: q.explanation
+                  ? stripHtmlToLatex(q.explanation)
+                  : undefined,
+              };
+            }),
+          });
+        } catch (questionError: any) {
+          try {
+            await deleteQuizMutation.mutateAsync(newQuizId);
+          } catch {
+            // ignore rollback error
+          }
+
+          const errorData = questionError?.response?.data;
+          let errorMessage = "Câu hỏi không hợp lệ, vui lòng kiểm tra lại";
+          if (errorData?.errors?.length > 0) {
+            const firstError = errorData.errors[0];
+            if (firstError.path?.includes("correct_answer")) {
+              const match = firstError.path.match(/questions\[(\d+)\]/);
+              const qNum = match ? Number(match[1]) + 1 : null;
+              errorMessage = qNum
+                ? `Câu hỏi số ${qNum} chưa có đáp án đúng`
+                : "Có câu hỏi chưa có đáp án đúng";
             } else {
-              correct_answer = String(q.correctAnswer ?? "");
+              errorMessage =
+                firstError.msg || errorData.message || errorMessage;
             }
+          } else if (errorData?.message) {
+            errorMessage = errorData.message;
+          } else if (questionError?.message) {
+            errorMessage = questionError.message;
+          }
 
-            return {
-              content: stripHtmlToLatex(q.content),
-              options: q.options?.map(stripHtmlToLatex),
-              correct_answer: Array.isArray(correct_answer)
-                ? correct_answer.map(stripHtmlToLatex)
-                : stripHtmlToLatex(correct_answer),
-              type: q.type as
-                | "MCQ"
-                | "MULTIPLE_ANSWER"
-                | "TRUE_FALSE"
-                | "ESSAY",
-              point: q.points,
-              explanation: q.explanation
-                ? stripHtmlToLatex(q.explanation)
-                : undefined,
-            };
-          }),
-        });
+          toast.error(errorMessage);
+          return;
+        }
 
         toast.success(
           isDraft

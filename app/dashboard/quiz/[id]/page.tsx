@@ -136,12 +136,13 @@ export default function QuizDetailPage() {
 
   const getDifficultyColor = (difficulty?: string) => {
     const colors = {
-      easy: "bg-green-100 text-green-700",
-      medium: "bg-yellow-100 text-yellow-700",
-      hard: "bg-red-100 text-red-700",
+      easy: "bg-green-500 text-white border-0 rounded-sm",
+      medium: "bg-yellow-500 text-white border-0 rounded-sm",
+      hard: "bg-red-500 text-white border-0 rounded-sm",
     };
     return (
-      colors[difficulty as keyof typeof colors] || "bg-gray-100 text-gray-700"
+      colors[difficulty as keyof typeof colors] ||
+      "bg-gray-400 text-white border-0 rounded-sm"
     );
   };
 
@@ -153,15 +154,6 @@ export default function QuizDetailPage() {
       hard: "Khó",
     };
     return texts[difficulty] || difficulty;
-  };
-
-  const getStatusColor = (status?: string) => {
-    const colors = {
-      draft: "bg-gray-100 text-gray-700",
-      public: "bg-blue-100 text-blue-700",
-      archived: "bg-orange-100 text-orange-700",
-    };
-    return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-700";
   };
 
   return (
@@ -186,17 +178,11 @@ export default function QuizDetailPage() {
                 {renderDifficultyText(quiz.difficulty)}
               </Badge>
             )}
-            {quiz.status && (
-              <Badge className={getStatusColor(quiz.status)}>
-                {quiz.status === "public"
-                  ? "Công khai"
-                  : quiz.status === "draft"
-                    ? "Bản nháp"
-                    : "Đã lưu trữ"}
-              </Badge>
-            )}
+
             {quiz.visibility === "community" && (
-              <Badge className="bg-green-100 text-green-700">Cộng đồng</Badge>
+              <Badge className="bg-green-500 text-white border-0 rounded-sm">
+                Công khai
+              </Badge>
             )}
           </div>
         </div>

@@ -65,6 +65,7 @@ export interface CreateQuestionRequest {
   correct_answer: CorrectAnswer;
   type?: QuestionType;
   point?: number;
+  difficulty?: Difficulty;
   explanation?: string;
 }
 
@@ -77,6 +78,7 @@ export interface UpdateQuestionRequest {
   correct_answer?: CorrectAnswer;
   type?: QuestionType;
   point?: number;
+  difficulty?: Difficulty;
   explanation?: string;
   document_id?: string | null;
 }
@@ -92,6 +94,7 @@ export interface BulkCreateQuestionsRequest {
     correct_answer: CorrectAnswer;
     type?: QuestionType;
     point?: number;
+    difficulty?: Difficulty;
     explanation?: string;
     document_id?: string | null;
   }>;

@@ -11,7 +11,7 @@ import { QuizInfoTab } from "@/components/organisms/quiz/QuizInfoTab";
 import { QuestionListTab } from "@/components/organisms/quiz/QuestionListTab";
 import { PDFPreview } from "@/components/features/quiz-generator/PDFPreview";
 import type { Quiz, CreateQuizRequest } from "@/types/quiz";
-import type { Question } from "@/types/question";
+import type { Question, Difficulty } from "@/types/question";
 import type { QuestionUI } from "@/types";
 import { toast } from "sonner";
 import {
@@ -442,6 +442,7 @@ export default function QuizNewPage() {
                   | "TRUE_FALSE"
                   | "ESSAY",
                 point: q.points,
+                difficulty: q.difficulty as Difficulty,
                 explanation: q.explanation
                   ? stripHtmlToLatex(q.explanation)
                   : undefined,

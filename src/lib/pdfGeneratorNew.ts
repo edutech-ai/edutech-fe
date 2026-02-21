@@ -1,9 +1,6 @@
 import html2pdf from "html2pdf.js";
 import katex from "katex";
 
-// Fetches katex.min.css from CDN and rewrites relative font paths to absolute
-// CDN URLs so the CSS can be safely embedded inline inside the PDF element.
-// Cached after first successful fetch.
 let _katexInlineCSS: string | null = null;
 async function getKatexInlineCSS(): Promise<string> {
   if (_katexInlineCSS !== null) return _katexInlineCSS;

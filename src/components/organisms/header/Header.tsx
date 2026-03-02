@@ -2,10 +2,21 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
-import { Menu, X, Compass } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Menu,
+  X,
+  Compass,
+  User,
+  ChevronDown,
+  FileText,
+  School,
+  LogOut,
+} from "lucide-react";
 import { RainbowButton } from "@/components/ui/rainbow-button";
+import { useUserStore } from "@/store/useUserStore";
+import { getAvatarUrl } from "@/utils/avatarUtils";
 
 interface NavItem {
   label: string;
@@ -26,8 +37,22 @@ const navItems: NavItem[] = [
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const router = useRouter();
   const isHomePage = pathname === "/";
+
+  const { user, isAuthenticated, clearUser } = useUserStore();
+  const isLoggedIn = isAuthenticated();
+
+  const avatarSrc = user
+    ? getAvatarUrl({
+        avatarUrl: user.avatar_url,
+        name: user.name || "Giáo viên",
+        seed: user.id || user.name || "default",
+      })
+    : "";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,6 +60,19 @@ export function Header() {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleNavClick = (
@@ -59,10 +97,35 @@ export function Header() {
     }
   };
 
+  const handleLogout = () => {
+    clearUser();
+    setIsDropdownOpen(false);
+    setIsMobileMenuOpen(false);
+    router.push("/");
+  };
+
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
   };
+
+  const userMenuItems = [
+    {
+      label: "Thông tin cá nhân",
+      href: "/dashboard/profile",
+      icon: User,
+    },
+    {
+      label: "Quản lí đề thi",
+      href: "/dashboard/quizzes",
+      icon: FileText,
+    },
+    {
+      label: "Quản lí lớp học",
+      href: "/dashboard/classrooms",
+      icon: School,
+    },
+  ];
 
   return (
     <header
@@ -145,18 +208,80 @@ export function Header() {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <Link
-              href="/login"
-              className="text-sm font-semibold text-white bg-primary hover:bg-blue-700 px-4 py-2 rounded-full shadow-lg hover:shadow-blue-500/30 transition-all duration-300 cursor-pointer"
-            >
-              Đăng nhập
-            </Link>
-            <Link
-              href="/register"
-              className="px-5 py-2.5 text-sm md:hidden lg:block font-semibold text-primary bg-transparent border border-primary hover:bg-blue-600 hover:text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-blue-500/30 cursor-pointer"
-            >
-              Dùng thử miễn phí
-            </Link>
+            {isLoggedIn && user ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-full hover:bg-gray-100/80 transition-all duration-200 cursor-pointer group"
+                >
+                  {/* Avatar */}
+                  <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-blue-500/20 group-hover:ring-blue-500/40 transition-all">
+                    <Image
+                      src={avatarSrc}
+                      alt={user.name}
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 max-w-[120px] truncate">
+                    {user.name}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                      isDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in-up z-50">
+                    {/* Menu Items */}
+                    <div className="py-1">
+                      {userMenuItems.map((menuItem) => (
+                        <Link
+                          key={menuItem.label}
+                          href={menuItem.href}
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors cursor-pointer"
+                        >
+                          <menuItem.icon className="w-4 h-4" />
+                          {menuItem.label}
+                        </Link>
+                      ))}
+                    </div>
+
+                    {/* Logout */}
+                    <div className="border-t border-gray-100 pt-1">
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Đăng xuất
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Guest Auth Buttons */
+              <>
+                <Link
+                  href="/login"
+                  className="text-sm font-semibold text-white bg-primary hover:bg-blue-700 px-4 py-2 rounded-full shadow-lg hover:shadow-blue-500/30 transition-all duration-300 cursor-pointer"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-5 py-2.5 text-sm md:hidden lg:block font-semibold text-primary bg-transparent border border-primary hover:bg-blue-600 hover:text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-blue-500/30 cursor-pointer"
+                >
+                  Dùng thử miễn phí
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -217,20 +342,68 @@ export function Header() {
             )
           )}
           <hr className="border-gray-100 my-2" />
-          <Link
-            href="/login"
-            className="text-center py-3 font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Đăng nhập
-          </Link>
-          <Link
-            href="/register"
-            className="text-center py-3 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Dùng thử miễn phí
-          </Link>
+
+          {isLoggedIn && user ? (
+            /* Mobile Logged-in Menu */
+            <>
+              {/* User Info */}
+              <div className="flex items-center gap-3 px-4 py-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-blue-500/20">
+                  <Image
+                    src={avatarSrc}
+                    alt={user.name}
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+
+              <hr className="border-gray-100 my-1" />
+
+              {/* Menu Items */}
+              {userMenuItems.map((menuItem) => (
+                <Link
+                  key={menuItem.label}
+                  href={menuItem.href}
+                  className="flex items-center gap-3 py-3 px-4 text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <menuItem.icon className="w-5 h-5" />
+                  {menuItem.label}
+                </Link>
+              ))}
+
+              <hr className="border-gray-100 my-1" />
+
+              {/* Logout */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 py-3 px-4 text-base font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors w-full cursor-pointer"
+              >
+                <LogOut className="w-5 h-5" />
+                Đăng xuất
+              </button>
+            </>
+          ) : (
+            /* Mobile Guest Buttons */
+            <>
+              <Link
+                href="/login"
+                className="text-center py-3 font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Đăng nhập
+              </Link>
+              <Link
+                href="/register"
+                className="text-center py-3 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Dùng thử miễn phí
+              </Link>
+            </>
+          )}
         </div>
       )}
     </header>

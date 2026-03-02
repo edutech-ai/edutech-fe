@@ -102,7 +102,7 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
-  avatar?: string;
+  avatar_url?: string;
   phone?: string;
   school?: string;
   subject?: string;

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { useUserStore } from "@/store/useUserStore";
+import { getAvatarUrl } from "@/utils/avatarUtils";
 
 interface NavItem {
   label: string;
@@ -44,6 +45,14 @@ export function Header() {
 
   const { user, isAuthenticated, clearUser } = useUserStore();
   const isLoggedIn = isAuthenticated();
+
+  const avatarSrc = user
+    ? getAvatarUrl({
+        avatarUrl: user.avatar_url,
+        name: user.name || "Giáo viên",
+        seed: user.id || user.name || "default",
+      })
+    : "";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -206,22 +215,15 @@ export function Header() {
                   className="flex items-center gap-2.5 px-3 py-2 rounded-full hover:bg-gray-100/80 transition-all duration-200 cursor-pointer group"
                 >
                   {/* Avatar */}
-                  {user.avatar_url ? (
-                    <div className="relative w-9 h-9 rounded-full overflow-hidden ring-2 ring-blue-500/20 group-hover:ring-blue-500/40 transition-all">
-                      <Image
-                        src={user.avatar_url}
-                        alt={user.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center ring-2 ring-blue-500/20 group-hover:ring-blue-500/40 transition-all">
-                      <span className="text-white text-sm font-bold">
-                        {user.name?.charAt(0)?.toUpperCase() || "G"}
-                      </span>
-                    </div>
-                  )}
+                  <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-blue-500/20 group-hover:ring-blue-500/40 transition-all">
+                    <Image
+                      src={avatarSrc}
+                      alt={user.name}
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 max-w-[120px] truncate">
                     {user.name}
                   </span>
@@ -346,22 +348,15 @@ export function Header() {
             <>
               {/* User Info */}
               <div className="flex items-center gap-3 px-4 py-3">
-                {user.avatar_url ? (
-                  <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-blue-500/20">
-                    <Image
-                      src={user.avatar_url}
-                      alt={user.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">
-                      {user.name?.charAt(0)?.toUpperCase() || "G"}
-                    </span>
-                  </div>
-                )}
+                <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-blue-500/20">
+                  <Image
+                    src={avatarSrc}
+                    alt={user.name}
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </div>
 
               <hr className="border-gray-100 my-1" />

@@ -224,7 +224,7 @@ export function Header() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 max-w-[120px] truncate">
+                  <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 max-w-30 truncate">
                     {user.name}
                   </span>
                   <ChevronDown

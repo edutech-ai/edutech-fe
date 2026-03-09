@@ -146,6 +146,19 @@ export default function QuizPage() {
         </button>
       </div>
 
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <h3 className="font-semibold text-amber-900 mb-2">
+          Lưu ý về tải lên đề thi
+        </h3>
+        <ul className="space-y-1 text-sm text-amber-800">
+          <li>• Đáp án đúng cần được kiểm tra thủ công sau khi import</li>
+          <li>• Hình ảnh có thể được thêm vào sau</li>
+          <li>• Quá trình phân tích có thể mất một khoảng thời gian</li>
+          <li>
+            • Nâng cấp gói để tăng giới hạn kích thước file và số lượng câu hỏi
+          </li>
+        </ul>
+      </div>
       <AIGeneratorModal open={showAIModal} onOpenChange={setShowAIModal} />
     </div>
   );

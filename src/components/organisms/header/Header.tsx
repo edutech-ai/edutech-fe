@@ -26,7 +26,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Khám phá", href: "/explore", highlight: true },
+  { label: "Khám phá đề thi", href: "/explore", highlight: true },
   { label: "Về chúng tôi", href: "/about", scrollTarget: "#about" },
   { label: "Tính năng", href: "/features", scrollTarget: "#features" },
   { label: "Bảng giá", href: "/pricing" },

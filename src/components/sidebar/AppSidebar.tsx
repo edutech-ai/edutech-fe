@@ -155,8 +155,9 @@ function SidebarContent({
         )}
       >
         <div className="space-y-1">
-          <a
-            href="mailto:support@eduquiz.vn?subject=Báo lỗi hệ thống"
+          <Link
+            href="/dashboard/bug-report"
+            onClick={onClose}
             className={cn(
               "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-200",
               isCollapsed && "justify-center px-2"
@@ -172,9 +173,10 @@ function SidebarContent({
             >
               Báo lỗi hệ thống
             </span>
-          </a>
-          <a
-            href="mailto:support@eduquiz.vn?subject=Đề xuất tính năng"
+          </Link>
+          <Link
+            href="/dashboard/feature-request"
+            onClick={onClose}
             className={cn(
               "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-200",
               isCollapsed && "justify-center px-2"
@@ -190,7 +192,7 @@ function SidebarContent({
             >
               Đề xuất tính năng
             </span>
-          </a>
+          </Link>
         </div>
         {!isCollapsed && (
           <p className="text-xs text-gray-400 text-center mt-3">

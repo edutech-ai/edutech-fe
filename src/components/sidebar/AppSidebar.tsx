@@ -13,6 +13,8 @@ import {
   X,
   Users,
   Grid3x3,
+  AlertCircle,
+  Lightbulb,
 } from "lucide-react";
 import { useSidebar } from "../ui/sidebar";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "../ui/sheet";
@@ -77,7 +79,7 @@ function SidebarContent({
   return (
     <div className="bg-white flex flex-col h-full">
       {/* Header */}
-      <div className="h-16 flex items-center justify-between border-b border-gray-200 px-3 overflow-hidden">
+      <div className="h-18 flex items-center justify-between border-b border-gray-200 px-4 overflow-hidden">
         <Link
           href="/dashboard"
           className="flex items-center justify-start flex-1 min-w-0"
@@ -91,10 +93,10 @@ function SidebarContent({
                   : "/images/logo/logo-text.svg"
               }
               alt="EduTech Logo"
-              width={isCollapsed ? 40 : 150}
-              height={40}
+              width={isCollapsed ? 44 : 160}
+              height={44}
               className="shrink-0 transition-all duration-300 ease-in-out"
-              style={{ width: "auto", height: "auto", maxHeight: "40px" }}
+              style={{ width: "auto", height: "auto", maxHeight: "44px" }}
             />
           </div>
         </Link>
@@ -108,7 +110,7 @@ function SidebarContent({
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4">
-        <div className="space-y-1 px-2">
+        <div className="space-y-1 px-3">
           {teacherMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -122,7 +124,7 @@ function SidebarContent({
                 href={item.url}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ease-in-out overflow-hidden",
+                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ease-in-out overflow-hidden",
                   isActive
                     ? "bg-blue-50 text-blue-600 font-semibold"
                     : "text-gray-700 hover:bg-gray-100",
@@ -130,10 +132,10 @@ function SidebarContent({
                 )}
                 title={isCollapsed ? item.title : undefined}
               >
-                <Icon className="w-5 h-5 shrink-0" />
+                <Icon className="w-6 h-6 shrink-0" />
                 <span
                   className={cn(
-                    "text-sm whitespace-nowrap transition-all duration-300 ease-in-out",
+                    "text-[15px] whitespace-nowrap transition-all duration-300 ease-in-out",
                     isCollapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
                   )}
                 >
@@ -144,6 +146,58 @@ function SidebarContent({
           })}
         </div>
       </nav>
+
+      {/* Footer */}
+      <div
+        className={cn(
+          "border-t border-gray-200 py-3 px-3",
+          isCollapsed && "px-2"
+        )}
+      >
+        <div className="space-y-1">
+          <a
+            href="mailto:support@eduquiz.vn?subject=Báo lỗi hệ thống"
+            className={cn(
+              "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-200",
+              isCollapsed && "justify-center px-2"
+            )}
+            title={isCollapsed ? "Báo lỗi hệ thống" : undefined}
+          >
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <span
+              className={cn(
+                "whitespace-nowrap transition-all duration-300",
+                isCollapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
+              )}
+            >
+              Báo lỗi hệ thống
+            </span>
+          </a>
+          <a
+            href="mailto:support@eduquiz.vn?subject=Đề xuất tính năng"
+            className={cn(
+              "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-200",
+              isCollapsed && "justify-center px-2"
+            )}
+            title={isCollapsed ? "Đề xuất tính năng" : undefined}
+          >
+            <Lightbulb className="w-5 h-5 shrink-0" />
+            <span
+              className={cn(
+                "whitespace-nowrap transition-all duration-300",
+                isCollapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
+              )}
+            >
+              Đề xuất tính năng
+            </span>
+          </a>
+        </div>
+        {!isCollapsed && (
+          <p className="text-xs text-gray-400 text-center mt-3">
+            © EduTech {new Date().getFullYear()}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -187,7 +241,7 @@ export function AppSidebar() {
       <aside
         className={cn(
           "hidden md:flex bg-white border-r-[0.5px] border-gray-200 flex-col transition-all duration-300 ease-in-out sticky top-0 h-screen",
-          isCollapsed ? "w-16" : "w-64"
+          isCollapsed ? "w-18" : "w-72"
         )}
       >
         <SidebarContent isCollapsed={isCollapsed} />
@@ -195,7 +249,7 @@ export function AppSidebar() {
 
       {/* Mobile Sidebar - Sheet Drawer */}
       <Sheet open={openMobile} onOpenChange={setOpenMobile}>
-        <SheetContent side="left" className="w-64 p-0 [&>button]:hidden">
+        <SheetContent side="left" className="w-72 p-0 [&>button]:hidden">
           <VisuallyHidden>
             <SheetTitle>Navigation Menu</SheetTitle>
             <SheetDescription>Main navigation sidebar</SheetDescription>

@@ -25,6 +25,8 @@ export function DashboardBreadcrumb() {
     "/dashboard/settings": "Cài đặt",
     "/dashboard/exam-matrix/new": "Tạo mới",
     "/dashboard/profile": "Thông tin cá nhân",
+    "/dashboard/bug-report": "Báo lỗi hệ thống",
+    "/dashboard/feature-request": "Đề xuất tính năng",
   };
 
   // Build folder hierarchy from current folder ID

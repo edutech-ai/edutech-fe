@@ -26,15 +26,6 @@ const aiOptions = [
     disabled: true,
   },
   {
-    id: "upload",
-    title: "Tạo từ Tài liệu",
-    description:
-      "Tải lên tài liệu, giáo trình hoặc bài giảng để AI tạo đề thi dựa trên nội dung liên quan",
-    image: "/images/quiz/upload.svg",
-    route: "/dashboard/quiz/upload",
-    disabled: true,
-  },
-  {
     id: "prompt",
     title: "Tạo theo Chủ đề",
     description:

@@ -346,7 +346,7 @@ export default function BugReportPage() {
                       ) : (
                         <div className="flex flex-col items-center gap-1 text-gray-400">
                           <FileVideo className="w-6 h-6" />
-                          <span className="text-[10px] truncate max-w-[68px] px-1">
+                          <span className="text-[10px] truncate max-w-17 px-1">
                             {file.name}
                           </span>
                         </div>

@@ -102,7 +102,7 @@ export default function FeatureRequestPage() {
     <div className="bg-white rounded-2xl border border-gray-100 p-5 flex gap-4 shadow-sm hover:shadow-md transition-shadow">
       <button
         onClick={() => handleLike(request.id)}
-        className={`flex flex-col items-center gap-1 min-w-[52px] pt-1 rounded-xl px-2 py-2 transition-all ${
+        className={`flex flex-col items-center gap-1 min-w-13 pt-1 rounded-xl px-2 py-2 transition-all ${
           request.liked
             ? "text-blue-600 bg-blue-50"
             : "text-gray-400 hover:bg-gray-50 hover:text-blue-500"

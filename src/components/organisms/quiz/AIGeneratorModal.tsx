@@ -26,15 +26,6 @@ const aiOptions = [
     disabled: true,
   },
   {
-    id: "upload",
-    title: "Tạo từ Tài liệu",
-    description:
-      "Tải lên tài liệu, giáo trình hoặc bài giảng để AI tạo đề thi dựa trên nội dung liên quan",
-    image: "/images/quiz/upload.svg",
-    route: "/dashboard/quiz/upload",
-    disabled: true,
-  },
-  {
     id: "prompt",
     title: "Tạo theo Chủ đề",
     description:
@@ -68,7 +59,7 @@ export function AIGeneratorModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           {aiOptions.map((option) => (
             <button
               key={option.id}

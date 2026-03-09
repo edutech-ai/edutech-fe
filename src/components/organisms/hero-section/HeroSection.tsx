@@ -88,7 +88,7 @@ export function HeroSection() {
 
             <div className="pt-8 flex items-center gap-8 text-sm font-medium text-gray-500 animate-fade-in-up delay-300">
               <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
+                {[26, 33, 14, 34].map((i) => (
                   <div
                     key={i}
                     className="w-10 h-10 rounded-full border-2 border-white bg-gray-200"

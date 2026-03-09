@@ -59,7 +59,7 @@ export function AIGeneratorModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           {aiOptions.map((option) => (
             <button
               key={option.id}

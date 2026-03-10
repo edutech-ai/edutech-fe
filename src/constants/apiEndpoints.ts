@@ -160,6 +160,12 @@ export const API_ENDPOINTS = {
 
   // Admin Dashboard endpoints
   ADMIN: {
+    CUSTOMERS: {
+      ENTERPRISE: "/admin/customers/enterprise",
+      INDIVIDUAL: "/admin/customers/individual",
+      BY_ID: (id: string) => `/admin/customers/${id}`,
+      LOCK: (id: string) => `/admin/customers/${id}/lock`,
+    },
     DASHBOARD: {
       SUMMARY: "/admin/dashboard/summary",
       REVENUE_METRICS: "/admin/dashboard/revenue-metrics",

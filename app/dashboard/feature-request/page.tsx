@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ThumbsUp, Plus, Lightbulb, Rocket, User } from "lucide-react";
+import { ThumbsUp, Plus, Lightbulb, Rocket, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,18 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-
-interface FeatureRequest {
-  id: string;
-  title: string;
-  description: string;
-  likes: number;
-  liked: boolean;
-  status: "pending" | "confirmed" | "deployed";
-  author: string;
-  createdAt: string;
-  isOwn?: boolean;
-}
+import {
+  useFeatureRequests,
+  useCreateFeatureRequest,
+  useToggleFeatureLike,
+  type FeatureRequest,
+} from "@/services/reportService";
 
 const STATUS_MAP = {
   pending: { label: "Đang chờ", color: "bg-gray-100 text-gray-600" },
@@ -35,73 +29,29 @@ const STATUS_MAP = {
   deployed: { label: "Đã triển khai", color: "bg-green-100 text-green-700" },
 };
 
-export default function FeatureRequestPage() {
-  const [requests, setRequests] = useState<FeatureRequest[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleLike = (id: string) => {
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              liked: !r.liked,
-              likes: r.liked ? r.likes - 1 : r.likes + 1,
-            }
-          : r
-      )
-    );
-  };
-
-  const handleSubmit = async () => {
-    if (!title.trim()) {
-      toast.error("Vui lòng nhập tiêu đề đề xuất");
-      return;
-    }
-    if (!description.trim()) {
-      toast.error("Vui lòng mô tả tính năng bạn mong muốn");
-      return;
-    }
-    setSubmitting(true);
-    // TODO: call API to submit feature request
-    await new Promise((r) => setTimeout(r, 800));
-    const newRequest: FeatureRequest = {
-      id: Date.now().toString(),
-      title: title.trim(),
-      description: description.trim(),
-      likes: 0,
-      liked: false,
-      status: "pending",
-      author: "Bạn",
-      createdAt: new Date().toISOString().split("T")[0],
-      isOwn: true,
-    };
-    setRequests((prev) => [newRequest, ...prev]);
-    setTitle("");
-    setDescription("");
-    setSubmitting(false);
-    setModalOpen(false);
-    toast.success("Đề xuất của bạn đã được gửi thành công!");
-  };
-
-  const confirmed = requests.filter((r) => r.status === "confirmed");
-  const deployed = requests.filter((r) => r.status === "deployed");
-  const own = requests.filter((r) => r.isOwn);
-
-  const EmptyState = () => (
+function EmptyState() {
+  return (
     <div className="text-center py-16 text-gray-400">
       <Rocket className="w-10 h-10 mx-auto mb-3 opacity-30" />
       <p className="text-sm">Chưa có đề xuất nào</p>
     </div>
   );
+}
 
-  const RequestCard = ({ request }: { request: FeatureRequest }) => (
+function RequestCard({
+  request,
+  onLike,
+  liking,
+}: {
+  request: FeatureRequest;
+  onLike: (id: number) => void;
+  liking: boolean;
+}) {
+  return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5 flex gap-4 shadow-sm hover:shadow-md transition-shadow">
       <button
-        onClick={() => handleLike(request.id)}
+        onClick={() => onLike(request.id)}
+        disabled={liking}
         className={`flex flex-col items-center gap-1 min-w-13 pt-1 rounded-xl px-2 py-2 transition-all ${
           request.liked
             ? "text-blue-600 bg-blue-50"
@@ -111,7 +61,7 @@ export default function FeatureRequestPage() {
         <ThumbsUp
           className={`w-5 h-5 ${request.liked ? "fill-blue-600" : ""}`}
         />
-        <span className="text-sm font-semibold">{request.likes}</span>
+        <span className="text-sm font-semibold">{request.likes_count}</span>
       </button>
 
       <div className="flex-1 min-w-0">
@@ -130,17 +80,84 @@ export default function FeatureRequestPage() {
         </p>
         <div className="flex items-center gap-2 mt-3 text-xs text-gray-400">
           <User className="w-3.5 h-3.5" />
-          <span>{request.author}</span>
+          <span>{request.author_name}</span>
           <span>·</span>
-          <span>{request.createdAt}</span>
+          <span>
+            {new Date(request.created_at).toLocaleDateString("vi-VN")}
+          </span>
         </div>
       </div>
     </div>
   );
+}
+
+function TabContent({
+  list,
+  loading,
+  onLike,
+  liking,
+}: {
+  list: FeatureRequest[];
+  loading?: boolean;
+  onLike: (id: number) => void;
+  liking: boolean;
+}) {
+  if (loading)
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      </div>
+    );
+  if (!list.length) return <EmptyState />;
+  return (
+    <>
+      {list.map((r) => (
+        <RequestCard key={r.id} request={r} onLike={onLike} liking={liking} />
+      ))}
+    </>
+  );
+}
+
+export default function FeatureRequestPage() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+
+  const { data: allData, isLoading } = useFeatureRequests();
+  const { data: confirmedData } = useFeatureRequests({ status: "confirmed" });
+  const { data: deployedData } = useFeatureRequests({ status: "deployed" });
+  const { data: mineData } = useFeatureRequests({ mine: true });
+  const createMutation = useCreateFeatureRequest();
+  const likeMutation = useToggleFeatureLike();
+
+  const handleSubmit = () => {
+    if (!title.trim()) {
+      toast.error("Vui lòng nhập tiêu đề đề xuất");
+      return;
+    }
+    if (!description.trim()) {
+      toast.error("Vui lòng mô tả tính năng bạn mong muốn");
+      return;
+    }
+    createMutation.mutate(
+      { title: title.trim(), description: description.trim() },
+      {
+        onSuccess: () => {
+          setTitle("");
+          setDescription("");
+          setModalOpen(false);
+        },
+      }
+    );
+  };
+
+  const all = allData?.data ?? [];
+  const confirmed = confirmedData?.data ?? [];
+  const deployed = deployedData?.data ?? [];
+  const mine = mineData?.data ?? [];
 
   return (
     <div className="px-4 py-8">
-      {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-xl bg-yellow-50 flex items-center justify-center">
@@ -163,7 +180,6 @@ export default function FeatureRequestPage() {
         </p>
       </div>
 
-      {/* Action Button */}
       <div className="flex justify-end mb-5">
         <Button onClick={() => setModalOpen(true)} className="gap-2">
           <Plus className="w-4 h-4" />
@@ -171,54 +187,65 @@ export default function FeatureRequestPage() {
         </Button>
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="all">
         <TabsList className="mb-5 w-full justify-start">
           <TabsTrigger value="all">
-            Tất cả
+            Tất cả{" "}
             <Badge variant="secondary" className="ml-1.5 text-xs">
-              {requests.length}
+              {all.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="confirmed">
-            Đã xác nhận
+            Đã xác nhận{" "}
             <Badge variant="secondary" className="ml-1.5 text-xs">
               {confirmed.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="deployed">
-            Đã triển khai
+            Đã triển khai{" "}
             <Badge variant="secondary" className="ml-1.5 text-xs">
               {deployed.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="own">
-            Đề xuất của tôi
+            Đề xuất của tôi{" "}
             <Badge variant="secondary" className="ml-1.5 text-xs">
-              {own.length}
+              {mine.length}
             </Badge>
           </TabsTrigger>
         </TabsList>
 
-        {[
-          { value: "all", list: requests },
-          { value: "confirmed", list: confirmed },
-          { value: "deployed", list: deployed },
-          { value: "own", list: own },
-        ].map(({ value, list }) => (
-          <TabsContent key={value} value={value} className="space-y-3">
-            {list.length === 0 ? (
-              <EmptyState />
-            ) : (
-              list
-                .sort((a, b) => b.likes - a.likes)
-                .map((r) => <RequestCard key={r.id} request={r} />)
-            )}
-          </TabsContent>
-        ))}
+        <TabsContent value="all" className="space-y-3">
+          <TabContent
+            list={all}
+            loading={isLoading}
+            onLike={likeMutation.mutate}
+            liking={likeMutation.isPending}
+          />
+        </TabsContent>
+        <TabsContent value="confirmed" className="space-y-3">
+          <TabContent
+            list={confirmed}
+            onLike={likeMutation.mutate}
+            liking={likeMutation.isPending}
+          />
+        </TabsContent>
+        <TabsContent value="deployed" className="space-y-3">
+          <TabContent
+            list={deployed}
+            onLike={likeMutation.mutate}
+            liking={likeMutation.isPending}
+          />
+        </TabsContent>
+        <TabsContent value="own" className="space-y-3">
+          <TabContent
+            list={mine}
+            onLike={likeMutation.mutate}
+            liking={likeMutation.isPending}
+          />
+        </TabsContent>
       </Tabs>
 
-      {/* Create Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -259,8 +286,15 @@ export default function FeatureRequestPage() {
             <Button variant="outline" onClick={() => setModalOpen(false)}>
               Hủy
             </Button>
-            <Button onClick={handleSubmit} disabled={submitting}>
-              {submitting ? "Đang gửi..." : "Gửi đề xuất"}
+            <Button onClick={handleSubmit} disabled={createMutation.isPending}>
+              {createMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang gửi...
+                </>
+              ) : (
+                "Gửi đề xuất"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

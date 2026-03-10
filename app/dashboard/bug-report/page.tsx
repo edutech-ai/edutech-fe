@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import {
   AlertCircle,
   Plus,
@@ -10,6 +10,7 @@ import {
   ImagePlus,
   X,
   FileVideo,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,17 +27,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import Image from "next/image";
-
-interface BugReport {
-  id: string;
-  title: string;
-  description: string;
-  status: "pending" | "confirmed" | "fixed";
-  author: string;
-  createdAt: string;
-  attachments?: string[];
-  isOwn?: boolean;
-}
+import {
+  useBugReports,
+  useCreateBugReport,
+  type BugReport,
+} from "@/services/reportService";
 
 const STATUS_MAP = {
   pending: {
@@ -65,15 +60,97 @@ const ACCEPTED_TYPES = [
 ];
 const MAX_SIZE_MB = 20;
 
+function EmptyState() {
+  return (
+    <div className="text-center py-16 text-gray-400">
+      <CheckCircle2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
+      <p className="text-sm">Không có báo cáo nào</p>
+    </div>
+  );
+}
+
+function ReportCard({ report }: { report: BugReport }) {
+  const StatusIcon = STATUS_MAP[report.status].icon;
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between gap-3 flex-wrap mb-2">
+        <h3 className="text-base font-semibold text-gray-800">
+          {report.title}
+        </h3>
+        <span
+          className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${STATUS_MAP[report.status].color}`}
+        >
+          <StatusIcon className="w-3.5 h-3.5" />
+          {STATUS_MAP[report.status].label}
+        </span>
+      </div>
+      <p className="text-sm text-gray-500 leading-relaxed">
+        {report.description}
+      </p>
+      {report.attachments.length > 0 && (
+        <div className="flex gap-2 mt-3">
+          {report.attachments.map((url, i) => (
+            <div
+              key={i}
+              className="w-16 h-16 rounded-lg overflow-hidden border border-gray-100"
+            >
+              <Image
+                src={url}
+                alt="attachment"
+                width={64}
+                height={64}
+                className="object-cover w-full h-full"
+              />
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex items-center gap-2 mt-3 text-xs text-gray-400">
+        <User className="w-3.5 h-3.5" />
+        <span>{report.author_name}</span>
+        <span>·</span>
+        <span>{new Date(report.created_at).toLocaleDateString("vi-VN")}</span>
+      </div>
+    </div>
+  );
+}
+
+function TabContent({
+  list,
+  loading,
+}: {
+  list: BugReport[];
+  loading?: boolean;
+}) {
+  if (loading)
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      </div>
+    );
+  if (!list.length) return <EmptyState />;
+  return (
+    <>
+      {list.map((r) => (
+        <ReportCard key={r.id} report={r} />
+      ))}
+    </>
+  );
+}
+
 export default function BugReportPage() {
-  const [reports, setReports] = useState<BugReport[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-  const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: allData, isLoading } = useBugReports();
+  const { data: mineData } = useBugReports({ mine: true });
+  const { data: confirmedData } = useBugReports({ status: "confirmed" });
+  const { data: fixedData } = useBugReports({ status: "fixed" });
+  const createMutation = useCreateBugReport();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -90,7 +167,6 @@ export default function BugReportPage() {
       }
       return true;
     });
-
     const newPreviews = valid.map((f) =>
       f.type.startsWith("image/") ? URL.createObjectURL(f) : ""
     );
@@ -122,87 +198,26 @@ export default function BugReportPage() {
       toast.error("Vui lòng mô tả chi tiết lỗi gặp phải");
       return;
     }
-    setSubmitting(true);
-    // TODO: call API to submit bug report
-    await new Promise((r) => setTimeout(r, 800));
-    const newReport: BugReport = {
-      id: Date.now().toString(),
-      title: title.trim(),
-      description: description.trim(),
-      status: "pending",
-      author: "Bạn",
-      createdAt: new Date().toISOString().split("T")[0],
-      isOwn: true,
-    };
-    setReports((prev) => [newReport, ...prev]);
-    setSubmitting(false);
-    setModalOpen(false);
-    resetModal();
-    toast.success(
-      "Báo cáo lỗi đã được gửi! Chúng tôi sẽ xem xét sớm nhất có thể."
+
+    // TODO: upload attachments to get URLs, then pass as attachments array
+    createMutation.mutate(
+      { title: title.trim(), description: description.trim(), attachments: [] },
+      {
+        onSuccess: () => {
+          setModalOpen(false);
+          resetModal();
+        },
+      }
     );
   };
 
-  const confirmed = reports.filter((r) => r.status === "confirmed");
-  const fixed = reports.filter((r) => r.status === "fixed");
-  const own = reports.filter((r) => r.isOwn);
-
-  const EmptyState = () => (
-    <div className="text-center py-16 text-gray-400">
-      <CheckCircle2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
-      <p className="text-sm">Không có báo cáo nào</p>
-    </div>
-  );
-
-  const ReportCard = ({ report }: { report: BugReport }) => {
-    const StatusIcon = STATUS_MAP[report.status].icon;
-    return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-start justify-between gap-3 flex-wrap mb-2">
-          <h3 className="text-base font-semibold text-gray-800">
-            {report.title}
-          </h3>
-          <span
-            className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${STATUS_MAP[report.status].color}`}
-          >
-            <StatusIcon className="w-3.5 h-3.5" />
-            {STATUS_MAP[report.status].label}
-          </span>
-        </div>
-        <p className="text-sm text-gray-500 leading-relaxed">
-          {report.description}
-        </p>
-        {report.attachments && report.attachments.length > 0 && (
-          <div className="flex gap-2 mt-3">
-            {report.attachments.map((url, i) => (
-              <div
-                key={i}
-                className="w-16 h-16 rounded-lg overflow-hidden border border-gray-100"
-              >
-                <Image
-                  src={url}
-                  alt="attachment"
-                  width={64}
-                  height={64}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="flex items-center gap-2 mt-3 text-xs text-gray-400">
-          <User className="w-3.5 h-3.5" />
-          <span>{report.author}</span>
-          <span>·</span>
-          <span>{report.createdAt}</span>
-        </div>
-      </div>
-    );
-  };
+  const all = allData?.data ?? [];
+  const confirmed = confirmedData?.data ?? [];
+  const fixed = fixedData?.data ?? [];
+  const mine = mineData?.data ?? [];
 
   return (
     <div className="px-4 py-8">
-      {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
@@ -220,7 +235,6 @@ export default function BugReportPage() {
         </p>
       </div>
 
-      {/* Action Button */}
       <div className="flex justify-end mb-5">
         <Button
           onClick={() => setModalOpen(true)}
@@ -232,52 +246,48 @@ export default function BugReportPage() {
         </Button>
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="all">
         <TabsList className="mb-5 w-full justify-start">
           <TabsTrigger value="all">
-            Tất cả
+            Tất cả{" "}
             <Badge variant="secondary" className="ml-1.5 text-xs">
-              {reports.length}
+              {all.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="confirmed">
-            Đã xác nhận
+            Đã xác nhận{" "}
             <Badge variant="secondary" className="ml-1.5 text-xs">
               {confirmed.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="fixed">
-            Đã sửa
+            Đã sửa{" "}
             <Badge variant="secondary" className="ml-1.5 text-xs">
               {fixed.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="own">
-            Báo cáo của tôi
+            Báo cáo của tôi{" "}
             <Badge variant="secondary" className="ml-1.5 text-xs">
-              {own.length}
+              {mine.length}
             </Badge>
           </TabsTrigger>
         </TabsList>
 
-        {[
-          { value: "all", list: reports },
-          { value: "confirmed", list: confirmed },
-          { value: "fixed", list: fixed },
-          { value: "own", list: own },
-        ].map(({ value, list }) => (
-          <TabsContent key={value} value={value} className="space-y-3">
-            {list.length === 0 ? (
-              <EmptyState />
-            ) : (
-              list.map((r) => <ReportCard key={r.id} report={r} />)
-            )}
-          </TabsContent>
-        ))}
+        <TabsContent value="all" className="space-y-3">
+          <TabContent list={all} loading={isLoading} />
+        </TabsContent>
+        <TabsContent value="confirmed" className="space-y-3">
+          <TabContent list={confirmed} />
+        </TabsContent>
+        <TabsContent value="fixed" className="space-y-3">
+          <TabContent list={fixed} />
+        </TabsContent>
+        <TabsContent value="own" className="space-y-3">
+          <TabContent list={mine} />
+        </TabsContent>
       </Tabs>
 
-      {/* Create Modal */}
       <Dialog
         open={modalOpen}
         onOpenChange={(open) => {
@@ -304,7 +314,6 @@ export default function BugReportPage() {
                 maxLength={100}
               />
             </div>
-
             <div className="space-y-1.5">
               <Label>
                 Mô tả chi tiết <span className="text-red-500">*</span>
@@ -320,15 +329,12 @@ export default function BugReportPage() {
                 {description.length}/1000
               </p>
             </div>
-
-            {/* Attachment Upload */}
             <div className="space-y-2">
               <Label>Ảnh / Video đính kèm</Label>
               <p className="text-xs text-gray-400">
                 Hỗ trợ JPG, PNG, WEBP, MP4, MOV · Tối đa 5 file · Mỗi file dưới{" "}
                 {MAX_SIZE_MB}MB
               </p>
-
               {attachments.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {attachments.map((file, i) => (
@@ -361,7 +367,6 @@ export default function BugReportPage() {
                   ))}
                 </div>
               )}
-
               {attachments.length < 5 && (
                 <>
                   <input
@@ -396,10 +401,17 @@ export default function BugReportPage() {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={submitting}
+              disabled={createMutation.isPending}
               variant="destructive"
             >
-              {submitting ? "Đang gửi..." : "Gửi báo cáo"}
+              {createMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang gửi...
+                </>
+              ) : (
+                "Gửi báo cáo"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

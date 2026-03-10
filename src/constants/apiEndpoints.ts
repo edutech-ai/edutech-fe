@@ -146,6 +146,12 @@ export const API_ENDPOINTS = {
     READ_ALL: "/notifications/read-all",
   },
 
+  REPORT: {
+    BUGS: "/reports/bugs",
+    FEATURES: "/reports/features",
+    FEATURE_LIKE: (id: number) => `/reports/features/${id}/like`,
+  },
+
   // Admin Dashboard endpoints
   ADMIN: {
     DASHBOARD: {

@@ -21,6 +21,8 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string) => `/profile/${id}`,
     STATS: "/profile/stats",
     RECENT_ACTIVITIES: "/profile/recent-activities",
+    MY_REPORTS: "/profile/reports",
+    MY_FEATURES: "/profile/features",
   },
 
   // Settings endpoints
@@ -148,7 +150,9 @@ export const API_ENDPOINTS = {
 
   REPORT: {
     BUGS: "/reports/bugs",
+    BUG_BY_ID: (id: number) => `/reports/bugs/${id}`,
     FEATURES: "/reports/features",
+    FEATURE_BY_ID: (id: number) => `/reports/features/${id}`,
     FEATURE_LIKE: (id: number) => `/reports/features/${id}/like`,
   },
 

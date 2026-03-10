@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { ThumbsUp, Plus, Lightbulb, Rocket, User, Loader2 } from "lucide-react";
+import {
+  ThumbsUp,
+  Plus,
+  Lightbulb,
+  Rocket,
+  User,
+  Loader2,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,13 +21,26 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   useFeatureRequests,
+  useMyFeatureRequests,
   useCreateFeatureRequest,
+  useUpdateFeatureRequest,
+  useDeleteFeatureRequest,
   useToggleFeatureLike,
   type FeatureRequest,
 } from "@/services/reportService";
@@ -42,10 +64,16 @@ function RequestCard({
   request,
   onLike,
   liking,
+  onEdit,
+  onDelete,
+  deleting,
 }: {
   request: FeatureRequest;
   onLike: (id: number) => void;
   liking: boolean;
+  onEdit?: (request: FeatureRequest) => void;
+  onDelete?: (id: number) => void;
+  deleting?: boolean;
 }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5 flex gap-4 shadow-sm hover:shadow-md transition-shadow">
@@ -54,8 +82,8 @@ function RequestCard({
         disabled={liking}
         className={`flex flex-col items-center gap-1 min-w-13 pt-1 rounded-xl px-2 py-2 transition-all ${
           request.liked
-            ? "text-blue-600 bg-blue-50"
-            : "text-gray-400 hover:bg-gray-50 hover:text-blue-500"
+            ? "text-blue-600 bg-white"
+            : "text-gray-400 hover:text-blue-500"
         }`}
       >
         <ThumbsUp
@@ -69,11 +97,30 @@ function RequestCard({
           <h3 className="text-base font-semibold text-gray-800">
             {request.title}
           </h3>
-          <span
-            className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${STATUS_MAP[request.status].color}`}
-          >
-            {STATUS_MAP[request.status].label}
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <span
+              className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_MAP[request.status].color}`}
+            >
+              {STATUS_MAP[request.status].label}
+            </span>
+            {request.is_own && onEdit && onDelete && (
+              <>
+                <button
+                  onClick={() => onEdit(request)}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => onDelete(request.id)}
+                  disabled={deleting}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
         <p className="text-sm text-gray-500 mt-1.5 leading-relaxed">
           {request.description}
@@ -96,11 +143,17 @@ function TabContent({
   loading,
   onLike,
   liking,
+  onEdit,
+  onDelete,
+  deleting,
 }: {
   list: FeatureRequest[];
   loading?: boolean;
   onLike: (id: number) => void;
   liking: boolean;
+  onEdit?: (request: FeatureRequest) => void;
+  onDelete?: (id: number) => void;
+  deleting?: boolean;
 }) {
   if (loading)
     return (
@@ -112,7 +165,15 @@ function TabContent({
   return (
     <>
       {list.map((r) => (
-        <RequestCard key={r.id} request={r} onLike={onLike} liking={liking} />
+        <RequestCard
+          key={r.id}
+          request={r}
+          onLike={onLike}
+          liking={liking}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          deleting={deleting}
+        />
       ))}
     </>
   );
@@ -120,15 +181,32 @@ function TabContent({
 
 export default function FeatureRequestPage() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<FeatureRequest | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
   const { data: allData, isLoading } = useFeatureRequests();
   const { data: confirmedData } = useFeatureRequests({ status: "confirmed" });
   const { data: deployedData } = useFeatureRequests({ status: "deployed" });
-  const { data: mineData } = useFeatureRequests({ mine: true });
+  const { data: mineData } = useMyFeatureRequests();
   const createMutation = useCreateFeatureRequest();
+  const updateMutation = useUpdateFeatureRequest();
+  const deleteMutation = useDeleteFeatureRequest();
   const likeMutation = useToggleFeatureLike();
+
+  const resetModal = () => {
+    setTitle("");
+    setDescription("");
+    setEditTarget(null);
+  };
+
+  const openEdit = (request: FeatureRequest) => {
+    setEditTarget(request);
+    setTitle(request.title);
+    setDescription(request.description);
+    setModalOpen(true);
+  };
 
   const handleSubmit = () => {
     if (!title.trim()) {
@@ -139,17 +217,42 @@ export default function FeatureRequestPage() {
       toast.error("Vui lòng mô tả tính năng bạn mong muốn");
       return;
     }
-    createMutation.mutate(
-      { title: title.trim(), description: description.trim() },
-      {
-        onSuccess: () => {
-          setTitle("");
-          setDescription("");
-          setModalOpen(false);
+
+    if (editTarget) {
+      updateMutation.mutate(
+        {
+          id: editTarget.id,
+          title: title.trim(),
+          description: description.trim(),
         },
-      }
-    );
+        {
+          onSuccess: () => {
+            resetModal();
+            setModalOpen(false);
+          },
+        }
+      );
+    } else {
+      createMutation.mutate(
+        { title: title.trim(), description: description.trim() },
+        {
+          onSuccess: () => {
+            resetModal();
+            setModalOpen(false);
+          },
+        }
+      );
+    }
   };
+
+  const handleDelete = (id: number) => setDeleteId(id);
+
+  const confirmDelete = () => {
+    if (deleteId === null) return;
+    deleteMutation.mutate(deleteId, { onSuccess: () => setDeleteId(null) });
+  };
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   const all = allData?.data ?? [];
   const confirmed = confirmedData?.data ?? [];
@@ -221,6 +324,9 @@ export default function FeatureRequestPage() {
             loading={isLoading}
             onLike={likeMutation.mutate}
             liking={likeMutation.isPending}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            deleting={deleteMutation.isPending}
           />
         </TabsContent>
         <TabsContent value="confirmed" className="space-y-3">
@@ -228,6 +334,9 @@ export default function FeatureRequestPage() {
             list={confirmed}
             onLike={likeMutation.mutate}
             liking={likeMutation.isPending}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            deleting={deleteMutation.isPending}
           />
         </TabsContent>
         <TabsContent value="deployed" className="space-y-3">
@@ -235,6 +344,9 @@ export default function FeatureRequestPage() {
             list={deployed}
             onLike={likeMutation.mutate}
             liking={likeMutation.isPending}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            deleting={deleteMutation.isPending}
           />
         </TabsContent>
         <TabsContent value="own" className="space-y-3">
@@ -242,16 +354,25 @@ export default function FeatureRequestPage() {
             list={mine}
             onLike={likeMutation.mutate}
             liking={likeMutation.isPending}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            deleting={deleteMutation.isPending}
           />
         </TabsContent>
       </Tabs>
 
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+      <Dialog
+        open={modalOpen}
+        onOpenChange={(open) => {
+          if (!open) resetModal();
+          setModalOpen(open);
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Lightbulb className="w-5 h-5 text-yellow-500" />
-              Tạo đề xuất tính năng
+              {editTarget ? "Chỉnh sửa đề xuất" : "Tạo đề xuất tính năng"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -283,15 +404,23 @@ export default function FeatureRequestPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                resetModal();
+                setModalOpen(false);
+              }}
+            >
               Hủy
             </Button>
-            <Button onClick={handleSubmit} disabled={createMutation.isPending}>
-              {createMutation.isPending ? (
+            <Button onClick={handleSubmit} disabled={isPending}>
+              {isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Đang gửi...
                 </>
+              ) : editTarget ? (
+                "Lưu thay đổi"
               ) : (
                 "Gửi đề xuất"
               )}
@@ -299,6 +428,35 @@ export default function FeatureRequestPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xoá đề xuất này?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {deleteMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Xoá"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

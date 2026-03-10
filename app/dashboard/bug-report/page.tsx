@@ -11,6 +11,8 @@ import {
   X,
   FileVideo,
   Loader2,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +24,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,7 +41,10 @@ import { toast } from "sonner";
 import Image from "next/image";
 import {
   useBugReports,
+  useMyBugReports,
   useCreateBugReport,
+  useUpdateBugReport,
+  useDeleteBugReport,
   type BugReport,
 } from "@/services/reportService";
 
@@ -69,7 +84,17 @@ function EmptyState() {
   );
 }
 
-function ReportCard({ report }: { report: BugReport }) {
+function ReportCard({
+  report,
+  onEdit,
+  onDelete,
+  deleting,
+}: {
+  report: BugReport;
+  onEdit?: (report: BugReport) => void;
+  onDelete?: (id: number) => void;
+  deleting?: boolean;
+}) {
   const StatusIcon = STATUS_MAP[report.status].icon;
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
@@ -77,12 +102,31 @@ function ReportCard({ report }: { report: BugReport }) {
         <h3 className="text-base font-semibold text-gray-800">
           {report.title}
         </h3>
-        <span
-          className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${STATUS_MAP[report.status].color}`}
-        >
-          <StatusIcon className="w-3.5 h-3.5" />
-          {STATUS_MAP[report.status].label}
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          <span
+            className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_MAP[report.status].color}`}
+          >
+            <StatusIcon className="w-3.5 h-3.5" />
+            {STATUS_MAP[report.status].label}
+          </span>
+          {report.is_own && onEdit && onDelete && (
+            <>
+              <button
+                onClick={() => onEdit(report)}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => onDelete(report.id)}
+                disabled={deleting}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
+        </div>
       </div>
       <p className="text-sm text-gray-500 leading-relaxed">
         {report.description}
@@ -118,9 +162,15 @@ function ReportCard({ report }: { report: BugReport }) {
 function TabContent({
   list,
   loading,
+  onEdit,
+  onDelete,
+  deleting,
 }: {
   list: BugReport[];
   loading?: boolean;
+  onEdit?: (report: BugReport) => void;
+  onDelete?: (id: number) => void;
+  deleting?: boolean;
 }) {
   if (loading)
     return (
@@ -132,7 +182,13 @@ function TabContent({
   return (
     <>
       {list.map((r) => (
-        <ReportCard key={r.id} report={r} />
+        <ReportCard
+          key={r.id}
+          report={r}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          deleting={deleting}
+        />
       ))}
     </>
   );
@@ -140,6 +196,8 @@ function TabContent({
 
 export default function BugReportPage() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<BugReport | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -147,10 +205,12 @@ export default function BugReportPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: allData, isLoading } = useBugReports();
-  const { data: mineData } = useBugReports({ mine: true });
+  const { data: mineData } = useMyBugReports();
   const { data: confirmedData } = useBugReports({ status: "confirmed" });
   const { data: fixedData } = useBugReports({ status: "fixed" });
   const createMutation = useCreateBugReport();
+  const updateMutation = useUpdateBugReport();
+  const deleteMutation = useDeleteBugReport();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -187,6 +247,16 @@ export default function BugReportPage() {
     setDescription("");
     setAttachments([]);
     setPreviews([]);
+    setEditTarget(null);
+  };
+
+  const openEdit = (report: BugReport) => {
+    setEditTarget(report);
+    setTitle(report.title);
+    setDescription(report.description);
+    setAttachments([]);
+    setPreviews([]);
+    setModalOpen(true);
   };
 
   const handleSubmit = async () => {
@@ -199,17 +269,45 @@ export default function BugReportPage() {
       return;
     }
 
-    // TODO: upload attachments to get URLs, then pass as attachments array
-    createMutation.mutate(
-      { title: title.trim(), description: description.trim(), attachments: [] },
-      {
-        onSuccess: () => {
-          setModalOpen(false);
-          resetModal();
+    if (editTarget) {
+      updateMutation.mutate(
+        {
+          id: editTarget.id,
+          title: title.trim(),
+          description: description.trim(),
         },
-      }
-    );
+        {
+          onSuccess: () => {
+            setModalOpen(false);
+            resetModal();
+          },
+        }
+      );
+    } else {
+      createMutation.mutate(
+        {
+          title: title.trim(),
+          description: description.trim(),
+          attachments: [],
+        },
+        {
+          onSuccess: () => {
+            setModalOpen(false);
+            resetModal();
+          },
+        }
+      );
+    }
   };
+
+  const handleDelete = (id: number) => setDeleteId(id);
+
+  const confirmDelete = () => {
+    if (deleteId === null) return;
+    deleteMutation.mutate(deleteId, { onSuccess: () => setDeleteId(null) });
+  };
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   const all = allData?.data ?? [];
   const confirmed = confirmedData?.data ?? [];
@@ -275,16 +373,37 @@ export default function BugReportPage() {
         </TabsList>
 
         <TabsContent value="all" className="space-y-3">
-          <TabContent list={all} loading={isLoading} />
+          <TabContent
+            list={all}
+            loading={isLoading}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            deleting={deleteMutation.isPending}
+          />
         </TabsContent>
         <TabsContent value="confirmed" className="space-y-3">
-          <TabContent list={confirmed} />
+          <TabContent
+            list={confirmed}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            deleting={deleteMutation.isPending}
+          />
         </TabsContent>
         <TabsContent value="fixed" className="space-y-3">
-          <TabContent list={fixed} />
+          <TabContent
+            list={fixed}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            deleting={deleteMutation.isPending}
+          />
         </TabsContent>
         <TabsContent value="own" className="space-y-3">
-          <TabContent list={mine} />
+          <TabContent
+            list={mine}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            deleting={deleteMutation.isPending}
+          />
         </TabsContent>
       </Tabs>
 
@@ -299,7 +418,7 @@ export default function BugReportPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-red-500" />
-              Báo cáo lỗi hệ thống
+              {editTarget ? "Chỉnh sửa báo cáo lỗi" : "Báo cáo lỗi hệ thống"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -329,65 +448,67 @@ export default function BugReportPage() {
                 {description.length}/1000
               </p>
             </div>
-            <div className="space-y-2">
-              <Label>Ảnh / Video đính kèm</Label>
-              <p className="text-xs text-gray-400">
-                Hỗ trợ JPG, PNG, WEBP, MP4, MOV · Tối đa 5 file · Mỗi file dưới{" "}
-                {MAX_SIZE_MB}MB
-              </p>
-              {attachments.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {attachments.map((file, i) => (
-                    <div
-                      key={i}
-                      className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center"
-                    >
-                      {file.type.startsWith("image/") ? (
-                        <Image
-                          src={previews[i]}
-                          alt="preview"
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center gap-1 text-gray-400">
-                          <FileVideo className="w-6 h-6" />
-                          <span className="text-[10px] truncate max-w-17 px-1">
-                            {file.name}
-                          </span>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => removeAttachment(i)}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+            {!editTarget && (
+              <div className="space-y-2">
+                <Label>Ảnh / Video đính kèm</Label>
+                <p className="text-xs text-gray-400">
+                  Hỗ trợ JPG, PNG, WEBP, MP4, MOV · Tối đa 5 file · Mỗi file
+                  dưới {MAX_SIZE_MB}MB
+                </p>
+                {attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {attachments.map((file, i) => (
+                      <div
+                        key={i}
+                        className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center"
                       >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {attachments.length < 5 && (
-                <>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
-                    multiple
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-gray-300 hover:text-gray-600 transition-colors w-full justify-center"
-                  >
-                    <ImagePlus className="w-4 h-4" />
-                    Thêm ảnh hoặc video
-                  </button>
-                </>
-              )}
-            </div>
+                        {file.type.startsWith("image/") ? (
+                          <Image
+                            src={previews[i]}
+                            alt="preview"
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-1 text-gray-400">
+                            <FileVideo className="w-6 h-6" />
+                            <span className="text-[10px] truncate max-w-17 px-1">
+                              {file.name}
+                            </span>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => removeAttachment(i)}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {attachments.length < 5 && (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
+                      multiple
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-gray-300 hover:text-gray-600 transition-colors w-full justify-center"
+                    >
+                      <ImagePlus className="w-4 h-4" />
+                      Thêm ảnh hoặc video
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
@@ -401,14 +522,16 @@ export default function BugReportPage() {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={createMutation.isPending}
+              disabled={isPending}
               variant="destructive"
             >
-              {createMutation.isPending ? (
+              {isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Đang gửi...
                 </>
+              ) : editTarget ? (
+                "Lưu thay đổi"
               ) : (
                 "Gửi báo cáo"
               )}
@@ -416,6 +539,35 @@ export default function BugReportPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xoá báo cáo này?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {deleteMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Xoá"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

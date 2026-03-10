@@ -18,6 +18,8 @@ import {
   DollarSign,
   AlertCircle,
   Lightbulb,
+  User,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -38,8 +40,19 @@ const navItems: NavItem[] = [
   },
   {
     title: "Khách hàng",
-    href: "/admin/customers",
     icon: Building2,
+    children: [
+      {
+        title: "Doanh nghiệp",
+        href: "/admin/customers/enterprise",
+        icon: Users,
+      },
+      {
+        title: "Cá nhân",
+        href: "/admin/customers/individual",
+        icon: User,
+      },
+    ],
   },
   // {
   //   title: "Người dùng",
@@ -105,7 +118,11 @@ export function AdminSidebar({
 }) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [openGroups, setOpenGroups] = useState<string[]>(["Revenue", "Hỗ trợ"]);
+  const [openGroups, setOpenGroups] = useState<string[]>([
+    "Revenue",
+    "Hỗ trợ",
+    "Khách hàng",
+  ]);
 
   const toggleGroup = (title: string) => {
     setOpenGroups((prev) =>

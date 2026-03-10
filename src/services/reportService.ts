@@ -264,3 +264,43 @@ export const useToggleFeatureLike = () => {
     },
   });
 };
+
+export const useAdminUpdateBugStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      const { data } = await axiosInstance.patch(
+        API_ENDPOINTS.REPORT.BUG_STATUS(id),
+        { status }
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bugs"] });
+      toast.success("Đã cập nhật trạng thái.");
+    },
+    onError: () => {
+      toast.error("Cập nhật thất bại.");
+    },
+  });
+};
+
+export const useAdminUpdateFeatureStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      const { data } = await axiosInstance.patch(
+        API_ENDPOINTS.REPORT.FEATURE_STATUS(id),
+        { status }
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["features"] });
+      toast.success("Đã cập nhật trạng thái.");
+    },
+    onError: () => {
+      toast.error("Cập nhật thất bại.");
+    },
+  });
+};

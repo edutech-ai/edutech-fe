@@ -154,6 +154,8 @@ export const API_ENDPOINTS = {
     FEATURES: "/reports/features",
     FEATURE_BY_ID: (id: number) => `/reports/features/${id}`,
     FEATURE_LIKE: (id: number) => `/reports/features/${id}/like`,
+    BUG_STATUS: (id: number) => `/reports/bugs/${id}/status`,
+    FEATURE_STATUS: (id: number) => `/reports/features/${id}/status`,
   },
 
   // Admin Dashboard endpoints

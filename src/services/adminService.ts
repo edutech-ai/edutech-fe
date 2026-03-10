@@ -1,6 +1,6 @@
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 import axiosInstance from "@/lib/axios";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // ==================== TYPES ====================
 
@@ -215,6 +215,129 @@ export const useGetUserGrowthChart = (
         `${API_ENDPOINTS.ADMIN.DASHBOARD.USER_GROWTH_CHART}?period=${period}`
       );
       return response.data.data as UserGrowthChartData;
+    },
+  });
+};
+
+// ==================== CUSTOMER TYPES ====================
+
+export interface AdminCustomer {
+  id: string;
+  email: string;
+  status: string;
+  created_at: string;
+  name: string | null;
+  avatar_url: string | null;
+  address?: string | null;
+  plan_name?: string | null;
+  plan_price?: number | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  subscription_status?: string | null;
+  quizzes_count: number;
+  classrooms_count: number;
+  students_count?: number;
+}
+
+export interface CustomerListResponse {
+  data: AdminCustomer[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// ==================== CUSTOMER HOOKS ====================
+
+export const useEnterpriseCustomers = (params?: {
+  search?: string;
+  status?: string;
+  page?: number;
+}) => {
+  return useQuery({
+    queryKey: ["admin", "customers", "enterprise", params],
+    queryFn: async () => {
+      const query = new URLSearchParams();
+      if (params?.search) query.set("search", params.search);
+      if (params?.status && params.status !== "all")
+        query.set("status", params.status);
+      if (params?.page) query.set("page", String(params.page));
+      const response = await axiosInstance.get(
+        `${API_ENDPOINTS.ADMIN.CUSTOMERS.ENTERPRISE}?${query}`
+      );
+      return response.data as CustomerListResponse;
+    },
+  });
+};
+
+export const useIndividualCustomers = (params?: {
+  search?: string;
+  status?: string;
+  page?: number;
+}) => {
+  return useQuery({
+    queryKey: ["admin", "customers", "individual", params],
+    queryFn: async () => {
+      const query = new URLSearchParams();
+      if (params?.search) query.set("search", params.search);
+      if (params?.status && params.status !== "all")
+        query.set("status", params.status);
+      if (params?.page) query.set("page", String(params.page));
+      const response = await axiosInstance.get(
+        `${API_ENDPOINTS.ADMIN.CUSTOMERS.INDIVIDUAL}?${query}`
+      );
+      return response.data as CustomerListResponse;
+    },
+  });
+};
+
+export const useCustomerDetail = (id: string) => {
+  return useQuery({
+    queryKey: ["admin", "customers", id],
+    queryFn: async () => {
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.ADMIN.CUSTOMERS.BY_ID(id)
+      );
+      return response.data.data as AdminCustomer;
+    },
+    enabled: !!id,
+  });
+};
+
+export const useToggleLockCustomer = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await axiosInstance.patch(
+        API_ENDPOINTS.ADMIN.CUSTOMERS.LOCK(id)
+      );
+      return response.data;
+    },
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ["admin", "customers", id] });
+      qc.invalidateQueries({ queryKey: ["admin", "customers", "enterprise"] });
+      qc.invalidateQueries({ queryKey: ["admin", "customers", "individual"] });
+    },
+  });
+};
+
+export const useCreateEnterpriseCustomer = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      email: string;
+      password: string;
+      name?: string;
+      plan_id: string;
+    }) => {
+      const response = await axiosInstance.post(
+        API_ENDPOINTS.ADMIN.CUSTOMERS.ENTERPRISE,
+        data
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "customers", "enterprise"] });
     },
   });
 };

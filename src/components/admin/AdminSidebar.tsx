@@ -16,6 +16,10 @@ import {
   X,
   ChevronDown,
   DollarSign,
+  AlertCircle,
+  Lightbulb,
+  User,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -36,8 +40,19 @@ const navItems: NavItem[] = [
   },
   {
     title: "Khách hàng",
-    href: "/admin/customers",
     icon: Building2,
+    children: [
+      {
+        title: "Doanh nghiệp",
+        href: "/admin/customers/enterprise",
+        icon: Users,
+      },
+      {
+        title: "Cá nhân",
+        href: "/admin/customers/individual",
+        icon: User,
+      },
+    ],
   },
   // {
   //   title: "Người dùng",
@@ -71,15 +86,26 @@ const navItems: NavItem[] = [
     icon: BarChart3,
   },
   {
+    title: "Hỗ trợ",
+    icon: HeadphonesIcon,
+    children: [
+      {
+        title: "Báo cáo lỗi",
+        href: "/admin/support/bug-reports",
+        icon: AlertCircle,
+      },
+      {
+        title: "Đề xuất chức năng",
+        href: "/admin/support/feature-requests",
+        icon: Lightbulb,
+      },
+    ],
+  },
+
+  {
     title: "Cài đặt",
     href: "/admin/settings",
     icon: Settings,
-  },
-  {
-    title: "Hỗ trợ",
-    href: "/admin/support",
-    icon: HeadphonesIcon,
-    badge: "3",
   },
 ];
 
@@ -92,7 +118,11 @@ export function AdminSidebar({
 }) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [openGroups, setOpenGroups] = useState<string[]>(["Revenue"]);
+  const [openGroups, setOpenGroups] = useState<string[]>([
+    "Revenue",
+    "Hỗ trợ",
+    "Khách hàng",
+  ]);
 
   const toggleGroup = (title: string) => {
     setOpenGroups((prev) =>
@@ -108,13 +138,18 @@ export function AdminSidebar({
 
     // If it's a group (has children)
     if (hasChildren) {
+      const isChildActive = item.children?.some(
+        (child) => child.href && pathname.startsWith(child.href)
+      );
       return (
         <div key={item.title}>
           <button
             onClick={() => !isCollapsed && toggleGroup(item.title)}
             className={cn(
               "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
+              isChildActive
+                ? "text-blue-600 bg-blue-50"
+                : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
               isCollapsed && "justify-center"
             )}
             title={isCollapsed ? item.title : undefined}

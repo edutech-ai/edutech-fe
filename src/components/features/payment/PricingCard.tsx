@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Check, LogIn } from "lucide-react";
+import { Check, LogIn, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { SubscriptionPlan } from "@/services/paymentService";
@@ -45,7 +45,13 @@ export function PricingCard({
             ? "border-green-500 bg-green-50"
             : "border-gray-200 hover:border-blue-300"
       )}
-      onClick={!isCurrentPlan && plan.price > 0 ? handleClick : undefined}
+      onClick={
+        plan.code === "ENTERPRISE"
+          ? () => window.open("https://www.facebook.com/aiedutechvn", "_blank")
+          : !isCurrentPlan && plan.price > 0
+            ? handleClick
+            : undefined
+      }
     >
       {/* Popular badge */}
       {isPopular && !isCurrentPlan && (
@@ -214,20 +220,31 @@ export function PricingCard({
       <Button
         className={cn(
           "w-full h-12 text-base font-semibold transition-colors duration-200",
-          isPopular
-            ? "bg-primary text-white"
-            : isCurrentPlan
-              ? "bg-green-100 text-green-700 hover:bg-green-200"
-              : "bg-blue-600 hover:bg-blue-700 text-white"
+          plan.code === "ENTERPRISE"
+            ? "bg-violet-600 hover:bg-violet-700 text-white"
+            : isPopular
+              ? "bg-primary text-white"
+              : isCurrentPlan
+                ? "bg-green-100 text-green-700 hover:bg-green-200"
+                : "bg-blue-600 hover:bg-blue-700 text-white"
         )}
         variant={isCurrentPlan ? "outline" : "default"}
         onClick={(e) => {
           e.stopPropagation();
+          if (plan.code === "ENTERPRISE") {
+            window.open("https://www.facebook.com/aiedutechvn", "_blank");
+            return;
+          }
           handleClick();
         }}
         disabled={isCurrentPlan || isLoading || plan.price === 0}
       >
-        {isCurrentPlan ? (
+        {plan.code === "ENTERPRISE" ? (
+          <>
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Liên hệ chúng tôi
+          </>
+        ) : isCurrentPlan ? (
           "Đang sử dụng"
         ) : plan.price === 0 ? (
           "Gói mặc định"

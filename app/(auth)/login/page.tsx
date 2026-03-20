@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const REMEMBER_KEY = "edutech-remember-email";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useLoginService } from "@/services/authService";
@@ -16,8 +18,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const loginMutation = useLoginService();
+
+  useEffect(() => {
+    const saved = localStorage.getItem(REMEMBER_KEY);
+    if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setEmail(saved);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleGoogleLogin = () => {
     try {
@@ -85,6 +97,12 @@ export default function LoginPage() {
                 );
               } catch {
                 userWithToken.name = user.email;
+              }
+
+              if (rememberMe) {
+                localStorage.setItem(REMEMBER_KEY, email);
+              } else {
+                localStorage.removeItem(REMEMBER_KEY);
               }
 
               setUser(userWithToken);
@@ -219,6 +237,8 @@ export default function LoginPage() {
             <input
               id="remember"
               type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label

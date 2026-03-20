@@ -128,6 +128,7 @@ export const API_ENDPOINTS = {
   AI: {
     CREATE_QUIZ_WITH_QUESTIONS: "/ai/create-quiz-with-questions",
     ANALYZE_QUIZ: "/ai/analyze-quiz",
+    CONVERT_EXAM: "/ai/convert-exam",
   },
 
   // Exam Matrix endpoints

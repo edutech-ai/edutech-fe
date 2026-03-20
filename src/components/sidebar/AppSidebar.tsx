@@ -81,7 +81,7 @@ function SidebarContent({
       {/* Header */}
       <div className="h-18 flex items-center justify-between border-b border-gray-200 px-4 overflow-hidden">
         <Link
-          href="/dashboard"
+          href="/"
           className="flex items-center justify-start flex-1 min-w-0"
           onClick={onClose}
         >

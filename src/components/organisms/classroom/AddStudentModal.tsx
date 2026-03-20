@@ -186,7 +186,7 @@ export function AddStudentModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle>Thêm học sinh vào lớp</DialogTitle>
           <DialogDescription>
@@ -261,7 +261,7 @@ export function AddStudentModal({
           <TabsContent value="import" className="space-y-4 mt-4">
             {/* Template download info */}
             <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
               <div className="text-sm text-blue-800">
                 <p>
                   Upload file Excel (.xlsx) chứa danh sách học sinh, hoặc{" "}
@@ -344,7 +344,7 @@ export function AddStudentModal({
 
                 {/* Show errors if any */}
                 {uploadResult.errors.length > 0 && (
-                  <div className="mt-2 max-h-[100px] overflow-y-auto">
+                  <div className="mt-2 max-h-25 overflow-y-auto">
                     <p className="text-sm font-medium text-red-600 mb-1">
                       Chi tiết lỗi:
                     </p>

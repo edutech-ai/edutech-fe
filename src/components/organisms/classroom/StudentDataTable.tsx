@@ -173,9 +173,15 @@ export function StudentDataTable({
         case "name":
           comparison = a.name.localeCompare(b.name, "vi");
           break;
-        case "studentCode":
-          comparison = a.studentCode.localeCompare(b.studentCode);
+        case "studentCode": {
+          const numA = parseInt(a.studentCode, 10);
+          const numB = parseInt(b.studentCode, 10);
+          comparison =
+            !isNaN(numA) && !isNaN(numB)
+              ? numA - numB
+              : a.studentCode.localeCompare(b.studentCode);
           break;
+        }
         case "averageScore":
           comparison = a.averageScore - b.averageScore;
           break;

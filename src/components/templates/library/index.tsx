@@ -2,8 +2,28 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Library, Loader2, Trash2, FileMinusCorner } from "lucide-react";
+import {
+  Library,
+  Loader2,
+  Trash2,
+  FileText,
+  Eye,
+  Edit,
+  Copy,
+  MoreVertical,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { QuizCard } from "@/components/molecules/quiz-card";
 import type { Quiz, QuizQueryParams, Folder, Document } from "@/types";
 import { CreateQuizCard } from "@/components/molecules/quiz-card/CreateQuizCard";
@@ -29,7 +49,7 @@ import { ImageModal } from "@/components/molecules/image-modal/ImageModal";
 export function LibraryTemplate() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
@@ -85,7 +105,9 @@ export function LibraryTemplate() {
     ? isLoadingFolderItems
     : isLoadingRootDocuments;
 
-  const [quizFilters] = useState<QuizQueryParams>({ page: 1, limit: 100 });
+  const [quizFilters] = useState<QuizQueryParams>({ page: 1, limit: 500 });
+  const [quizPage, setQuizPage] = useState(1);
+  const QUIZ_PAGE_SIZE = 10;
   const {
     data: quizzesResponse,
     isLoading: isLoadingQuizzes,
@@ -93,19 +115,35 @@ export function LibraryTemplate() {
   } = useMyQuizzes(quizFilters);
 
   // Derived data - use folder items when inside a folder, otherwise use root data
+  const rawFolderItemsFolders = folderItemsResponse?.data?.folders;
+  const rawFolderItemsDocs = folderItemsResponse?.data?.documents;
+  const rawRootFolders = foldersResponse?.data;
+  const rawRootDocs = documentsResponse?.data;
+  const rawQuizzes = quizzesResponse?.data;
+
   const folders: Folder[] = currentFolderId
-    ? (folderItemsResponse?.data?.folders ?? [])
-    : (foldersResponse?.data ?? []);
+    ? Array.isArray(rawFolderItemsFolders)
+      ? rawFolderItemsFolders
+      : []
+    : Array.isArray(rawRootFolders)
+      ? rawRootFolders
+      : [];
   const documents: Document[] = currentFolderId
-    ? (folderItemsResponse?.data?.documents ?? [])
-    : (documentsResponse?.data ?? []);
+    ? Array.isArray(rawFolderItemsDocs)
+      ? rawFolderItemsDocs
+      : []
+    : Array.isArray(rawRootDocs)
+      ? rawRootDocs
+      : [];
 
   const folderPath = useMemo(
     () => folderPathResponse?.data ?? [],
     [folderPathResponse?.data]
   );
-  const allFolders: Folder[] = folderTreeResponse?.data ?? [];
-  const quizzes: Quiz[] = quizzesResponse?.data ?? [];
+  const allFolders: Folder[] = Array.isArray(folderTreeResponse?.data)
+    ? folderTreeResponse.data
+    : [];
+  const quizzes: Quiz[] = Array.isArray(rawQuizzes) ? rawQuizzes : [];
 
   const currentFolderDepth = useMemo(() => {
     if (!currentFolderId) return 0;
@@ -118,6 +156,14 @@ export function LibraryTemplate() {
     (quiz) =>
       quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       quiz.subject.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const quizTotalPages = Math.max(
+    1,
+    Math.ceil(filteredQuizzes.length / QUIZ_PAGE_SIZE)
+  );
+  const paginatedQuizzes = filteredQuizzes.slice(
+    (quizPage - 1) * QUIZ_PAGE_SIZE,
+    quizPage * QUIZ_PAGE_SIZE
   );
 
   // Navigation handlers
@@ -159,6 +205,7 @@ export function LibraryTemplate() {
   };
 
   const handleSearchChange = (value: string) => {
+    setQuizPage(1);
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
       params.set("search", value);
@@ -169,6 +216,7 @@ export function LibraryTemplate() {
   };
 
   const handleSearchSubmit = () => {
+    setQuizPage(1);
     setSelectedItems(new Set());
     const params = new URLSearchParams();
     params.set("tab", "quizzes");
@@ -321,29 +369,230 @@ export function LibraryTemplate() {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-lg border border-gray-200">
-              <div className="divide-y">
-                {filteredQuizzes.map((quiz) => (
-                  <div
-                    key={quiz.id}
-                    className="flex items-center gap-4 p-4 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => actions.handleViewQuiz(quiz.id)}
-                  >
-                    <div className="shrink-0">
-                      <FileMinusCorner className="text-file-blue" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">
-                        {quiz.title}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {quiz.subject} • Lớp {quiz.grade} •{" "}
-                        {quiz.total_questions} câu • {quiz.duration} phút
-                      </p>
-                    </div>
+            <div className="space-y-3">
+              {/* Create button — above table */}
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => actions.handleCreateQuiz()}
+              >
+                <Plus className="w-4 h-4" />
+                Tạo đề thi mới
+              </Button>
+
+              {/* Table */}
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="hidden sm:grid grid-cols-[1fr_120px_80px_140px_80px] bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <div className="px-4 py-2.5">Tên</div>
+                  <div className="px-4 py-2.5 text-center border-l border-gray-200">
+                    Trạng thái
                   </div>
-                ))}
+                  <div className="px-4 py-2.5 text-center border-l border-gray-200">
+                    Câu hỏi
+                  </div>
+                  <div className="px-4 py-2.5 text-right border-l border-gray-200">
+                    Ngày tạo
+                  </div>
+                  <div className="px-4 py-2.5 text-center border-l border-gray-200">
+                    Hành động
+                  </div>
+                </div>
+
+                {paginatedQuizzes.map((quiz) => {
+                  const statusMap: Record<
+                    string,
+                    { label: string; cls: string }
+                  > = {
+                    draft: {
+                      label: "Bản nháp",
+                      cls: "bg-amber-400 text-white border-0 rounded-sm",
+                    },
+                    public: {
+                      label: "Hoàn chỉnh",
+                      cls: "bg-blue-500 text-white border-0 rounded-sm",
+                    },
+                    archived: {
+                      label: "Lưu trữ",
+                      cls: "bg-gray-400 text-white border-0 rounded-sm",
+                    },
+                  };
+                  const statusInfo = statusMap[quiz.status] ?? {
+                    label: quiz.status,
+                    cls: "bg-gray-400 text-white border-0 rounded-sm",
+                  };
+
+                  const createdAt = new Date(quiz.created_at);
+                  const formattedDate = `${String(createdAt.getDate()).padStart(2, "0")}.${String(createdAt.getMonth() + 1).padStart(2, "0")}.${String(createdAt.getFullYear()).slice(2)} ${String(createdAt.getHours()).padStart(2, "0")}:${String(createdAt.getMinutes()).padStart(2, "0")}`;
+
+                  return (
+                    <div
+                      key={quiz.id}
+                      className="grid grid-cols-[1fr_44px] sm:grid-cols-[1fr_120px_80px_140px_80px] items-center border-b last:border-0 hover:bg-gray-50 cursor-pointer group transition-colors"
+                      onClick={() => actions.handleViewQuiz(quiz.id)}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 px-4 py-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 truncate text-sm">
+                            {quiz.title}
+                          </p>
+                          <p className="text-xs text-gray-500 sm:hidden">
+                            {quiz.subject} • Lớp {quiz.grade} •{" "}
+                            {quiz.total_questions} câu
+                          </p>
+                          <p className="text-xs text-gray-400 hidden sm:block">
+                            {quiz.subject} • Lớp {quiz.grade} • {quiz.duration}{" "}
+                            phút
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="hidden sm:flex items-center justify-center px-4 py-3 border-l border-gray-200 self-stretch">
+                        <Badge
+                          className={`text-xs font-semibold px-2.5 py-0.5 ${statusInfo.cls}`}
+                        >
+                          {statusInfo.label}
+                        </Badge>
+                      </div>
+
+                      <div className="hidden sm:flex items-center justify-center px-4 py-3 border-l border-gray-200 self-stretch text-sm text-gray-700 font-medium">
+                        {quiz.total_questions}
+                      </div>
+
+                      <div className="hidden sm:flex items-center justify-end px-4 py-3 border-l border-gray-200 self-stretch text-xs text-gray-500">
+                        {formattedDate}
+                      </div>
+
+                      <div className="flex items-center justify-center px-2 py-3 sm:border-l sm:border-gray-200 self-stretch">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="p-1.5 rounded-md hover:bg-gray-200 transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreVertical className="w-4 h-4 text-gray-500" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                actions.handleViewQuiz(quiz.id);
+                              }}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              Xem chi tiết
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                actions.handleEditQuiz(quiz.id);
+                              }}
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Chỉnh sửa
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                actions.handleDuplicateQuiz(quiz.id);
+                              }}
+                            >
+                              <Copy className="w-4 h-4 mr-2" />
+                              Sao chép
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-red-600 focus:text-red-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                actions.handleDeleteQuiz(quiz.id);
+                              }}
+                              disabled={actions.deletingQuizId === quiz.id}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              {actions.deletingQuizId === quiz.id
+                                ? "Đang xóa..."
+                                : "Xóa"}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
+
+              {/* Pagination */}
+              {quizTotalPages > 1 && (
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-xs text-gray-500">
+                    {(quizPage - 1) * QUIZ_PAGE_SIZE + 1}–
+                    {Math.min(
+                      quizPage * QUIZ_PAGE_SIZE,
+                      filteredQuizzes.length
+                    )}{" "}
+                    trong {filteredQuizzes.length} đề thi
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setQuizPage((p) => Math.max(1, p - 1))}
+                      disabled={quizPage === 1}
+                      className="p-1.5 rounded-md border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4 text-gray-600" />
+                    </button>
+
+                    {Array.from({ length: quizTotalPages }, (_, i) => i + 1)
+                      .filter(
+                        (p) =>
+                          p === 1 ||
+                          p === quizTotalPages ||
+                          Math.abs(p - quizPage) <= 1
+                      )
+                      .reduce<(number | "...")[]>((acc, p, idx, arr) => {
+                        if (idx > 0 && p - (arr[idx - 1] as number) > 1)
+                          acc.push("...");
+                        acc.push(p);
+                        return acc;
+                      }, [])
+                      .map((item, idx) =>
+                        item === "..." ? (
+                          <span
+                            key={`ellipsis-${idx}`}
+                            className="px-1.5 text-gray-400 text-sm"
+                          >
+                            …
+                          </span>
+                        ) : (
+                          <button
+                            key={item}
+                            onClick={() => setQuizPage(item as number)}
+                            className={`min-w-8 h-8 px-2 rounded-md text-sm border transition-colors ${
+                              quizPage === item
+                                ? "bg-blue-600 text-white border-blue-600"
+                                : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        )
+                      )}
+
+                    <button
+                      onClick={() =>
+                        setQuizPage((p) => Math.min(quizTotalPages, p + 1))
+                      }
+                      disabled={quizPage === quizTotalPages}
+                      className="p-1.5 rounded-md border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronRight className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

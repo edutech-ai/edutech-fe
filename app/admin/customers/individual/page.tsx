@@ -1,0 +1,193 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Search, Eye, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useIndividualCustomers } from "@/services/adminService";
+import { cn } from "@/lib/utils";
+
+const STATUS_COLOR: Record<string, string> = {
+  active: "bg-green-50 text-green-700 border-green-200",
+  locked: "bg-red-50 text-red-700 border-red-200",
+  pending: "bg-yellow-50 text-yellow-700 border-yellow-200",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  active: "Hoạt động",
+  locked: "Đã khoá",
+  pending: "Chờ xác minh",
+};
+
+export default function IndividualCustomersPage() {
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const { data, isLoading } = useIndividualCustomers({
+    search: debouncedSearch,
+    page,
+  });
+  const customers = data?.data ?? [];
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    clearTimeout((window as any)._searchTimer);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any)._searchTimer = setTimeout(() => {
+      setDebouncedSearch(val);
+      setPage(1);
+    }, 400);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Khách hàng Cá nhân</h2>
+        <p className="text-gray-500 text-sm mt-1">
+          Giáo viên tự đăng ký, khách hàng cá nhân sử dụng nền tảng cho mục đích
+          học tập hoặc trải nghiệm.
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="p-4">
+          <p className="text-sm text-gray-500">Tổng tài khoản</p>
+          <p className="mt-1 text-2xl font-bold text-gray-900">
+            {data?.total ?? "—"}
+          </p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-gray-500">Đang hoạt động</p>
+          <p className="mt-1 text-2xl font-bold text-green-600">
+            {data?.total ?? "—"}
+          </p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-gray-500">Bị khoá</p>
+          <p className="mt-1 text-2xl font-bold text-red-600">
+            {customers.filter((c) => c.status === "locked").length}
+          </p>
+        </Card>
+      </div>
+
+      <Card className="p-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Input
+            placeholder="Tìm theo tên hoặc email..."
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </Card>
+
+      <Card>
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+          </div>
+        ) : customers.length === 0 ? (
+          <div className="py-12 text-center text-gray-500">
+            Chưa có tài khoản nào
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Tài khoản
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Bài thi
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Lớp học
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Ngày tham gia
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Trạng thái
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Thao tác
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {customers.map((c) => (
+                  <tr key={c.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-gray-900">
+                        {c.name ?? "—"}
+                      </p>
+                      <p className="text-sm text-gray-500">{c.email}</p>
+                    </td>
+                    <td className="px-6 py-4 text-gray-700">
+                      {c.quizzes_count}
+                    </td>
+                    <td className="px-6 py-4 text-gray-700">
+                      {c.classrooms_count}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {new Date(c.created_at).toLocaleDateString("vi-VN")}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={cn(
+                          "inline-flex rounded-full border px-2 py-1 text-xs font-medium",
+                          STATUS_COLOR[c.status] ??
+                            "bg-gray-50 text-gray-700 border-gray-200"
+                        )}
+                      >
+                        {STATUS_LABEL[c.status] ?? c.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Link href={`/admin/customers/${c.id}`}>
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+      {data && data.totalPages > 1 && (
+        <div className="flex items-center justify-between text-sm text-gray-500">
+          <span>
+            Trang {data.page} / {data.totalPages} — {data.total} tài khoản
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= data.totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

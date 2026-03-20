@@ -21,6 +21,8 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string) => `/profile/${id}`,
     STATS: "/profile/stats",
     RECENT_ACTIVITIES: "/profile/recent-activities",
+    MY_REPORTS: "/profile/reports",
+    MY_FEATURES: "/profile/features",
   },
 
   // Settings endpoints
@@ -146,8 +148,24 @@ export const API_ENDPOINTS = {
     READ_ALL: "/notifications/read-all",
   },
 
+  REPORT: {
+    BUGS: "/reports/bugs",
+    BUG_BY_ID: (id: number) => `/reports/bugs/${id}`,
+    FEATURES: "/reports/features",
+    FEATURE_BY_ID: (id: number) => `/reports/features/${id}`,
+    FEATURE_LIKE: (id: number) => `/reports/features/${id}/like`,
+    BUG_STATUS: (id: number) => `/reports/bugs/${id}/status`,
+    FEATURE_STATUS: (id: number) => `/reports/features/${id}/status`,
+  },
+
   // Admin Dashboard endpoints
   ADMIN: {
+    CUSTOMERS: {
+      ENTERPRISE: "/admin/customers/enterprise",
+      INDIVIDUAL: "/admin/customers/individual",
+      BY_ID: (id: string) => `/admin/customers/${id}`,
+      LOCK: (id: string) => `/admin/customers/${id}/lock`,
+    },
     DASHBOARD: {
       SUMMARY: "/admin/dashboard/summary",
       REVENUE_METRICS: "/admin/dashboard/revenue-metrics",

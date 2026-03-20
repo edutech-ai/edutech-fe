@@ -76,6 +76,7 @@ export default function LoginPage() {
               try {
                 const profile = await getProfile();
                 userWithToken.name = profile.name || user.email;
+                userWithToken.avatar_url = profile.avatar_url || undefined;
 
                 storageData.state.user = userWithToken;
                 localStorage.setItem(

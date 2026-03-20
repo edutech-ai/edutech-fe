@@ -9,6 +9,8 @@ import {
   FileText,
   Loader2,
   Sparkles,
+  Globe,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +18,7 @@ import {
   useQuizById,
   useQuizQuestions,
   useDeleteQuiz,
+  useUpdateVisibility,
 } from "@/services/quizService";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -30,6 +33,7 @@ export default function QuizDetailPage() {
   const quizId = params.id as string;
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAnalyzeDialog, setShowAnalyzeDialog] = useState(false);
 
@@ -44,6 +48,7 @@ export default function QuizDetailPage() {
     useQuizQuestions(quizId, true); // includeAnswers = true for owner
 
   const deleteQuizMutation = useDeleteQuiz();
+  const updateVisibilityMutation = useUpdateVisibility();
 
   const quiz = quizResponse?.data ?? null;
 
@@ -80,6 +85,28 @@ export default function QuizDetailPage() {
     router.back();
   };
 
+  const handleToggleVisibility = async () => {
+    if (!quiz) return;
+    const isCommunity = quiz.visibility === "community";
+    const next = isCommunity ? "private" : "community";
+    setIsUpdatingVisibility(true);
+    try {
+      await updateVisibilityMutation.mutateAsync({
+        id: quizId,
+        visibility: next,
+      });
+      toast.success(
+        next === "community"
+          ? "Đã công khai đề thi!"
+          : "Đã đặt đề thi thành riêng tư!"
+      );
+    } catch {
+      toast.error("Không thể cập nhật quyền hiển thị. Vui lòng thử lại!");
+    } finally {
+      setIsUpdatingVisibility(false);
+    }
+  };
+
   if (isLoadingQuiz || isLoadingQuestions) {
     return (
       <div className="flex items-center justify-center min-h-100">
@@ -109,12 +136,13 @@ export default function QuizDetailPage() {
 
   const getDifficultyColor = (difficulty?: string) => {
     const colors = {
-      easy: "bg-green-100 text-green-700",
-      medium: "bg-yellow-100 text-yellow-700",
-      hard: "bg-red-100 text-red-700",
+      easy: "bg-green-500 text-white border-0 rounded-sm",
+      medium: "bg-yellow-500 text-white border-0 rounded-sm",
+      hard: "bg-red-500 text-white border-0 rounded-sm",
     };
     return (
-      colors[difficulty as keyof typeof colors] || "bg-gray-100 text-gray-700"
+      colors[difficulty as keyof typeof colors] ||
+      "bg-gray-400 text-white border-0 rounded-sm"
     );
   };
 
@@ -128,15 +156,6 @@ export default function QuizDetailPage() {
     return texts[difficulty] || difficulty;
   };
 
-  const getStatusColor = (status?: string) => {
-    const colors = {
-      draft: "bg-gray-100 text-gray-700",
-      public: "bg-blue-100 text-blue-700",
-      archived: "bg-orange-100 text-orange-700",
-    };
-    return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-700";
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -145,43 +164,57 @@ export default function QuizDetailPage() {
         label="Danh sách đề thi"
         href="/dashboard/library?tab=quizzes"
       />
-      <div className="flex items-center justify-between mt-2">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-lg md:text-2xl font-bold text-gray-900 mb-2">
-              {quiz.title}
-            </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-sm text-gray-900 font-bold">
-                {quiz.subject} • Lớp {quiz.grade || "Không xác định"}
-              </span>
-              {quiz.difficulty && (
-                <Badge className={getDifficultyColor(quiz.difficulty)}>
-                  {renderDifficultyText(quiz.difficulty)}
-                </Badge>
-              )}
-              {quiz.status && (
-                <Badge className={getStatusColor(quiz.status)}>
-                  {quiz.status === "public"
-                    ? "Công khai"
-                    : quiz.status === "draft"
-                      ? "Bản nháp"
-                      : "Đã lưu trữ"}
-                </Badge>
-              )}
-            </div>
+      <div className="flex flex-wrap items-start justify-between gap-4 mt-2">
+        <div>
+          <h1 className="text-lg md:text-2xl font-bold text-gray-900 mb-2">
+            {quiz.title}
+          </h1>
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <span className="text-sm text-gray-900 font-bold">
+              {quiz.subject} • Lớp {quiz.grade || "Không xác định"}
+            </span>
+            {quiz.difficulty && (
+              <Badge className={getDifficultyColor(quiz.difficulty)}>
+                {renderDifficultyText(quiz.difficulty)}
+              </Badge>
+            )}
+
+            {quiz.visibility === "community" && (
+              <Badge className="bg-green-500 text-white border-0 rounded-sm">
+                Công khai
+              </Badge>
+            )}
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant={quiz.visibility === "community" ? "outline" : "default"}
+            onClick={handleToggleVisibility}
+            disabled={isUpdatingVisibility}
+          >
+            {isUpdatingVisibility ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : quiz.visibility === "community" ? (
+              <Lock className="w-4 h-4 mr-2" />
+            ) : (
+              <Globe className="w-4 h-4 mr-2" />
+            )}
+            <span className="hidden sm:inline">
+              {quiz.visibility === "community" ? "Đặt riêng tư" : "Công khai"}
+            </span>
+            <span className="sm:hidden">
+              {quiz.visibility === "community" ? "Riêng tư" : "Công khai"}
+            </span>
+          </Button>
           <Button variant="outline" onClick={handleEdit}>
-            <Edit className="w-4 h-4 mr-2" />
-            Chỉnh sửa
+            <Edit className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Chỉnh sửa</span>
           </Button>
           <Button variant="outline" onClick={handleDuplicate}>
-            <Copy className="w-4 h-4 mr-2" />
-            Sao chép
+            <Copy className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Sao chép</span>
           </Button>
           <Button
             variant="destructive"
@@ -189,11 +222,11 @@ export default function QuizDetailPage() {
             disabled={isDeleting}
           >
             {isDeleting ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin sm:mr-2" />
             ) : (
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="w-4 h-4 sm:mr-2" />
             )}
-            Xóa
+            <span className="hidden sm:inline">Xóa</span>
           </Button>
         </div>
       </div>

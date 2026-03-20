@@ -78,6 +78,53 @@ export interface CreateQuizWithQuestionsResponse {
     | ValidationErrorData;
 }
 
+export interface ConvertExamRequest {
+  file: File;
+  title?: string;
+  subject?: string;
+  grade?: number;
+  duration?: number;
+}
+
+export interface ConvertedQuestion {
+  id: string;
+  content: string;
+  type: string;
+  options?: any[];
+  correct_answer: string | string[];
+  explanation?: string | null;
+  point: number;
+  difficulty?: string;
+}
+
+export interface ConvertExamResponse {
+  success: boolean;
+  message: string;
+  data: {
+    quiz: {
+      id: string;
+      title: string;
+      subject: string;
+      grade: number;
+      duration: number;
+      difficulty: string;
+      status: string;
+      total_questions: number;
+      questions: ConvertedQuestion[];
+    };
+    document: {
+      id: string;
+      name: string;
+      file_url: string;
+    };
+    conversionInfo: {
+      total_questions: number;
+      total_score: number;
+      total_minutes: number;
+    };
+  };
+}
+
 // ==================== MUTATION HOOKS ====================
 
 /**
@@ -101,6 +148,40 @@ export const useCreateQuizWithAI = (): UseMutationResult<
     },
     onSuccess: () => {
       // Invalidate quiz lists to refetch
+      queryClient.invalidateQueries({ queryKey: QUIZ_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: QUIZ_KEYS.all });
+    },
+  });
+};
+
+/**
+ * Convert exam PDF to quiz using AI
+ */
+export const useConvertExam = (): UseMutationResult<
+  ConvertExamResponse,
+  AxiosError,
+  ConvertExamRequest
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ file, title, subject, grade, duration }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      if (title) formData.append("title", title);
+      if (subject) formData.append("subject", subject);
+      if (grade !== undefined) formData.append("grade", grade.toString());
+      if (duration !== undefined)
+        formData.append("duration", duration.toString());
+
+      const response = await axiosInstance.post<ConvertExamResponse>(
+        API_ENDPOINTS.AI.CONVERT_EXAM,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUIZ_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUIZ_KEYS.all });
     },

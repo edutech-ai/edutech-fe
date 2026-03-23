@@ -48,10 +48,10 @@ export default function ExplorePage() {
           <div className="max-w-6xl mx-auto px-4 py-8 md:py-10">
             <div className="relative z-10">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
-                Trang chia sẽ đề thi
+                Trang chia sẻ đề thi
               </h1>
               <p className="text-sm text-gray-500 mb-6 max-w-md">
-                Tổng hợp những bài kiểm tra được chia sẽ từ giáo viên trên nền
+                Tổng hợp những bài kiểm tra được chia sẻ từ giáo viên trên nền
                 tảng
               </p>
 

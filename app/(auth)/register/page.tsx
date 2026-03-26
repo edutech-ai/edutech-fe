@@ -29,11 +29,13 @@ export default function RegisterPage() {
   const [otpCode, setOtpCode] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     confirmPassword: "",
-    role: "TEACHER" as "TEACHER" | "STUDENT",
+    role: "TEACHER" as "TEACHER" | "TUTOR",
     subject: "" as Subject,
   });
 
@@ -77,6 +79,11 @@ export default function RegisterPage() {
 
     if (formData.password.length < 6) {
       toast.error("Mật khẩu phải có ít nhất 6 ký tự");
+      return;
+    }
+
+    if (!agreedToTerms) {
+      toast.error("Vui lòng đồng ý với Điều khoản & Chính sách để tiếp tục");
       return;
     }
 
@@ -286,17 +293,17 @@ export default function RegisterPage() {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  role: e.target.value as "TEACHER" | "STUDENT",
+                  role: e.target.value as "TEACHER" | "TUTOR",
                 })
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value="TEACHER">Giáo viên</option>
-              <option value="STUDENT">Học sinh</option>
+              <option value="TUTOR">Gia sư</option>
             </select>
           </div>
 
-          {formData.role === "TEACHER" && (
+          {(formData.role === "TEACHER" || formData.role === "TUTOR") && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Môn giảng dạy
@@ -316,10 +323,34 @@ export default function RegisterPage() {
             </div>
           )}
 
+          <div className="flex items-start gap-2">
+            <input
+              id="terms-register"
+              type="checkbox"
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              className="h-4 w-4 mt-0.5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded shrink-0"
+            />
+            <label htmlFor="terms-register" className="text-sm text-gray-600">
+              Tôi đồng ý với{" "}
+              <Link href="/terms" className="text-blue-600 hover:text-blue-500">
+                Điều khoản
+              </Link>{" "}
+              &amp;{" "}
+              <Link
+                href="/policy"
+                className="text-blue-600 hover:text-blue-500"
+              >
+                Chính sách
+              </Link>{" "}
+              của EduTech
+            </label>
+          </div>
+
           <button
             type="submit"
-            disabled={registerMutation.isPending}
-            className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition mt-6"
+            disabled={registerMutation.isPending || !agreedToTerms}
+            className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition mt-2"
           >
             {registerMutation.isPending ? "Đang đăng ký..." : "Đăng ký"}
           </button>

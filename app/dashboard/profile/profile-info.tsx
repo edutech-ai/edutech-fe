@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -95,8 +96,8 @@ export function ProfileInfoForm() {
         setValue("gender", data.gender || "");
         setValue("avatar_url", data.avatar_url || "");
         setValue("address", data.address || "");
-        setValue("email_notification", data.email_notification || false);
-        setValue("push_notification", data.push_notification || false);
+        setValue("email_notification", !!data.email_notification);
+        setValue("push_notification", !!data.push_notification);
 
         if (data.avatar_url) {
           setAvatarPreview(data.avatar_url);
@@ -163,6 +164,22 @@ export function ProfileInfoForm() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onInvalid = (errors: Record<string, any>) => {
+    const firstKey = Object.keys(errors)[0];
+    const fieldLabels: Record<string, string> = {
+      name: "Họ và tên",
+      date_of_birth: "Ngày sinh",
+      gender: "Giới tính",
+      avatar_url: "Ảnh đại diện",
+      address: "Tỉnh/Thành phố",
+      email_notification: "Thông báo email",
+      push_notification: "Thông báo",
+    };
+    const label = fieldLabels[firstKey] ?? firstKey;
+    toast.error(`Vui lòng kiểm tra lại: ${label}`);
+  };
+
   // Handle form submission
   const onSubmit = async (data: ProfileFormData) => {
     setIsSaving(true);
@@ -170,10 +187,10 @@ export function ProfileInfoForm() {
     try {
       const updateData: UpdateProfileRequest = {
         name: data.name,
-        date_of_birth: data.date_of_birth || null,
-        gender: data.gender || null,
-        avatar_url: data.avatar_url || null,
-        address: data.address || null,
+        date_of_birth: data.date_of_birth || undefined,
+        gender: data.gender || undefined,
+        avatar_url: data.avatar_url || undefined,
+        address: data.address || undefined,
         email_notification: data.email_notification,
         push_notification: data.push_notification,
       };
@@ -228,7 +245,10 @@ export function ProfileInfoForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-4xl">
+    <form
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
+      className="space-y-6 max-w-4xl"
+    >
       {/* Avatar Section */}
       <Card>
         <CardHeader>

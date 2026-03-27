@@ -81,6 +81,7 @@ export interface QuizQueryParams {
   status?: QuizStatus;
   difficulty?: QuizDifficulty;
   search?: string;
+  subject?: string;
   page?: number;
   limit?: number;
 }

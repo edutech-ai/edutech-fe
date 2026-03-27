@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, GripVertical, Edit, Trash2 } from "lucide-react";
+import { Plus, GripVertical, Edit, Trash2, Library } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ImportFromLibraryModal } from "@/components/features/library/ImportFromLibraryModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +40,7 @@ const difficultyLabels: Record<string, string> = {
 
 export function QuestionListTab({ questions, onUpdate }: QuestionListTabProps) {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionUI | null>(
     null
   );
@@ -100,13 +102,19 @@ export function QuestionListTab({ questions, onUpdate }: QuestionListTabProps) {
             Tổng điểm: <span className="font-semibold">{totalPoints}</span>
           </p>
         </div>
-        <Button
-          data-tour="add-question-btn"
-          onClick={() => setShowAddModal(true)}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Thêm câu hỏi
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setShowImportModal(true)}>
+            <Library className="w-4 h-4 mr-2" />
+            Thêm từ Kho
+          </Button>
+          <Button
+            data-tour="add-question-btn"
+            onClick={() => setShowAddModal(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Thêm câu hỏi
+          </Button>
+        </div>
       </div>
 
       {/* Question List */}
@@ -216,6 +224,16 @@ export function QuestionListTab({ questions, onUpdate }: QuestionListTabProps) {
           </div>
         )}
       </div>
+
+      {/* Import from Library Modal */}
+      <ImportFromLibraryModal
+        open={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImport={(imported) => {
+          onUpdate([...questions, ...imported]);
+          setShowImportModal(false);
+        }}
+      />
 
       {/* Add/Edit Question Modal */}
       <AddQuestionModal

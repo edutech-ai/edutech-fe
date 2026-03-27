@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const REMEMBER_KEY = "edutech-remember-email";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useLoginService } from "@/services/authService";
@@ -16,8 +18,19 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const loginMutation = useLoginService();
+
+  useEffect(() => {
+    const saved = localStorage.getItem(REMEMBER_KEY);
+    if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setEmail(saved);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleGoogleLogin = () => {
     try {
@@ -36,6 +49,11 @@ export default function LoginPage() {
 
     if (!email || !password) {
       toast.error("Vui lòng nhập đầy đủ email và mật khẩu");
+      return;
+    }
+
+    if (!agreedToTerms) {
+      toast.error("Vui lòng đồng ý với Điều khoản & Chính sách để tiếp tục");
       return;
     }
 
@@ -87,13 +105,20 @@ export default function LoginPage() {
                 userWithToken.name = user.email;
               }
 
+              if (rememberMe) {
+                localStorage.setItem(REMEMBER_KEY, email);
+              } else {
+                localStorage.removeItem(REMEMBER_KEY);
+              }
+
               setUser(userWithToken);
 
               toast.success("Đăng nhập thành công!");
 
-              if (user.role?.toUpperCase() === "ADMIN") {
+              const role = user.role?.toUpperCase();
+              if (role === "ADMIN") {
                 router.push("/admin/dashboard");
-              } else if (user.role?.toUpperCase() === "TEACHER") {
+              } else if (role === "TEACHER" || role === "TUTOR") {
                 router.push("/dashboard");
               } else {
                 router.push("/app");
@@ -219,6 +244,8 @@ export default function LoginPage() {
             <input
               id="remember"
               type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label
@@ -237,9 +264,30 @@ export default function LoginPage() {
           </Link>
         </div>
 
+        <div className="flex items-start gap-2">
+          <input
+            id="terms-login"
+            type="checkbox"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            className="h-4 w-4 mt-0.5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded shrink-0"
+          />
+          <label htmlFor="terms-login" className="text-sm text-gray-600">
+            Tôi đồng ý với{" "}
+            <Link href="/terms" className="text-blue-600 hover:text-blue-500">
+              Điều khoản
+            </Link>{" "}
+            &amp;{" "}
+            <Link href="/policy" className="text-blue-600 hover:text-blue-500">
+              Chính sách
+            </Link>{" "}
+            của EduTech
+          </label>
+        </div>
+
         <button
           type="submit"
-          disabled={loginMutation.isPending}
+          disabled={loginMutation.isPending || !agreedToTerms}
           className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           {loginMutation.isPending ? "Đang đăng nhập..." : "Đăng nhập"}

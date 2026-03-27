@@ -292,6 +292,8 @@ export interface UploadScoresResponse {
   success: boolean;
   message: string;
   data: {
+    failed: number;
+    imported: number;
     total: number;
     successCount: number;
     errorCount: number;

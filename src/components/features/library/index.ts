@@ -8,3 +8,5 @@ export { FolderListView } from "./FolderListView";
 export { LibraryToolbar } from "./LibraryToolbar";
 export { LibraryBreadcrumb } from "./LibraryBreadcrumb";
 export { LibraryDialogs } from "./LibraryDialogs";
+export { QuizDetailModal } from "./QuizDetailModal";
+export { ImportFromLibraryModal } from "./ImportFromLibraryModal";

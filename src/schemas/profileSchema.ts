@@ -4,7 +4,8 @@ export const profileSchema = z.object({
   name: z
     .string()
     .min(1, "Tên không được để trống")
-    .max(500, "Tên không được vượt quá 500 ký tự"),
+    .max(500, "Tên không được vượt quá 500 ký tự")
+    .optional(),
   date_of_birth: z
     .string()
     .optional()

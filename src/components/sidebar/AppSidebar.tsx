@@ -9,6 +9,7 @@ import {
   Home,
   FileQuestion,
   Library,
+  BookOpen,
   Settings,
   X,
   Users,
@@ -43,6 +44,11 @@ const teacherMenuItems: MenuItem[] = [
     title: "Thư viện",
     url: "/dashboard/library",
     icon: Library,
+  },
+  {
+    title: "Kho học liệu",
+    url: "/dashboard/explore",
+    icon: BookOpen,
   },
   {
     title: "Ma trận đề thi",

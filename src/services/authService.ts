@@ -7,7 +7,7 @@ import type { User } from "@/types";
 export interface RegisterRequest {
   email: string;
   password: string;
-  role: "TEACHER" | "STUDENT";
+  role: "TEACHER" | "STUDENT" | "TUTOR";
   subject?: string;
 }
 

@@ -229,7 +229,7 @@ export default function DashboardExplorePage() {
 
           {/* Quiz grid */}
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
@@ -244,7 +244,7 @@ export default function DashboardExplorePage() {
                 : "Chưa có đề thi nào"}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-4">
               {filtered.map((quiz) => (
                 <LibraryQuizCard
                   key={quiz.id}

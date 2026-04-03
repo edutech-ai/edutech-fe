@@ -27,6 +27,7 @@ export function DashboardBreadcrumb() {
     "/dashboard/profile": "Thông tin cá nhân",
     "/dashboard/bug-report": "Báo lỗi hệ thống",
     "/dashboard/feature-request": "Đề xuất tính năng",
+    "/dashboard/explore": "Khám phá đề thi",
   };
 
   // Build folder hierarchy from current folder ID

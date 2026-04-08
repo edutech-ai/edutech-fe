@@ -34,11 +34,11 @@ interface GetAvatarUrlOptions {
 /**
  * Returns a valid avatar URL:
  * - If user has a custom avatar_url, returns it as-is
- * - Otherwise, generates an initial-based avatar via UI Avatars API
+ * - Otherwise, generates an initials-based avatar via DiceBear API
  *
  * @example
  * const url = getAvatarUrl({ avatarUrl: user.avatar_url, name: "Nguyễn Văn A", seed: user.id });
- * // → "https://ui-avatars.com/api/?name=Nguyễn+Văn+A&background=4F46E5&color=fff&size=128&bold=true&format=svg"
+ * // → "https://api.dicebear.com/9.x/initials/svg?seed=Nguy%E1%BB%85n+V%C4%83n+A&backgroundColor=4F46E5&..."
  */
 export function getAvatarUrl({
   avatarUrl,
@@ -54,15 +54,13 @@ export function getAvatarUrl({
   const bgColor = getColorFromSeed(seed || name);
 
   const params = new URLSearchParams({
-    name,
-    background: bgColor,
-    color: "fff",
+    seed: name,
+    backgroundColor: bgColor,
+    textColor: "ffffff",
+    fontSize: "40",
+    fontWeight: "700",
     size: size.toString(),
-    bold: "true",
-    format: "svg",
-    "font-size": "0.4",
-    rounded: "true",
   });
 
-  return `https://ui-avatars.com/api/?${params.toString()}`;
+  return `https://api.dicebear.com/9.x/initials/svg?${params.toString()}`;
 }

@@ -52,7 +52,7 @@ export function ProcessSection() {
           <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-6">
             Từ ý tưởng đến bài giảng
             <br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-primary/70">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-primary/70 pb-1 inline-block">
               chỉ trong vài giây
             </span>
           </h2>

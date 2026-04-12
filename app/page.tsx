@@ -7,6 +7,7 @@ import { BenefitsSection } from "@/components/organisms/benefits-section";
 import { ProcessSection } from "@/components/organisms/process-section";
 import { FAQSection } from "@/components/organisms/faq-section";
 import { TargetAudienceSection } from "@/components/organisms/target-audience-section";
+import { MobileSection } from "@/components/organisms/mobile-section";
 import { Footer } from "@/components/organisms/footer";
 
 export default function HomePage() {
@@ -18,6 +19,7 @@ export default function HomePage() {
       <BenefitsSection />
       <ProcessSection />
       <TargetAudienceSection />
+      <MobileSection />
       <FAQSection />
       <Footer />
     </div>

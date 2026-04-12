@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Header } from "@/components/organisms/header";
 import { Footer } from "@/components/organisms/footer";
 import { blogPosts, categories } from "@/data/blog-posts";
-import { Calendar, Clock, User } from "lucide-react";
+import { Calendar, Clock, ArrowRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -15,8 +16,6 @@ export const metadata: Metadata = {
     "tips giáo viên",
     "công nghệ giáo dục",
     "EdTech Việt Nam",
-    "hướng dẫn giảng dạy",
-    "soạn bài AI",
   ],
   openGraph: {
     title: "Blog AI EduTech - Kiến thức AI giáo dục",
@@ -25,165 +24,159 @@ export const metadata: Metadata = {
   },
 };
 
+const categoryColors: Record<string, string> = {
+  "AI trong giáo dục": "text-blue-600 before:bg-blue-500",
+  "Kỹ năng giảng dạy": "text-purple-600 before:bg-purple-500",
+  "Hướng dẫn": "text-emerald-600 before:bg-emerald-500",
+  "Xu hướng": "text-orange-500 before:bg-orange-500",
+};
+
+function CategoryBadge({ category }: { category: string }) {
+  const cls = categoryColors[category] ?? "text-gray-500 before:bg-gray-400";
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase before:content-[''] before:w-1.5 before:h-1.5 before:rounded-full before:shrink-0 ${cls}`}
+    >
+      {category}
+    </span>
+  );
+}
+
 export default function BlogPage() {
-  const featuredPost = blogPosts[0];
-  const otherPosts = blogPosts.slice(1);
+  const sorted = [...blogPosts].sort(
+    (a, b) =>
+      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+  );
+  const featuredPost = sorted[0];
+  const otherPosts = sorted.slice(1);
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen w-full bg-white">
       <Header />
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-16 bg-gradient-to-b from-blue-50 to-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Blog <span className="text-blue-600">AI EduTech</span>
+      {/* Hero — clean, minimal */}
+      <section className="pt-32 pb-10 border-b border-gray-100">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-sm font-medium text-primary mb-3 tracking-wide uppercase">
+            Bài viêt
+          </p>
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-4 max-w-xl">
+            Góc nhìn về AI trong giáo dục
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Kiến thức về AI trong giáo dục, tips giảng dạy hiệu quả và xu hướng
-            công nghệ dành cho giáo viên Việt Nam.
+          <p className="text-gray-500 max-w-lg">
+            Tips giảng dạy, xu hướng EdTech và hướng dẫn ứng dụng AI dành cho
+            giáo viên Việt Nam.
           </p>
         </div>
       </section>
 
       {/* Categories */}
-      <section className="py-8 bg-white border-b">
+      <section className="py-4 border-b border-gray-100 sticky top-16 bg-white/95 backdrop-blur-sm z-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap gap-3 justify-center">
-            {categories.map((category) => (
+          <div className="flex gap-1 flex-wrap">
+            {categories.map((cat) => (
               <button
-                key={category}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  category === "Tất cả"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                key={cat}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  cat === "Tất cả"
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
                 }`}
               >
-                {category}
+                {cat}
               </button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Featured Post */}
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <Link href={`/blog/${featuredPost.slug}`} className="group block">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-              <div className="relative aspect-video bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-6xl">📚</span>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
-                  {featuredPost.category}
-                </span>
-                <h2 className="text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                  {featuredPost.title}
-                </h2>
-                <p className="text-lg text-gray-600">{featuredPost.excerpt}</p>
-                <div className="flex items-center gap-6 text-sm text-gray-500">
-                  <span className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    {featuredPost.author.name}
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(featuredPost.publishedAt).toLocaleDateString(
-                      "vi-VN"
-                    )}
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    {featuredPost.readingTime} phút đọc
-                  </span>
-                </div>
-              </div>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        {/* Featured post */}
+        <Link href={`/blog/${featuredPost.slug}`} className="group block mb-16">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            <div className="relative aspect-16/10 rounded-2xl overflow-hidden bg-gray-100">
+              <Image
+                src="/images/logo/backgroud.png"
+                alt={featuredPost.title}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
             </div>
-          </Link>
-        </div>
-      </section>
+            <div className="space-y-4">
+              <CategoryBadge category={featuredPost.category} />
+              <h2 className="text-3xl font-bold text-gray-900 leading-snug group-hover:text-primary transition-colors">
+                {featuredPost.title}
+              </h2>
+              <p className="text-gray-500 leading-relaxed line-clamp-3">
+                {featuredPost.excerpt}
+              </p>
+              <div className="flex items-center gap-5 text-sm text-gray-400">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {new Date(featuredPost.publishedAt).toLocaleDateString(
+                    "vi-VN"
+                  )}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  {featuredPost.readingTime} phút đọc
+                </span>
+              </div>
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:gap-3 transition-all">
+                Đọc bài viết <ArrowRight className="w-4 h-4" />
+              </span>
+            </div>
+          </div>
+        </Link>
 
-      {/* Other Posts Grid */}
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">
+        {/* Divider */}
+        <div className="flex items-center gap-4 mb-10">
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-widest shrink-0">
             Bài viết mới nhất
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {otherPosts.map((post) => (
-              <Link
-                key={post.id}
-                href={`/blog/${post.slug}`}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-4xl">
-                      {post.category === "AI trong giáo dục"
-                        ? "🤖"
-                        : post.category === "Kỹ năng giảng dạy"
-                          ? "📖"
-                          : post.category === "Hướng dẫn"
-                            ? "📝"
-                            : "🚀"}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-6 space-y-3">
-                  <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">
-                    {post.category}
-                  </span>
-                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
-                    {post.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {post.excerpt}
-                  </p>
-                  <div className="flex items-center gap-4 text-xs text-gray-500 pt-2">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(post.publishedAt).toLocaleDateString("vi-VN")}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {post.readingTime} phút
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <div className="flex-1 h-px bg-gray-100" />
         </div>
-      </section>
 
-      {/* Newsletter CTA */}
-      <section className="py-16 bg-blue-600">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-            Đăng ký nhận bài viết mới
-          </h2>
-          <p className="text-blue-100 mb-8 max-w-xl mx-auto">
-            Nhận thông báo khi có bài viết mới về AI giáo dục và tips giảng dạy
-            hiệu quả.
-          </p>
-          <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Email của bạn"
-              className="flex-1 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-white"
-            />
-            <button
-              type="submit"
-              className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+        {/* Posts grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+          {otherPosts.map((post) => (
+            <Link
+              key={post.id}
+              href={`/blog/${post.slug}`}
+              className="group flex flex-col"
             >
-              Đăng ký
-            </button>
-          </form>
+              <div className="relative aspect-16/10 rounded-xl overflow-hidden bg-gray-100 mb-4">
+                <Image
+                  src="/images/logo/backgroud.png"
+                  alt={post.title}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              <div className="flex flex-col flex-1 space-y-2">
+                <CategoryBadge category={post.category} />
+                <h3 className="font-bold text-gray-900 group-hover:text-primary transition-colors leading-snug line-clamp-2">
+                  {post.title}
+                </h3>
+                <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed flex-1">
+                  {post.excerpt}
+                </p>
+                <div className="flex items-center gap-4 text-xs text-gray-400 pt-1">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {new Date(post.publishedAt).toLocaleDateString("vi-VN")}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {post.readingTime} phút đọc
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
-      </section>
+      </div>
 
       <Footer />
     </div>

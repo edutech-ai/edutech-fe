@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
@@ -48,29 +48,38 @@ function CheckoutContent() {
     isPolling
   );
 
-  // Create payment when plan is loaded
+  // Create payment when plan is loaded — guarded by ref to prevent re-fire on StrictMode double-mount
+  const hasFiredRef = useRef(false);
+
   useEffect(() => {
-    if (plan && !paymentData && !createPaymentMutation.isPending) {
-      createPaymentMutation.mutate(
-        { planCode: plan.code },
-        {
-          onSuccess: (response) => {
-            setPaymentData(response.data);
-            setIsPolling(true);
-            // Calculate countdown from expiresAt
-            const expiresAt = new Date(response.data.expiresAt).getTime();
-            const now = Date.now();
-            setCountdown(Math.max(0, Math.floor((expiresAt - now) / 1000)));
-          },
-          onError: (error) => {
-            const message =
-              error.response?.data?.message || "Không thể tạo thanh toán";
-            toast.error(message);
-            router.push("/pricing");
-          },
-        }
-      );
-    }
+    if (
+      !plan ||
+      paymentData ||
+      createPaymentMutation.isPending ||
+      hasFiredRef.current
+    )
+      return;
+    hasFiredRef.current = true;
+
+    createPaymentMutation.mutate(
+      { planCode: plan.code },
+      {
+        onSuccess: (response) => {
+          setPaymentData(response.data);
+          setIsPolling(true);
+          const expiresAt = new Date(response.data.expiresAt).getTime();
+          const now = Date.now();
+          setCountdown(Math.max(0, Math.floor((expiresAt - now) / 1000)));
+        },
+        onError: (error) => {
+          hasFiredRef.current = false; // allow retry on error
+          const message =
+            error.response?.data?.message || "Không thể tạo thanh toán";
+          toast.error(message);
+          router.push("/pricing");
+        },
+      }
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan]);
 
@@ -199,7 +208,13 @@ function CheckoutContent() {
                       <Button
                         variant="outline"
                         className="mt-3"
-                        onClick={() => window.location.reload()}
+                        onClick={() => {
+                          setPaymentData(null);
+                          setCountdown(0);
+                          setIsPolling(false);
+                          createPaymentMutation.reset();
+                          hasFiredRef.current = false;
+                        }}
                       >
                         <RefreshCw className="h-4 w-4 mr-2" />
                         Tạo đơn mới
